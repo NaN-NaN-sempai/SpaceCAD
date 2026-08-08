@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> LHS Unnamed Custom Furnture App </title>
+ 
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #tempCursor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 25px;
+            height: 25px;
+            
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            right: 50%;
+            bottom: 50%;
+            display: none;
+        }
+
+        #a {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            margin: 20px;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <div id="tempCursor"></div>
+
+    <button id="a">test</button>
+    
+</body>
+<script type="importmap">
+{
+  "imports": {
+    "three": "/node_modules/three/build/three.module.js",
+    "three/addons/": "/node_modules/three/examples/jsm/",
+
+    "astring": "/node_modules/astring/dist/astring.mjs"
+  }
+}
+</script>
+
+<script src="./scripts/lib/inputManager.js"></script>
+<script src="./scripts/lib/loopManager.js"></script>
+<script src="./scripts/lib/mouseLock.js"></script>
+
+<script src="/node_modules/acorn/dist/acorn.js"></script>
+<script type="module"> // globalize astring 
+    import * as astring from "astring";
+    window.astring = astring;
+
+    import * as THREE from "three";
+    window.THREE = THREE;
+
+    const loadScript = (...list) => {
+        const src = list[0];
+
+        if(src == undefined) return;
+        const script = document.createElement("script");
+        script.src = src;
+        script.onload = () => loadScript(...list.slice(1));
+        document.head.appendChild(script);
+    }
+
+    loadScript("./scripts/lib/overloadOperator.js", "./scripts/engine.js");
+</script>
+
+<script src="/socket.io/socket.io.js"></script>
+<script> // SOCKET.IO
+    const socket = io();
+    
+    let firstConnection = true;
+    let doServerRestart = true;
+
+    socket.on('connect', () => {
+        if(!firstConnection && doServerRestart)
+            location.reload();
+
+        firstConnection = false;
+
+        console.log('Connected to server');
+    });
+
+
+
+    socket.on('res', (data) => {
+        console.log('Received message:', data);
+        return
+
+        if(data == "server_restart"){
+            location.reload();
+        }
+    });
+</script>
+
+
+</html>

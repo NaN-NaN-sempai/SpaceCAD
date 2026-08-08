@@ -1,0 +1,13 @@
+{
+    "dependencies": {
+        "acorn": "^8.18.0",
+        "astring": "^1.9.0",
+        "express": "^5.2.1",
+        "socket.io": "^4.8.3",
+        "three": "^0.185.1"
+    },
+    "type": "module",
+    "scripts": {
+        "dev": "node --watch-path=./ ."
+    }
+}
