@@ -674,7 +674,7 @@ class DirectionGizmo {
                 url,
                 direction
             };
-        }
+        } 
 
         return obj;
     }
