@@ -439,7 +439,7 @@ class MouseManager {
             this.position.y = event.clientY;
 
             this.delta.x = event.movementX;
-            this.delta.y = event.movementY;
+            this.delta.y = -event.movementY;
 
             setDirection(event.movementX, event.movementY, 0, "MouseMove");
         });

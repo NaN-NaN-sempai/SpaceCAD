@@ -306,8 +306,12 @@ class Overloader {
             if(type == "unary" && typeof a?.__overload_anyUnary == "function")
                 return a.__overload_anyUnary(b, handler);
 
-            if(typeof a?.[key] == "function")
-                return a[key](b);
+            if(typeof a?.[`__overload_${key}`] == "function")
+                return a[`__overload_${key}`](b);
+
+            // TESTING IF BREAKS ANYTHING
+            /* if(typeof a?.[key] == "function")
+                return a[key](b); */
 
             return null;
         },

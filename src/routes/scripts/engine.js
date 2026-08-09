@@ -34,6 +34,9 @@ function getDirection () {
     return returnObject;
 }
 function isAboveMouse (camera) {
+    camera = this.ownerCamera || this.pivotCamera?.selectedCamera || camera;
+    if(!camera) return {intersects: false, direct: false, indexOf: -1, list: [], error: "camera not found"};
+
     const mouse = new THREE.Vector2();
 
     mouse.x = (mousePosition.x / window.innerWidth) * 2 - 1;
@@ -41,7 +44,20 @@ function isAboveMouse (camera) {
 
     raycaster.setFromCamera(mouse, camera);
 
-    const list = raycaster.intersectObjects(camera.originScene.children, true);
+    const list = raycaster
+        .intersectObjects(camera.originScene.children, true)
+        .filter(intersect => {
+        let obj = intersect.object;
+
+        while (obj) {
+            if (!obj.visible)
+                return false;
+
+            obj = obj.parent;
+        }
+
+        return true;
+    });
 
     let intersects = false;
     let direct = false;
@@ -134,6 +150,10 @@ Object.defineProperties(THREE.Object3D.prototype, {
         get: function () { return this.rotation },
         set: function (value) { this.rotation.set(value.x, value.y, value.z) },
     },
+    isMouseOver: {
+        get: isAboveMouse,
+        set: function () {}
+    },
     mouseOver: {
         value: isAboveMouse,
         writable: false,
@@ -141,6 +161,10 @@ Object.defineProperties(THREE.Object3D.prototype, {
 
 });
 Object.defineProperties(THREE.Group.prototype, {
+    isMouseOver: {
+        get: isAboveMouseGroup,
+        set: function () {}
+    },
     mouseOver: {
         value: isAboveMouseGroup,
         writable: false,
@@ -317,7 +341,6 @@ THREE.Euler.prototype.__overload_anyAssignArithmetic = function (that, operator)
 
 
 
-
     
 // UI
 document.querySelector("#a").addEventListener("click", () => {
@@ -328,7 +351,8 @@ document.querySelector("#a").addEventListener("click", () => {
 const scene = new THREE.Scene();
 const UIScene = new THREE.Scene();
 
-const setupCamera = (scene, perspective = "perspective") => {
+// pivot camera object
+const pivotCamera = (scene, perspective = "perspective") => {
     const camera = new THREE.Object3D();
 
     camera.perspective = perspective;
@@ -368,12 +392,22 @@ const setupCamera = (scene, perspective = "perspective") => {
 
 
 // CAMERAS
-const camera = setupCamera(scene);
-const UICamera = setupCamera(UIScene);
+const camera = pivotCamera(scene);
+const UICamera = pivotCamera(UIScene);
 
 
 // RENDERER
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const auxCanvas = (sizeX = 256, sizeY = 256) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = sizeX;
+    canvas.height = sizeY;
+
+    canvas.ctx = canvas.getContext("2d");
+
+    return canvas;
+}
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 const canvas = renderer.domElement;
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
@@ -403,8 +437,6 @@ const unlockMouse = () => {
 
 // TEMP SCENE
 
-scene.background = new THREE.Color(0x87ceeb);
-
 // Luz ambiente
 scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
@@ -428,6 +460,7 @@ floor.rotation.x = -Math.PI / 2;
 scene.add(floor);
 
 // Cubos
+if(0)
 for (let x = -40; x <= 40; x += 10) {
     for (let z = -40; z <= 40; z += 10) {
         const cube = new THREE.Mesh(
@@ -448,6 +481,7 @@ for (let x = -40; x <= 40; x += 10) {
 }
 
 // Alguns pilares
+if(0)
 for (let i = 0; i < 20; i++) {
     const pillar = new THREE.Mesh(
         new THREE.CylinderGeometry(0.5, 0.5, 8),
@@ -569,12 +603,11 @@ class ScreenToScene {
 const screenToScene = new ScreenToScene(7.2);
 
 
-const arrow = (from, to, color) => {
+const arrow = (from, to, color, size = .15) => {
     const distance = to.clone().sub(from).length();
 
     const arrowMaterial = new THREE.MeshBasicMaterial({ color });
 
-    const size = .2;
     const cylinderSize = size/2.5;
     const cylinder = new THREE.Mesh(
         new THREE.CylinderGeometry(cylinderSize, cylinderSize, distance, 32),
@@ -600,94 +633,339 @@ const arrow = (from, to, color) => {
     return arrowGroup;
 }
 
-class DirectionGizmo {
-    static Arrow  = (direction, color, camera) => {
-        const obj = arrow(new THREE.Vector3(), new THREE.Vector3(...direction), color);
-        obj.gizmoDirection = direction;
-        obj.getAxisScreenDirection = () => getAxisScreenDirection(obj, [0, 0, 1], camera.selectedCamera);
-
-        obj.getAngle = function () {
-            const { direction, facingCamera } = this.getAxisScreenDirection();
-
-            if(facingCamera) 
-                return { facingCamera: true, angle: null };
-
-            let angle = Math.atan2(direction.y, direction.x) * 180 / Math.PI;
-
-            angle = (angle + 180) % 360;
-
-            return {
-                angle,
-                facingCamera
-            };
-        }
-        obj.toDirection = function () {
-            const {angle, facingCamera} = this.getAngle();
-
-            if (facingCamera) return null;
-            
-            if (angle >= 67.5 && angle < 112.5)
-                return new THREE.Vector2(0, 1);      // top
-
-            if (angle >= 247.5 && angle < 292.5)
-                return new THREE.Vector2(0, -1);     // bottom
-
-            if (angle >= 112.5 && angle < 157.5)
-                return new THREE.Vector2(-1, 1);     // top left
-
-            if (angle >= 22.5 && angle < 67.5)
-                return new THREE.Vector2(1, 1);      // top right
-
-            if (angle >= 157.5 && angle < 202.5)
-                return new THREE.Vector2(-1, 0);     // left
-
-            if (angle >= 292.5 && angle < 337.5)
-                return new THREE.Vector2(-1, -1);    // bottom left
-
-            if (angle >= 337.5 || angle < 22.5)
-                return new THREE.Vector2(1, 0);      // right
-
-            if (angle >= 202.5 && angle < 247.5)
-                return new THREE.Vector2(1, -1);     // bottom right
-        }
-        obj.toCursor = function () {
-            const direction = this.toDirection();
-            
-            let url;
-
-            if ( direction == null )
-                url = "minidot.png";
-
-            else if ( direction.x == 0 && direction.y != 0 )
-                url = "translate_ver.png";
-                
-            else if ( direction.x != 0 && direction.y == 0 )
-                url = "translate_hoz.png";
-            
-            else if ( direction.x > 0 && direction.y > 0  || direction.x < 0 && direction.y < 0 )
-                url = "translate_dia.png";
-
-            else
-                url = "translate_dia_b.png";
-
-            return {
-                url,
-                direction
-            };
-        } 
-
-        return obj;
+class Gizmo {
+    static instances = [];
+    static update() {
+        Gizmo.instances.forEach(gizmo => gizmo.update?.());
     }
-    constructor(camera) {
+    constructor() {
+        Gizmo.instances.push(this);
+    }
+}
+class DirectionGizmo extends Gizmo {
+    static instances = [];
+    constructor(camera, config = {}) {
+        super();
+        DirectionGizmo.instances.push(this);
+
         this.object = new THREE.Group();
 
         this.camera = camera;
+        this.visible = true;
+        this.ignoreFidgetHiding = false;
 
-        this.x = DirectionGizmo.Arrow([1,0,0], 0xff0000, camera);
-        this.y = DirectionGizmo.Arrow([0,1,0], 0x00ff00, camera);
-        this.z = DirectionGizmo.Arrow([0,0,1], 0x0000ff, camera);
+        const defaultConfig = {
+            hideBackfacingFidgets: true,
+            x: {
+                color: "#ff0000",
+            },
+            y: {
+                color: "#00ff00",
+            },
+            z: {
+                color: "#0000ff",
+            },
+        }
+        
+        const recursiveProxy = (config, defaults) => {
+            return new Proxy(config, {
+                get(target, key) {
+                    const value = target[key];
+                    const defaultValue = defaults?.[key];
 
-        this.object.add(this.x, this.y, this.z);
+                    if (value && typeof value === "object") {
+                        return recursiveProxy(value, defaultValue);
+                    }
+
+                    return value ?? defaultValue;
+                }
+            });
+        };
+
+        this.fidgetConfig = config = recursiveProxy(config, defaultConfig);
+
+        const setupKey = ([x, y, z]) => {
+            const obj = {x, y, z};
+            const setup = ([name, value]) => value? name + (value<0?"R": "") : ""; 
+            const setupOrder = str => [...str].map(c => [c, obj[c]]).map(setup).join("");
+
+            const aux = [
+                setupOrder("xyz"),
+                setupOrder("yxz"),
+                setupOrder("zyx"),
+                setupOrder("yzx"),
+                setupOrder("zxy"),
+                setupOrder("xzy"),
+            ];
+
+            const returnArr = [];
+
+            aux.forEach(a => {
+                if(!returnArr.find(b => b == a)) 
+                    returnArr.push(a);
+            });
+
+            return returnArr;
+        }
+
+        const GizmoArrow  = (direction, color) => {
+            const obj = arrow(new THREE.Vector3(), new THREE.Vector3(...direction), color);
+            obj.gizmoDirection = new THREE.Vector3(...direction);
+            obj.getAxisScreenDirection = () => getAxisScreenDirection(obj, [0, 0, 1], camera.selectedCamera);
+
+            obj.fidgetType = "arrow";
+            obj.pivotCamera = camera;
+
+            obj.gizmoKeys = setupKey(direction);
+
+            obj.oppositeFidgets = () => [
+                this.getFromArr(direction.map(x => -x))
+            ];
+
+            obj.getAngle = function () {
+                const { direction, facingCamera } = this.getAxisScreenDirection();
+
+                if(facingCamera) 
+                    return { facingCamera: true, angle: null };
+
+                let angle = Math.atan2(direction.y, direction.x) * 180 / Math.PI;
+
+                angle = (angle + 180) % 360;
+
+                return {
+                    angle,
+                    facingCamera
+                };
+            }
+            obj.toDirection = function () {
+                const {angle, facingCamera} = this.getAngle();
+
+                if (facingCamera) return null;
+                
+                if (angle >= 67.5 && angle < 112.5)
+                    return new THREE.Vector2(0, -1);      // bottom
+
+                if (angle >= 247.5 && angle < 292.5)
+                    return new THREE.Vector2(0, 1);     // top
+
+                if (angle >= 112.5 && angle < 157.5)
+                    return new THREE.Vector2(-1, 1);     // top left
+
+                if (angle >= 22.5 && angle < 67.5)
+                    return new THREE.Vector2(-1, -1);      // bottom left
+
+                if (angle >= 157.5 && angle < 202.5)
+                    return new THREE.Vector2(1, 0);     // left
+
+                if (angle >= 292.5 && angle < 337.5)
+                    return new THREE.Vector2(1, 1);    // top left
+
+                if (angle >= 337.5 || angle < 22.5)
+                    return new THREE.Vector2(-1, 0);      // right
+
+                if (angle >= 202.5 && angle < 247.5)
+                    return new THREE.Vector2(1, -1);     // bottom right
+            }
+            obj.toCursor = function () {
+                const direction = this.toDirection();
+                
+                let url;
+
+                if ( direction == null )
+                    url = "minidot.png";
+
+                else if ( direction.x == 0 && direction.y != 0 )
+                    url = "translate_ver.png";
+                    
+                else if ( direction.x != 0 && direction.y == 0 )
+                    url = "translate_hoz.png";
+                
+                else if ( direction.x > 0 && direction.y > 0  || direction.x < 0 && direction.y < 0 )
+                    url = "translate_dia.png";
+
+                else
+                    url = "translate_dia_b.png";
+
+                return {
+                    url,
+                    direction
+                };
+            }
+
+            return obj;
+        }
+        const Plane = (colorFrom, colorTo, direction = [0,0,1,1], position = [0,0,0], rotation = [0,0,0],  planeSize = 1) => {
+            const createGradient = (from, to, gap = 0) => {
+                const canvas = auxCanvas();
+                
+                const gradient = canvas.ctx.createLinearGradient(
+                ...direction.map(x => x * canvas.width)
+                );
+
+                gradient.addColorStop(0, from);
+                gradient.addColorStop(.5 - gap, from);
+                gradient.addColorStop(.5 + gap, to);
+                gradient.addColorStop(1, to);
+
+                canvas.ctx.fillStyle = gradient;
+                canvas.ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Borda
+                canvas.ctx.strokeStyle = "#ffffff";
+                const strokeSize = 30;
+                canvas.ctx.lineWidth = strokeSize;
+                canvas.ctx.strokeRect(
+                    1,
+                    -strokeSize,
+                    canvas.width + strokeSize,
+                    canvas.height - 2 + strokeSize
+                );
+
+                return new THREE.CanvasTexture(canvas);
+            }
+            
+            const gradient = createGradient(colorFrom, colorTo, .01);
+
+            const createGizmosPlane = () => {
+                planeSize *= .8;
+
+                const plane = new THREE.Mesh(
+                    new THREE.PlaneGeometry(planeSize, planeSize),
+                    new THREE.MeshBasicMaterial({ 
+                        map: gradient,
+                        side: THREE.DoubleSide
+                    }),
+                );
+
+                plane.position.set(...position.map(x => x * (planeSize/2) * 2));
+                plane.rotation.set(...rotation.map(x => (x * 90) * (Math.PI / 180)));
+
+                return plane;
+            }
+
+            const obj = createGizmosPlane();
+            obj.fidgetType = "plane";
+            obj.pivotCamera = camera;
+            obj.gizmoDirection = new THREE.Vector3(...position);
+
+            obj.gizmoKeys = setupKey(position);
+
+            const getOppositeDirection = () => {
+                const indexes = position
+                    .map((v, i) => v == 0 ? -1: i)
+                    .filter(v => v != -1);
+                    
+                const opposite = [];
+
+                for(let i = -1; i < 2; i += 2)
+                    for(let j = -1; j < 2; j += 2) {
+                        if(position[indexes[0]] == i && position[indexes[1]] == j) continue;
+                        const dir = [0,0,0];
+                        dir[indexes[0]] = i;
+                        dir[indexes[1]] = j;
+                        opposite.push(dir);
+                    }
+
+                console.log(position, indexes, opposite);
+                return opposite;
+            }
+            obj.oppositeFidgets = () => getOppositeDirection().map(x => this.getFromArr(x));
+
+            obj.getDirection = function () {
+                const quaternion = this.getWorldQuaternion(
+                    new THREE.Quaternion()
+                );
+
+                const normal = new THREE.Vector3(0, 0, 1)
+                    .applyQuaternion(quaternion)
+                    .normalize();
+
+                const planePosition = new THREE.Vector3();
+                this.getWorldPosition(planePosition);
+
+                const cameraPosition = new THREE.Vector3();
+                camera.getWorldPosition(cameraPosition);
+
+                const toCamera = cameraPosition
+                    .sub(planePosition)
+                    .normalize();
+
+                const trueFront = normal.dot(toCamera) > 0;
+
+                const localDirect = new THREE.Vector3(...position);            
+
+                return {
+                    front: trueFront,
+                    direction: trueFront
+                        ? localDirect
+                        : localDirect.clone().negate()
+                };
+            }
+            obj.toCursor = function () {
+                const direction = this.getDirection();
+
+                return {
+                    url: "translate.png",
+                    direction
+                };
+            }
+
+            return obj;
+        }
+
+        const size = .15;
+        const planeSize = size * 2.5;
+
+        this.fidgets = [
+            GizmoArrow([1,0,0], config.x.color, size),
+            GizmoArrow([0,1,0], config.y.color, size),
+            GizmoArrow([0,0,1], config.z.color, size),
+            
+            GizmoArrow([-1,0,0], config.x.color, size), 
+            GizmoArrow([0,-1,0], config.y.color, size),
+            GizmoArrow([0,0,-1], config.z.color, size),
+
+            Plane(config.y.color, config.x.color, [0,0,1,1], [1,1,0], [0,0,0], planeSize),
+            Plane(config.y.color, config.z.color, [1,1,0,0], [0,1,1], [0,1,1], planeSize),
+            Plane(config.x.color, config.z.color, [0,0,1,1], [1,0,1], [1,2,1], planeSize),
+
+            Plane(config.y.color, config.x.color, [0,0,1,1], [-1,1,0], [0,0,-1], planeSize),
+            Plane(config.y.color, config.z.color, [1,1,0,0], [0,-1,1], [-1,1,1], planeSize),
+            Plane(config.x.color, config.z.color, [0,0,1,1], [1,0,-1], [1,2,0], planeSize),
+
+            Plane(config.y.color, config.x.color, [0,0,1,1], [1,-1,0], [0,0,1], planeSize),
+            Plane(config.y.color, config.z.color, [1,1,0,0], [0,1,-1], [0,1,1], planeSize),
+            Plane(config.x.color, config.z.color, [0,0,1,1], [-1,0,1], [1,2,-2], planeSize),
+
+            Plane(config.y.color, config.x.color, [0,0,1,1], [-1,-1,0], [0,0,-2], planeSize),
+            Plane(config.y.color, config.z.color, [1,1,0,0], [0,-1,-1], [2,1,1], planeSize),
+            Plane(config.x.color, config.z.color, [0,0,1,1], [-1,0,-1], [1,2,-1], planeSize), 
+        ];
+
+        const applyOpacity = (obj, o) => {
+            obj.traverse(obj => {
+                if (!obj.material) return;
+
+                const materials = Array.isArray(obj.material)
+                    ? obj.material
+                    : [obj.material];
+
+                materials.forEach(material => {
+                    material.transparent = true;
+                    material.opacity = o;
+                    material.depthTest = false;
+                });
+            });
+        }
+
+        this.applyOpacity = o => applyOpacity(this.object, o);
+
+        this.fidgets.forEach(fidget => {
+            fidget.applyOpacity = o => applyOpacity(fidget, o);
+            fidget.gizmoKeys.forEach(key => this[key] = fidget);
+        });
+
+        this.object.add(...this.fidgets);
 
         Object.defineProperties(this, {
             position: {
@@ -705,17 +983,134 @@ class DirectionGizmo {
             rot: {
                 get: () => this.object.rotation,
                 set: (value) => this.object.rotation.set(value.x, value.y, value.z)
+            },
+
+            isMouseOverAny: {
+                get: () => {
+                    const axes = {};
+                    
+                    this.fidgets.forEach(fidget => {
+                        axes[fidget.gizmoKeys[0]] = fidget.isMouseOver
+                    });
+
+                    const key = Object.keys(axes).find(key => axes[key].intersects);
+                    const direct = key && axes[key].direct || false; 
+                    const intersects = key && axes[key].intersects || false;
+                    const directGizmo = key && this[key];
+                    const intersectsGizmos = key && axes[key].list || [];
+
+                    return {
+                        key,
+                        direct,
+                        intersects,
+                        directGizmo,
+                        intersectsGizmos
+                    }
+                },
+                set: () => {}
             }
         });
+        
     }
 
+    getFromArr(arr){
+        return this.fidgets.find(fidget => 
+            fidget.gizmoDirection.x === arr[0] && 
+            fidget.gizmoDirection.y === arr[1] && 
+            fidget.gizmoDirection.z === arr[2]
+        )
+    }
+
+    update() {
+        if(!this.visible) {
+            this.object.visible = false;
+            return;
+        }
+        if(this.ignoreFidgetHiding) return;
+        if(!this.fidgetConfig.hideBackfacingFidgets) return;
+
+        this.ignoreFidgetHiding = false;
+
+        // ORTHO
+
+        
+
+
+        const cameraPos = this.camera.selectedCamera.getWorldPosition(
+            new THREE.Vector3()
+        );
+
+        const gizmoPos = this.object.getWorldPosition(
+            new THREE.Vector3()
+        );
+
+        const cameraDir = cameraPos.sub(gizmoPos).normalize();
+
+        cameraDir.applyQuaternion(
+            this.object.getWorldQuaternion(
+                new THREE.Quaternion()
+            ).invert()
+        );
+
+        const { x, y, z } = cameraDir;
+
+        const setVisibility = (fidget, visible) => {
+            fidget.visible = visible;
+            fidget.oppositeFidgets().forEach(opposite => opposite.visible = !visible);
+        }
+
+        setVisibility(this.x, x > 0);
+        setVisibility(this.y, y > 0);
+        setVisibility(this.z, z > 0);
+
+        const setPlaneVisibility = (a, b, planes) => {
+            const ia = a > 0 ? 0 : 1;
+            const ib = b > 0 ? 0 : 1;
+
+            planes.forEach((plane, i) => {
+                plane.visible = i === ia * 2 + ib;
+            });
+        };
+
+        setPlaneVisibility(x, y, [
+            this.xy,
+            this.xyR,
+            this.xRy,
+            this.xRyR
+        ]);
+
+        setPlaneVisibility(y, z, [
+            this.yz,
+            this.yzR,
+            this.yRz,
+            this.yRzR
+        ]);
+
+        setPlaneVisibility(x, z, [
+            this.xz,
+            this.xzR,
+            this.xRz,
+            this.xRzR
+        ]);
+    }
 }
 
-const worldGizmo = new DirectionGizmo(UICamera);// createDirectionGizmo();
+const worldGizmo = new DirectionGizmo(UICamera);
+worldGizmo.applyOpacity(.7);
 
 UI.add(worldGizmo.object);
-    
 
+
+const selection3DGizmo = new DirectionGizmo(camera, {
+    x: {color: "#9900ff"},
+    y: {color: "#ffff00"},
+    z: {color: "#006aff"},
+});
+
+selection3DGizmo.pos.y = .5;
+selection3DGizmo.pos.x = -1;
+selection3DGizmo.pos.z = 15;
+scene.add(selection3DGizmo.object);
 
 
 function getScreenDirection(object, camera) {
@@ -783,88 +1178,114 @@ function getAxisScreenDirection(object, axis, camera){
     };
 }
 
-function gizmoToCursor (gizmoDir, camera) {
-    const axis = [0, 0, -1];
-
-    const { direction, facingCamera } =
-        getAxisScreenDirection(gizmoDir, axis, camera);
-
-    if(facingCamera)
-        return "minidot";
-
-    let angle = Math.atan2(direction.y, direction.x) * 180 / Math.PI;
-
-    angle = (angle + 180) % 360;
-
-    if (
-        angle >= 67.5 &&
-        angle < 112.5 ||
-        angle >= 247.5 &&
-        angle < 292.5
-    ) {
-        return "ver";
-    }
-
-
-    if( angle < 22.5 || angle > 337.5 ||
-        (angle > 157.5 && angle < 202.5) )
-        return "hoz";
-
-
-    if (angle >= 22.5 && angle < 67.5 ||
-        angle >= 202.5 && angle < 247.5) {
-        return "dia";
-    }
-
-    return "dia_b";
-}
-
 let onMouseRotation = false;
 
 let doMouseRotate = true;
 let doMouseMove = true;
 
 let zoom = 10;
+
+let lockSelectionmovement = false; // REMOVER
 const overloader = new Overloader((frame, loop) => {
     cube.rotation.x += 0.01;
     cube.rotation.y += 0.01;
+
+    const selection3dGizmoAny = selection3DGizmo.isMouseOverAny;    
     
-    const gizmoAnyDirect = {
-        x: worldGizmo.x.mouseOver(UICamera.selectedCamera),
-        y: worldGizmo.y.mouseOver(UICamera.selectedCamera),
-        z: worldGizmo.z.mouseOver(UICamera.selectedCamera)
-    };
-    
-    const gizmoAnyKey = Object.keys(gizmoAnyDirect).find(key => gizmoAnyDirect[key].direct);
-    if(gizmoAnyKey && mouseLeft.get() && !onMouseRotation) {
+    if(selection3dGizmoAny.direct && mouseLeft.get() && !onMouseRotation || lockSelectionmovement) {
         doMouseRotate = false;
 
-        const selectedArrow = worldGizmo[gizmoAnyKey];
 
-        const { url, direction } = selectedArrow.toCursor();
+        const { url, direction } = selection3DGizmo.x.toCursor();
 
         setCursor(url);
         lockMouse(1);
 
-        const arrowDirection = new THREE.Vector3(
-            ...selectedArrow.gizmoDirection
-        ).normalize();
+        let move = 0;
 
-        console.log(direction);
+        const {delta} = inputManager.mouse;
 
-        const mouseOperation = 
-            direction == null ? inputManager.mouse.delta.x + inputManager.mouse.delta.y : // minidot
-            direction.x > 0 && direction.y == 0 ? -inputManager.mouse.delta.x : // right
-            direction.x < 0 && direction.y == 0 ? inputManager.mouse.delta.x : // left
-            direction.x == 0 && direction.y > 0 ? inputManager.mouse.delta.y : // up
-            direction.x == 0 && direction.y < 0 ? -inputManager.mouse.delta.y : // down
-            direction.x > 0 && direction.y > 0 ? inputManager.mouse.delta.x - inputManager.mouse.delta.y : // right up
-            direction.x > 0 && direction.y < 0 ? inputManager.mouse.delta.x - inputManager.mouse.delta.y : // right down
-            direction.x < 0 && direction.y > 0 ? -inputManager.mouse.delta.x + inputManager.mouse.delta.y : // left up
-            direction.x < 0 && direction.y < 0 ? -inputManager.mouse.delta.x - inputManager.mouse.delta.y : // left down
-            0;
+        selection3DGizmo.pos.x += delta.x * 0.01;
 
-        camera.pos += arrowDirection * mouseOperation * 0.1;       
+        lockSelectionmovement = true;
+    } else {
+        selection3DGizmo.applyOpacity(.7);
+
+        
+    if(selection3dGizmoAny.direct || lockSelectionmovement)
+        selection3dGizmoAny.directGizmo.applyOpacity(1);
+    }
+    if(mouseLeft.is("up")) {
+        lockSelectionmovement = false;
+    }
+    
+    
+    const gizmoAny = worldGizmo.isMouseOverAny;
+
+    if(gizmoAny.direct) 
+        gizmoAny.directGizmo.applyOpacity(1);
+    else 
+        worldGizmo.applyOpacity(.7);
+
+    if(gizmoAny.direct && mouseLeft.get() && !onMouseRotation) {
+        doMouseRotate = false;
+
+        const gizmoFidget = gizmoAny.directGizmo;
+
+        const { url, direction } = gizmoFidget.toCursor();
+
+        setCursor(url);
+        lockMouse(1);
+
+        let move = 0;
+
+        if(gizmoFidget.fidgetType == "plane") {
+            const localDir = direction.direction.clone();
+            
+            let localMove = 
+                localDir.x != 0 && localDir.y != 0  ?
+                    new THREE.Vector3(mouseMovement.x, mouseMovement.y, 0) :
+                localDir.x != 0 && localDir.z != 0 ?
+                    new THREE.Vector3(mouseMovement.x, 0, -mouseMovement.y) :
+                localDir.y != 0 && localDir.z != 0 ?
+                    new THREE.Vector3(0, mouseMovement.y, -mouseMovement.x) :
+                new THREE.Vector3(0, 0, 0);
+
+            localDir.y = Math.abs(localDir.y);            
+            
+            localMove *= localDir;         
+
+            move = localMove;
+
+            
+        } else {
+            const arrowDirection = new THREE.Vector3(
+                ...gizmoFidget.gizmoDirection
+            ).normalize();
+
+            let mouseMove = 
+                direction == null ? mouseMovement.x + mouseMovement.y : // minidot
+                direction.x > 0 && direction.y == 0 ? mouseMovement.x : // right
+                direction.x < 0 && direction.y == 0 ? -mouseMovement.x : // left
+
+                direction.x == 0 && direction.y > 0 ? mouseMovement.y : // up
+                direction.x == 0 && direction.y < 0 ? -mouseMovement.y : // down
+                
+                direction.x > 0 && direction.y > 0 ?
+                    (mouseMovement.x + mouseMovement.y) / Math.sqrt(2) : // right up
+                direction.x > 0 && direction.y < 0 ?
+                    (mouseMovement.x - mouseMovement.y) / Math.sqrt(2) : // right down
+
+                direction.x < 0 && direction.y > 0 ?
+                    (-mouseMovement.x + mouseMovement.y) / Math.sqrt(2) : // left up
+                direction.x < 0 && direction.y < 0 ?
+                    (-mouseMovement.x - mouseMovement.y) / Math.sqrt(2) : // left down
+                0;
+
+            move = arrowDirection * mouseMove;
+        }
+
+        camera.pos += move * 0.1;     
     }
 
     worldGizmo.rot.x = -camera.rot.x;
@@ -885,7 +1306,7 @@ const overloader = new Overloader((frame, loop) => {
         camera.dir.up * (camera.perspective == "perspective" ? movement.get().dep : -movement.get().ver) * movSpeed;
 
 
-    let calcZoom = zoom - wheelZoom.y * 0.1;
+    let calcZoom = zoom + wheelZoom.y * 0.1;
     zoom = calcZoom < 0.001 ? 0.001 : calcZoom;
 
     if(camera.perspective == "perspective") {
@@ -906,7 +1327,7 @@ const overloader = new Overloader((frame, loop) => {
         const sensibility = 0.0007;
         
         camera.rot.y -= inputManager.mouse.delta.x * sensibility;
-        camera.rot.x -= inputManager.mouse.delta.y * sensibility;
+        camera.rot.x += inputManager.mouse.delta.y * sensibility;
 
         camera.rot.x = Math.max(
             -Math.PI / 2,
@@ -922,7 +1343,7 @@ const overloader = new Overloader((frame, loop) => {
 
         camera.position +=
             camera.directions.right * mouseMovement.x * mouseMovSpeed +
-            camera.directions.up * -mouseMovement.y * mouseMovSpeed;
+            camera.directions.up * mouseMovement.y * mouseMovSpeed;
     }
 
     if(lookAtMouse.is("double")) {
@@ -934,7 +1355,7 @@ const overloader = new Overloader((frame, loop) => {
 
 const ENGINE_LOOP = new LOOP.pre(overloader.execute);
 
-const PRE_LOOP = new ENGINE_LOOP.loopBefore(() => {       
+const PRE_LOOP = new ENGINE_LOOP.loopBefore(() => {   
     const aspect = window.innerWidth / window.innerHeight;
 
     if (camera.perspective == "perspective") {
@@ -972,7 +1393,8 @@ const PRE_LOOP = new ENGINE_LOOP.loopBefore(() => {
 const POST_LOOP = new LOOP.post(() => {
     doMouseMove = true;
     doMouseRotate = true;
-
+    
+    Gizmo.update();
     inputManager.update();
 
     if(!mouseLock.state)
