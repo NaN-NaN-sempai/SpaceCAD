@@ -343,6 +343,50 @@ THREE.Euler.prototype.__overload_anyAssignArithmetic = function (that, operator)
         return new Error(`Invalid Assign Arithmetic operation between ${typeof this} and ${typeof that}`);
 };
 
+// ARRAY UTILS
+Object.defineProperties(Array.prototype, {
+    populate: {
+        get: function (value) {
+            let allNumber = this.map(e => typeof e == "number").reduce((a, b) => a && b, true);
+            if(!allNumber) {
+                console.warn("Array must only contain numbers to be populated");
+                return this;
+            }
+            if(this.length < 2) {
+                console.warn("Array must have at least 2 values to be populated");
+                return this;
+            }
+
+            const array = [];
+
+            const generate = (from, to, ignoreFirst = false) => {
+                const arr = [];
+                
+                if(from > to) 
+                    for (let i = from; i >= to; i--) 
+                        arr.push(i);
+                else 
+                    for (let i = from; i <= to; i++) 
+                        arr.push(i);
+
+                if(ignoreFirst)
+                    arr.shift();
+
+                return arr;
+            }
+
+            this.forEach((v, i) => {
+                if(this[i + 1] == undefined) return;
+                const arr = generate(this[i], this[i+1], i != 0);
+                array.push(...arr);
+            })
+
+            return array;
+        },
+        set: () => {}
+    }
+});
+
 // array propagate [0, 5].pupulate -> [0,1,2,3,4,5]
 
 
