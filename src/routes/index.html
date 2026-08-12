@@ -42,7 +42,7 @@
 <body>
     <div id="tempCursor"></div>
 
-    <button id="a">test</button>
+    <button id="a">mostrar cantos</button>
     
 </body>
 <script type="importmap">
@@ -67,6 +67,9 @@
 
     import * as THREE from "three";
     window.THREE = THREE;
+
+    import {RoomEnvironment} from "three/addons/environments/RoomEnvironment.js";
+    window.RoomEnvironment = RoomEnvironment;
 
     const loadScript = (...list) => {
         const src = list[0];

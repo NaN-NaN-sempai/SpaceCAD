@@ -150,6 +150,10 @@ Object.defineProperties(THREE.Object3D.prototype, {
         get: function () { return this.rotation },
         set: function (value) { this.rotation.set(value.x, value.y, value.z) },
     },
+    scl: {
+        get: function () { return this.scale },
+        set: function (value) { this.scale.set(value.x, value.y, value.z) },
+    },
     isMouseOver: {
         get: isAboveMouse,
         set: function () {}
@@ -341,62 +345,625 @@ THREE.Euler.prototype.__overload_anyAssignArithmetic = function (that, operator)
 
 
 
+
+// UTILS
+const recursiveProxy = (config, defaults) => {
+    return new Proxy(config, {
+        get(target, key) {
+            const value = target[key];
+            const defaultValue = defaults?.[key];
+
+            if (value && typeof value === "object") {
+                return recursiveProxy(value, defaultValue);
+            }
+
+            return value ?? defaultValue;
+        }
+    });
+};
+function isClass(value) {
+    return typeof value === "function" &&
+        /^class\s/.test(Function.prototype.toString.call(value));
+}
+function syncFetch(url, config = {}) {
+    config = recursiveProxy(config, {
+        method: "GET",
+    });
+    const xhr = new XMLHttpRequest();
+
+    xhr.open(config.method, url, false); // false = síncrono
+    xhr.send();
+
+    Object.defineProperties(xhr, {
+        json: {
+            get: () => {
+                let ret;
+                try {
+                    ret = JSON.parse(xhr.responseText);
+                } catch (e) {
+                    console.warn(`Error parsing JSON - ${e}`);
+                    ret = null;
+                }
+                return ret;
+            },
+            enumerable: false
+        },
+        text: {
+            get: () => xhr.responseText,
+            enumerable: false
+        }
+    });
+
+    return xhr
+}
+
+
+
+
+// PROJECT CLASSES
+// class - SpaceCAD
+class SpaceCAD {
+    static store = function (name) {
+        return this;
+    }
+    static load = (name) => {
+        // import Logic
+    }
+
+    static currentSpace = null;
+
+    static instances = [];
+    static roots = [];
+
+    // implement
+    static DOMList = () => {
+        const arr = [];
+        const ns = (obj, list) => {
+            const name = obj.name;
+
+            if(!list) {
+                arr.push(`root: ${name}`);
+            } else if(list.indexOf(obj) == 0 && list.length == 1) {
+                arr.push(`singular start and end: ${name}`);
+            } else if(list.indexOf(obj) == 0) {
+                arr.push(`start: ${name}`);
+            } else if(list.indexOf(obj) == list.length - 1) {
+                arr.push(`end: ${name}`);
+            } else {
+                arr.push(`between: ${name}`);
+            }
+
+
+            if(obj.children.length)
+                obj.children.forEach(child => ns(child, obj.children));
+
+
+            return arr;
+        }
+
+        SpaceCAD.roots.forEach(root => ns(root));
+
+        return arr;
+    }
+
+    static Root = CLASS => class extends CLASS {
+        constructor(...args) {
+            // setting static
+            CLASS.store = SpaceCAD.store;
+
+            super(...args);
+
+            this.isSpaceCAD = true;
+            this.name = this._name = CLASS.name;
+
+            Object.defineProperties(this, {
+                name: {
+                    get: () => this._name,
+                    set: (name) => {
+                        if(typeof name !== "string")
+                            return this._name;
+                        else 
+                            return this._name = name;
+                    }
+                },
+                
+            });
+
+            SpaceCAD.instances.push(this);
+            
+            if(SpaceCAD.currentSpace)
+                SpaceCAD.currentSpace.add(this);
+            else {
+                SpaceCAD.roots.push(this);
+                scene.add(this);
+            }
+        }
+        
+        store = SpaceCAD.store;
+
+        space (callback) {
+            if(typeof callback !== "function") return this;
+
+            const previousSpace = SpaceCAD.currentSpace;
+
+            SpaceCAD.currentSpace = this;
+             
+            try {
+                callback.call(this);
+            } finally {
+                SpaceCAD.currentSpace = previousSpace;
+            }
+
+            return this;
+        }
+
+        setPosition (x, y, z) {
+            this.position.set(x, y, z);
+            return this;
+        }
+        setPos = this.setPosition;
+        setRotation (...args) {
+            this.rotation.set(...args.map(x => x * (Math.PI / 180)));
+            return this;
+        }
+        setRot = this.setRotation;
+        setRotationPI (x, y, z) {
+            this.rotation.set(x, y, z);
+            return this;
+        }
+        setRotPI = this.setRotationPI;
+        setScale (x, y, z) {
+            this.scale.set(x, y, z);
+            return this;
+        }
+        setScl = this.setScale;
+        mirror (x, y, z) {
+            this.scale.set(
+                x ? -1 : 1,
+                y ? -1 : 1,
+                z ? -1 : 1
+            );
+            return this;
+        }
+    }
+    static Mesh = class extends SpaceCAD.Root(THREE.Mesh) {
+        static instances = [];
+        constructor(geometry, material) {
+            super(geometry, material);
+
+            this.edgeHilighting = SpaceCAD.edgeHilighting;
+            this.toggleEdgeHilighting(this.edgeHilighting);
+
+            SpaceCAD.Mesh.instances.push(this);
+        }
+
+        toggleEdgeHilighting (togle) {
+            if(togle) {
+                const edges = new THREE.EdgesGeometry(this.geometry);
+
+                const line = new THREE.LineSegments(
+                    edges,
+                    new THREE.LineBasicMaterial({ color: "#ffffff" })
+                );
+
+                line.name = `__edges`;
+
+                this.add(line);
+
+            } else {
+                const edges = this.children.find(child => child.name == "__edges");
+                edges?.removeFromParent?.();
+            }
+        }
+        
+    }
+    static mesh = (...args) => new SpaceCAD.Mesh(...args);
+    static Group = class extends SpaceCAD.Root(THREE.Group) {
+        static instances = [];
+        constructor() {
+            super();
+
+            SpaceCAD.Group.instances.push(this);
+        }
+    }
+    static group = (...args) => new SpaceCAD.Group(...args);
+
+
+    static RootObject = CLASS => class extends CLASS {
+        constructor(prop = {}, ...args) {
+            super(...args);
+
+            this.constructorProps = prop;
+
+            const position = prop.pos || prop.position;
+            if(position && (Array.isArray(position) || position instanceof THREE.Vector3) )
+                if(Array.isArray(position)) this.position.set(...position);
+                else this.position.copy(position);
+            
+            const rotation = prop.rot || prop.rotation;
+            if(rotation && (Array.isArray(rotation) || rotation instanceof THREE.Vector3) )
+                if(Array.isArray(rotation)) this.rotation.set(...rotation);
+                else this.rotation.copy(rotation);
+
+            const scale = prop.scl || prop.scale;
+            if(scale && (Array.isArray(scale) || scale instanceof THREE.Vector3) )
+                if(Array.isArray(scale)) this.scale.set(...scale);
+                else this.scale.copy(scale);
+
+        }
+    }
+
+    static Object = class extends SpaceCAD.RootObject(SpaceCAD.Mesh) {};
+
+
+
+    // others
+    static AxesHelper = class extends THREE.LineSegments {
+        constructor(pivotCamera ,  color = 0x000000, size = 100000, opacity = .2) {
+            const vertices = [
+                -size, 0, 0,	size, 0, 0,
+                0, -size, 0,	0, size, 0,
+                0, 0, -size,	0, 0, size
+            ];
+
+            const colors = [
+                1, 0, 0,	1, 0.6, 0,
+                0, 1, 0,	0.6, 1, 0,
+                0, 0, 1,	0, 0.6, 1
+            ];
+
+
+            
+
+
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+            geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
+
+            const material = new THREE.LineBasicMaterial( {
+                vertexColors: true, 
+                toneMapped: false,
+                transparent: true,
+                opacity
+            } );
+
+            super( geometry, material );
+
+            this.camera = pivotCamera;
+            this.ogVertices = vertices;
+
+            this.size = size;
+
+            this.setColors( color );
+
+            this.type = 'AxesHelper';
+
+        }
+
+        setColors( xAxisColor, yAxisColor, zAxisColor ) {
+            yAxisColor = yAxisColor || xAxisColor;
+            zAxisColor = zAxisColor || xAxisColor;
+
+            const color = new THREE.Color();
+            const array = this.geometry.attributes.color.array;
+
+            color.set( xAxisColor );
+            color.toArray( array, 0 );
+            color.toArray( array, 3 );
+
+            color.set( yAxisColor );
+            color.toArray( array, 6 );
+            color.toArray( array, 9 );
+
+            color.set( zAxisColor );
+            color.toArray( array, 12 );
+            color.toArray( array, 15 );
+
+            this.geometry.attributes.color.needsUpdate = true;
+
+            return this;
+
+        }
+
+        dispose() {
+
+            this.geometry.dispose();
+            this.material.dispose();
+
+        }
+
+        toggle(toggle) {
+            this.visible = Stoggle === undefined
+                ? !this.visible
+                : !!toggle;
+        }
+
+        toggleSpacing(toggle) {
+            this.spacingIndicator = toggle === undefined
+                ? !this.spacing
+                : !!toggle;
+
+            if(this.spacingIndicator)
+                this.spacingHelper();
+            else
+                this.setVertices();
+        }
+        spacingHelper(spacing = 50, width = 3) {
+            const vertices = [];
+            for(let i = -this.size/10, j =0; i <= this.size/10; i += spacing, j++) {
+                if(i == 0)
+                    continue;
+
+                vertices.push(
+                    j%2? -width : -width * 2 , i, 0,
+                    0, i, 0
+                );
+            }
+
+            this.setVertices(vertices);
+        }
+
+        setVertices(arr = []) {
+            const array = [...this.ogVertices, ...arr];
+            this.geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( array, 3 ) );
+        }
+
+        update() {
+            if(this.spacingIndicator && this.pivotCamera) {
+                if(this.pivotCamera.perspective == "perspective"){
+                    const worldCameraPos = this.pivotCamera.selectedCamera.getWorldPosition(new THREE.Vector3());
+                    const dist = this.position.distanceTo(worldCameraPos);
+                    
+                    const width = dist/50;
+    
+                    this.spacingHelper(50, width);
+
+                } else if(this.pivotCamera.perspective == "orthographic"){
+                    const width = .32 / camera.selectedCamera.zoom;
+    
+                    this.spacingHelper(50, width);
+                }
+            }
+
+        }
+        
+    }
+    static axesHelper = new SpaceCAD.AxesHelper();
+
+    //TODO: SPACE CAD
+    // TEXT FROM CANVAS
+
+    // HELPER LINE WITH WIDTH
+
+    // RULER -> LINE AND TEXT (DISTANCE, ANGLE - OPTIONAL)
+    // RULER UPDATE -> AWAYS LOOK AT CAMERA
+
+    // HINTER -> LINE AND TEXT AT END POSITION
+    // HINTER UPDATE -> AWAYS LOOK AT CAMERA, TEXT AWAYS OUTSIDE OF LINE WAY
+
+
+    // OBJECT HINTER -> LINE FROM OBJECT WITH TEXT (NAME, SIZE, MORE INFO)
+    // OBJECT HINTER UPDATE -> AWAYS LOOK AT CAMERA, AWAYS SHOW OR SHOW ONMOUSEOVER OR DISABLED
+    
+    // TODO: SPACE CAD
+
+
+
+    static edgeHilighting = false;
+    static toggleEdgeHilight = (toggle) => {
+        SpaceCAD.edgeHilighting = toggle === undefined
+            ? !SpaceCAD.edgeHilighting
+            : !!toggle;
+
+        SpaceCAD.Mesh.instances.forEach(mesh => {
+            mesh.toggleEdgeHilighting(SpaceCAD.edgeHilighting);
+        });
+    }
+
+
+
+    static setPosition = (...args) => {
+        const obj = new SpaceCAD.Group();
+        obj.position.setRotation(...args);
+        return obj;
+    }
+    static setPos = SpaceCAD.setPosition;
+    static setRotation = (...args) => {
+        const obj = new SpaceCAD.Group();
+        obj.rotation.setRotation(...args);
+        return obj;
+    }
+    static setRot = SpaceCAD.setRotation;
+    static setRotationPI = (...args) => {
+        const obj = new SpaceCAD.Group();
+        obj.rotation.setRotation(...args);
+        return obj;
+    }
+    static setRotPI = SpaceCAD.setRotationPI;
+    static setScale = (...args) => {
+        const obj = new SpaceCAD.Group();
+        obj.scale.setSale(...args);
+        return obj;
+    }
+    static setScl = SpaceCAD.setScale;
+    static mirror = (...args) => {
+        const obj = new SpaceCAD.Group();
+        obj.scale.mirror(...args);
+        return obj;
+    }
+
+}
+
+
+// arrow
+class Arrow extends THREE.Group {
+    constructor(from, to, color, size = .15) {
+        super();
+        
+        const distance = to.clone().sub(from).length();
+
+        const arrowMaterial = new THREE.MeshBasicMaterial({ color });
+
+        const cylinderSize = size/2.5;
+        this.cylinder = new THREE.Mesh(
+            new THREE.CylinderGeometry(cylinderSize, cylinderSize, distance, 32),
+            arrowMaterial
+        );
+        this.cone = new THREE.Mesh(
+            new THREE.ConeGeometry(size, size*1.5, 32),
+            arrowMaterial
+        );
+
+        this.preArrowGroup = new THREE.Group();
+        this.preArrowGroup.add(this.cylinder);
+        this.preArrowGroup.add(this.cone);
+        
+        this.cylinder.position.set(0, distance/2, 0);
+        this.cone.position.set(0, distance + (size * .5), 0);
+
+        this.preArrowGroup.rot.x = Math.PI / 2;
+        this.add(this.preArrowGroup);
+        this.lookAt(to);
+
+        this.objectList = [
+            this.cylinder,
+            this.cone,
+            this.preArrowGroup,
+            this
+        ]
+    }
+}
+
+
+
+
     
 // UI
 document.querySelector("#a").addEventListener("click", () => {
-    console.clear();
-    console.log(123)
-})
+    SpaceCAD.toggleEdgeHilight();
+});
+
 
 const scene = new THREE.Scene();
 const UIScene = new THREE.Scene();
 
+
 // pivot camera object
-const pivotCamera = (scene, perspective = "perspective") => {
-    const camera = new THREE.Object3D();
+class PivotCamera extends THREE.Object3D {
+    static instances = [];
 
-    camera.perspective = perspective;
-    const aspect = window.innerWidth / window.innerHeight;
-    const size = 2;
+    static updateAll() {
+        PivotCamera.instances.forEach(cam => cam.update());
+    }
 
-    camera.translateObject = new THREE.Object3D();
+    constructor(scene, perspective = "perspective") {
+        super();
+        
+        this.originScene = scene;
+        this.perspective = perspective;
 
-    camera.orthographicCamera = new THREE.OrthographicCamera(
-        -size * aspect,
-        size * aspect,
-        size,
-        -size,
-        0.1,
-        10000
-    );
-    camera.perspectiveCamera = new THREE.PerspectiveCamera(
-        75,
-        window.innerWidth / window.innerHeight,
-        0.1,
-        1000
-    );
-    camera.perspectiveCamera.originScene = camera.orthographicCamera.originScene = scene;
-    camera.translateObject.add(camera.perspectiveCamera);
-    camera.translateObject.add(camera.orthographicCamera);
+        
+        const aspect = window.innerWidth / window.innerHeight;
+        const size = 2;
+
+        this.translateObject = new THREE.Object3D();
+
+        this.orthographicCamera = new THREE.OrthographicCamera(
+            -size * aspect,
+            size * aspect,
+            size,
+            -size,
+            0.1,
+            100000
+        );
+        this.perspectiveCamera = new THREE.PerspectiveCamera(
+            75,
+            window.innerWidth / window.innerHeight,
+            0.1,
+            1000000
+        );
+        this.perspectiveCamera.originScene = this.orthographicCamera.originScene = scene;
+        this.translateObject.add(this.perspectiveCamera);
+        this.translateObject.add(this.orthographicCamera);
 
 
-    camera.selectedCamera = camera.perspective == "perspective" ?
-        camera.perspectiveCamera:
-        camera.orthographicCamera;
+        this.selectedCamera = this.perspective == "perspective" ?
+            this.perspectiveCamera:
+            this.orthographicCamera;
 
-    camera.add(camera.translateObject);
-    scene.add(camera);
+        this.add(this.translateObject);
+        scene.add(this);
 
-    return camera;
+        PivotCamera.instances.push(this);
+    }
+
+    setZoom(value) {        
+        if(this.perspective == "perspective") {
+            this.translateObject.position.set(0, 0, value);
+
+        } else if(this.perspective == "orthographic") {
+            this.translateObject.position.set(0, 0, 1000);
+            this.orthographicCamera.zoom = (window.__auxOrthoZoom || 13) / value;
+            this.orthographicCamera.updateProjectionMatrix();
+        }
+    }
+
+    copyFrom(pivotCamera) {
+        this.perspective = pivotCamera.perspective;
+        this.position.copy(pivotCamera.position);
+        this.rotation.copy(pivotCamera.rotation);        
+    }
+
+    update() {
+        const aspect = window.innerWidth / window.innerHeight;
+
+        if (this.perspective == "perspective") {
+            this.selectedCamera = this.perspectiveCamera;
+            this.selectedCamera.aspect = aspect;
+
+        } else if (this.perspective == "orthographic") {
+            this.selectedCamera = this.orthographicCamera;
+            const size = 10;
+
+            this.selectedCamera.left = -size * aspect;
+            this.selectedCamera.right = size * aspect;
+            this.selectedCamera.top = size;
+            this.selectedCamera.bottom = -size;
+        }
+
+        this.selectedCamera.updateProjectionMatrix();
+    }
 }
-
-
 // CAMERAS
-const camera = pivotCamera(scene);
-const UICamera = pivotCamera(UIScene);
+const camera = new PivotCamera(scene);
+const UICamera = new PivotCamera(UIScene);
+
+camera.position.set(20, 20, 10);
+
+camera.rotation.order = "YXZ";
 
 
 // RENDERER
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+const canvas = renderer.domElement;
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+
+const pmremGenerator = new THREE.PMREMGenerator(renderer);
+const environmentMap = pmremGenerator.fromScene(
+    new RoomEnvironment(),
+    0.04
+).texture;
+
+scene.environment = environmentMap;
+UIScene.environment = environmentMap;
+
+
+/* 
+use to create textures
+*/
 const auxCanvas = (sizeX = 256, sizeY = 256) => {
     const canvas = document.createElement("canvas");
     canvas.width = sizeX;
@@ -407,12 +974,221 @@ const auxCanvas = (sizeX = 256, sizeY = 256) => {
     return canvas;
 }
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-const canvas = renderer.domElement;
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+
+// WORLD OBJECTS
+const light = new THREE.DirectionalLight(0xffffff, 2);
+light.position.set(5, 10, 5);
+
+scene.add(light);
 
 
+SpaceCAD.axesHelper.toggleSpacing(1);
+SpaceCAD.axesHelper.pivotCamera = camera;
+scene.add(SpaceCAD.axesHelper);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// custom object
+
+const {
+    mesh, group, setPosition, setPos, setRotation, setRot, setScale, setScl, mirror
+} = SpaceCAD;
+
+
+// FAZER OBJETOS FICAREM COM ARESTAS VISIVEIS
+class Metalom extends SpaceCAD.Object {
+    static instances = [];
+    
+    static defaultGlobalSettings = {
+        color: "#000000",
+        roughness: .2,
+        metalness: 0
+    };
+    static globalSettings = { ...Metalom.defaultGlobalSettings }
+
+    static globalSettings(prop) {
+        Metalom.globalSettings = {
+            ...Metalom.defaultGlobalSettings,
+            ...prop
+        }
+    }
+    static restoreSettings() {
+        Metalom.globalSettings = {
+            ...Metalom.defaultGlobalSettings
+        }
+    }
+
+    constructor(prop = {}) {
+        prop = recursiveProxy(prop, {
+            width: 50,
+            type: [20,20],
+            ...Metalom.globalSettings,
+            cap: false, 
+            capTop: false,
+            capBottom: false,
+            cutTop: 0,
+            cutBottom: 0,
+        });
+
+        prop.cap = prop.capTop && prop.capBottom? true : prop.cap;
+
+        const metalomShape = (pWidth, pHeight, pDepth) => {
+            const getIntersection = (y, angle) => {
+                angle = THREE.MathUtils.degToRad(angle);
+
+                return y / Math.tan(angle)
+            }
+            
+
+            const shape = new THREE.Shape();
+
+            const w = pWidth;
+            const h = pHeight;
+
+            const bottom = prop.cutBottom;
+            const top = prop.cutTop;
+
+            let bottomX = 0;
+            let topX = w;
+
+            if (bottom !== 0) {
+                const x = getIntersection(h, bottom);
+
+                bottomX = -x;
+            }
+
+            if (top !== 0) {
+                const x = getIntersection(h, top);
+
+                topX = -x;
+            }
+
+            shape.moveTo(bottomX > 0? bottomX: 0, 0);
+
+            shape.lineTo(w - (topX == w? 0: topX > 0? topX : 0), 0);
+            shape.lineTo(w - (topX > 0? 0 : -topX), h);
+            shape.lineTo(0 + (bottomX > 0? 0 : -bottomX), h);
+            
+
+            shape.closePath();
+
+            const geometry = new THREE.ExtrudeGeometry(shape, {
+                depth: pDepth,
+                bevelEnabled: false
+            });
+
+            geometry.clearGroups();
+
+            geometry.addGroup(0, 12, 0);  // frente/trás
+            geometry.addGroup(12, 6, 1);  // bottom
+            geometry.addGroup(18, 6, 2);  // right
+            geometry.addGroup(24, 6, 3);  // top
+            geometry.addGroup(30, 6, 4);  // left
+
+
+
+            // criar materiais
+            const material = new THREE.MeshStandardMaterial(defaultFace);
+
+            const capBottom = new THREE.MeshStandardMaterial({
+                ...defaultFace,
+                transparent: !prop.capBottom,
+                opacity: prop.capBottom ? 1 : 0
+            });
+
+            const capTop = new THREE.MeshStandardMaterial({
+                ...defaultFace,
+                transparent: !prop.capTop,
+                opacity: prop.capTop ? 1 : 0
+            });
+
+            return {
+                geometry,
+                materials: [
+                    material,
+                    material,
+                    capTop,
+                    material,
+                    capBottom,
+                ]
+            };
+        };
+
+        
+        const defaultFace = {
+            color: prop.color,
+            side: !prop.cap ? THREE.DoubleSide : THREE.FrontSide,
+            roughness: prop.roughness,
+            metalness: prop.metalness
+        }
+
+        const {geometry, materials} = metalomShape(prop.width, prop.type[0], prop.type[1]);
+
+        super(prop, geometry, materials);
+
+        this._width = this.width = prop.width;
+
+        
+        this._metalomType = this.metalomType = prop.type;
+        this.name = `Metalom - ${this.metalomType[0]}x${this.metalomType[1]}`;
+
+        Object.defineProperties(this, {
+            metalomType: {
+                get: () => this._metalomType,
+                set: (value) => {
+                    if(!Array.isArray(value)) throw new Error("value must be an array");
+                    this.geometry = metalomShape(this.width, value[0], value[1]).geometry;
+                    this._metalomType = value;
+                }
+            },
+            width: {
+                get: () => this._width,
+                set: (value) => {
+                    if(typeof value !== "number") throw new Error("value must be a number");
+                    this.geometry = metalomShape(value, this.metalomType[0], this.metalomType[1]).geometry;
+                    this._width = value;
+                }
+            },
+            
+        })
+
+        Metalom.instances.push(this);
+    }
+}
+const metalom = (...args) => new Metalom(...args);
+
+metalom().space(function(){
+    /* console.log(this)
+    metalom().position.set(-2, 0, 0);
+    metalom().space(()=>{
+        
+        metalom().position.set(-2, 0, 0);
+        metalom().position.set(-2, 0, 0);
+    })
+    metalom().position.set(-2, 0, 0); */
+});
+
+
+
+
+
+
+
+
+// USER INTERFACE AND INTERACTIONS
 const cursor = document.querySelector('#tempCursor').style;
 const setCursor = url => {
     cursor.backgroundImage = `url(/cursor/${url})`;
@@ -434,102 +1210,6 @@ const unlockMouse = () => {
     //mouseLock.unlock();
 }
 
-
-// TEMP SCENE
-
-// Luz ambiente
-scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-
-// Luz direcional (sol)
-const sun = new THREE.DirectionalLight(0xffffff, 2);
-sun.position.set(20, 30, -10);
-scene.add(sun);
-
-// Grade
-scene.add(new THREE.GridHelper(200, 200));
-
-// Chão
-const floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(200, 200),
-    new THREE.MeshStandardMaterial({
-        color: 0x808080,
-        roughness: 1
-    })
-);
-floor.rotation.x = -Math.PI / 2;
-scene.add(floor);
-
-// Cubos
-if(0)
-for (let x = -40; x <= 40; x += 10) {
-    for (let z = -40; z <= 40; z += 10) {
-        const cube = new THREE.Mesh(
-            new THREE.BoxGeometry(2, 2, 2),
-            new THREE.MeshStandardMaterial({
-                color: Math.random() * 0xffffff
-            })
-        );
-
-        cube.position.set(
-            x + (Math.random() - 0.5) * 3,
-            1,
-            z + (Math.random() - 0.5) * 3
-        );
-
-        scene.add(cube);
-    }
-}
-
-// Alguns pilares
-if(0)
-for (let i = 0; i < 20; i++) {
-    const pillar = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.5, 0.5, 8),
-        new THREE.MeshStandardMaterial({ color: 0x666666 })
-    );
-
-    pillar.position.set(
-        (Math.random() - 0.5) * 100,
-        4,
-        (Math.random() - 0.5) * 100
-    );
-
-    scene.add(pillar);
-}
-
-
-const cube = new THREE.Mesh(
-    new THREE.BoxGeometry(),
-    new THREE.MeshNormalMaterial()
-);
-scene.add(cube);
-
-
-camera.position.set(0, 2, 10);
-
-
-// INPUT MANAGING
-const inputManager = new InputManager(canvas);
-const {InputAction} = inputManager;
-
-inputManager.preventDefault = false;
-// inputManager.button.debug.log = true;
-const movement = new InputAction.Linear3dLerp(.01, "a", "d", "w", "s", "q", "e", { preventDefault: true });
-const mouseMovement = inputManager.mouse.delta;
-const mousePosition = inputManager.mouse.position;
-const lookAtMouse = new InputAction.Button("MouseLeft");
-const mouseLeft = new InputAction.ButtonBool("MouseLeft");
-
-const mouseRight = new InputAction.ButtonBool("MouseRight", { preventDefault: true });
-
-const wheelZoom = inputManager.mouse.wheel.delta;
-
-const perspective = new InputAction.Button("p");
-
-
-
-camera.rotation.order = "YXZ";
-
 const raycaster = new THREE.Raycaster();
 const cameraMoveToMouse = () => {
     const mouse = new THREE.Vector2();
@@ -547,9 +1227,9 @@ const cameraMoveToMouse = () => {
 };
 
 
-const uiOverlay = new THREE.MeshStandardMaterial();
-uiOverlay.depthTest = false;  
-uiOverlay.depthWrite = false;  
+const uiOverlayMaterial = new THREE.MeshStandardMaterial();
+uiOverlayMaterial.depthTest = false;  
+uiOverlayMaterial.depthWrite = false;  
 
 
 const UI = new THREE.Group();
@@ -558,103 +1238,32 @@ const UIDistance = 10;
 UI.position.set(0, 0, -UIDistance);
 UICamera.add(UI);
 
-
-
-
-class ScreenToScene {
-    constructor(sceneSize) {
-        this.setSize(sceneSize);
-        window.addEventListener("resize", () => this.setSize(sceneSize));
-    }
-    setSize(sceneSize) {
-        this.sceneHeight = sceneSize;
-        this.sceneWidth = sceneSize * (window.innerWidth / window.innerHeight);
-    }
-    height() {
-        if(camera.perspective == "orthographic")
-            return this.sceneHeight * 1.3
-
-        return this.sceneHeight
-    }
-    width() {
-        if(camera.perspective == "orthographic")
-            return this.sceneWidth * 1.3;
-        return this.sceneWidth;
-    }
-
-    left(offset) {
-        const porc = offset / window.innerWidth;
-        const endPos = ((this.width() * 2) * porc) - this.width();
-        return endPos;
-    }
-    right(offset) {
-        return this.left(window.innerWidth - offset);
-    }
-    top(offset) {
-        const porc = offset / window.innerHeight;
-        const endPos = ((this.height() * 2) * porc) - this.height();
-        return -endPos;
-    }
-    bottom(offset) {
-        return this.top(window.innerHeight - offset);
-    }
-}
-
-const screenToScene = new ScreenToScene(7.2);
-
-
-const arrow = (from, to, color, size = .15) => {
-    const distance = to.clone().sub(from).length();
-
-    const arrowMaterial = new THREE.MeshBasicMaterial({ color });
-
-    const cylinderSize = size/2.5;
-    const cylinder = new THREE.Mesh(
-        new THREE.CylinderGeometry(cylinderSize, cylinderSize, distance, 32),
-        arrowMaterial
-    );
-    const cone = new THREE.Mesh(
-        new THREE.ConeGeometry(size, size*1.5, 32),
-        arrowMaterial
-    );
-
-    const preArrowGroup = new THREE.Group();
-    preArrowGroup.add(cylinder);
-    preArrowGroup.add(cone);
-    
-    cylinder.position.set(0, distance/2, 0);
-    cone.position.set(0, distance + (size * .5), 0);
-
-    preArrowGroup.rot.x = Math.PI / 2;
-    const arrowGroup = new THREE.Group();
-    arrowGroup.add(preArrowGroup);
-    arrowGroup.lookAt(to);
-
-    return arrowGroup;
-}
-
 class Gizmo {
     static instances = [];
-    static update() {
+    static updateAll() {
         Gizmo.instances.forEach(gizmo => gizmo.update?.());
     }
     constructor() {
         Gizmo.instances.push(this);
     }
+
+    static Root = CLASS => class extends CLASS {
+        constructor(...args) {
+            super(...args);
+            Gizmo.instances.push(this);
+        }
+    }
 }
-class DirectionGizmo extends Gizmo {
+
+class DirectionGizmo extends Gizmo.Root(THREE.Group) {
     static instances = [];
     constructor(camera, config = {}) {
         super();
-        DirectionGizmo.instances.push(this);
-
-        this.object = new THREE.Group();
-
         this.camera = camera;
         this.visible = true;
         this.ignoreFidgetHiding = false;
 
-        const defaultConfig = {
+        this.fidgetConfig = config = recursiveProxy(config, {
             hideBackfacingFidgets: true,
             x: {
                 color: "#ff0000",
@@ -665,25 +1274,9 @@ class DirectionGizmo extends Gizmo {
             z: {
                 color: "#0000ff",
             },
-        }
+        });
+
         
-        const recursiveProxy = (config, defaults) => {
-            return new Proxy(config, {
-                get(target, key) {
-                    const value = target[key];
-                    const defaultValue = defaults?.[key];
-
-                    if (value && typeof value === "object") {
-                        return recursiveProxy(value, defaultValue);
-                    }
-
-                    return value ?? defaultValue;
-                }
-            });
-        };
-
-        this.fidgetConfig = config = recursiveProxy(config, defaultConfig);
-
         const setupKey = ([x, y, z]) => {
             const obj = {x, y, z};
             const setup = ([name, value]) => value? name + (value<0?"R": "") : ""; 
@@ -709,7 +1302,10 @@ class DirectionGizmo extends Gizmo {
         }
 
         const GizmoArrow  = (direction, color) => {
-            const obj = arrow(new THREE.Vector3(), new THREE.Vector3(...direction), color);
+            const objects = new Arrow(new THREE.Vector3(), new THREE.Vector3(...direction), color);
+            objects.objectList.forEach(obj => obj.isGizmoObject = true);
+            
+            const obj = objects.objectList[3];
             obj.gizmoDirection = new THREE.Vector3(...direction);
             obj.getAxisScreenDirection = () => getAxisScreenDirection(obj, [0, 0, 1], camera.selectedCamera);
 
@@ -718,9 +1314,14 @@ class DirectionGizmo extends Gizmo {
 
             obj.gizmoKeys = setupKey(direction);
 
-            obj.oppositeFidgets = () => [
-                this.getFromArr(direction.map(x => -x))
-            ];
+            const auxThis = this;
+            obj.oppositeFidgets = function (callback) {
+                const list = [auxThis.getFromArr(direction.map(x => -x))];
+
+                if(!callback) return list;
+
+                list.forEach(callback);
+            }
 
             obj.getAngle = function () {
                 const { direction, facingCamera } = this.getAxisScreenDirection();
@@ -844,6 +1445,7 @@ class DirectionGizmo extends Gizmo {
             }
 
             const obj = createGizmosPlane();
+            obj.isGizmoObject = true;
             obj.fidgetType = "plane";
             obj.pivotCamera = camera;
             obj.gizmoDirection = new THREE.Vector3(...position);
@@ -866,10 +1468,16 @@ class DirectionGizmo extends Gizmo {
                         opposite.push(dir);
                     }
 
-                console.log(position, indexes, opposite);
                 return opposite;
             }
-            obj.oppositeFidgets = () => getOppositeDirection().map(x => this.getFromArr(x));
+            const auxThis = this;
+            obj.oppositeFidgets = function (callback) {
+                const list = getOppositeDirection().map(x => auxThis.getFromArr(x));
+
+                if (!callback) return list;
+
+                list.forEach(callback);
+            }
 
             obj.getDirection = function () {
                 const quaternion = this.getWorldQuaternion(
@@ -934,7 +1542,7 @@ class DirectionGizmo extends Gizmo {
             Plane(config.x.color, config.z.color, [0,0,1,1], [1,0,-1], [1,2,0], planeSize),
 
             Plane(config.y.color, config.x.color, [0,0,1,1], [1,-1,0], [0,0,1], planeSize),
-            Plane(config.y.color, config.z.color, [1,1,0,0], [0,1,-1], [0,1,1], planeSize),
+            Plane(config.y.color, config.z.color, [1,1,0,0], [0,1,-1], [1,1,1], planeSize),
             Plane(config.x.color, config.z.color, [0,0,1,1], [-1,0,1], [1,2,-2], planeSize),
 
             Plane(config.y.color, config.x.color, [0,0,1,1], [-1,-1,0], [0,0,-2], planeSize),
@@ -958,34 +1566,17 @@ class DirectionGizmo extends Gizmo {
             });
         }
 
-        this.applyOpacity = o => applyOpacity(this.object, o);
+        this.applyOpacity = o => applyOpacity(this, o);
 
         this.fidgets.forEach(fidget => {
             fidget.applyOpacity = o => applyOpacity(fidget, o);
             fidget.gizmoKeys.forEach(key => this[key] = fidget);
         });
 
-        this.object.add(...this.fidgets);
+        this.add(...this.fidgets);
 
         Object.defineProperties(this, {
-            position: {
-                get: () => this.object.position,
-                set: (value) => this.object.position.set(value.x, value.y, value.z)
-            },
-            pos: {
-                get: () => this.object.position,
-                set: (value) => this.object.position.set(value.x, value.y, value.z)
-            },
-            rotation: {
-                get: () => this.object.rotation,
-                set: (value) => this.object.rotation.set(value.x, value.y, value.z)
-            },
-            rot: {
-                get: () => this.object.rotation,
-                set: (value) => this.object.rotation.set(value.x, value.y, value.z)
-            },
-
-            isMouseOverAny: {
+            isMouseOver: {
                 get: () => {
                     const axes = {};
                     
@@ -997,20 +1588,34 @@ class DirectionGizmo extends Gizmo {
                     const direct = key && axes[key].direct || false; 
                     const intersects = key && axes[key].intersects || false;
                     const directGizmo = key && this[key];
-                    const intersectsGizmos = key && axes[key].list || [];
+                    let hitList = key && axes[key].list || [];
+
+                    if(directGizmo) {
+                        directGizmo.mouseIsDirect = true;
+                    }
+                    
+                    const intersectsGizmos =
+                        hitList.map(hit => hit.object)
+                        .filter(obj => obj.isGizmoObject)
+                        .map(obj => obj.fidgetType == "Plane"? obj : obj.parent.parent)
+                        .filter((obj, i, arr) => arr.indexOf(obj) == i);
+
+                    intersectsGizmos.forEach(gizmo => {
+                        gizmo.mouseIsIntersecting = true;
+                    });
 
                     return {
                         key,
                         direct,
                         intersects,
                         directGizmo,
-                        intersectsGizmos
+                        intersectsGizmos,
+                        hitList
                     }
                 },
                 set: () => {}
             }
         });
-        
     }
 
     getFromArr(arr){
@@ -1021,9 +1626,31 @@ class DirectionGizmo extends Gizmo {
         )
     }
 
+    getDirectFidget(persistent = false){
+        if(persistent)
+            if(this.persistentDirectFidget)
+                return this.persistentDirectFidget;
+            
+        const direct = this.fidgets.find(fidget => fidget.mouseIsDirect);
+        this.persistentDirectFidget = direct;
+
+        return direct;
+    }
+    releaseMantainedFidget(){
+        this.persistentDirectFidget = null;
+    }
+    getIntersectingFidgets(){
+        return this.fidgets.filter(fidget => fidget.mouseIsIntersecting);
+    }
+
     update() {
+        this.fidgets.forEach(fidget => {
+            fidget.mouseIsDirect = false;
+            fidget.mouseIsIntersecting = false;
+        });
+
         if(!this.visible) {
-            this.object.visible = false;
+            this.visible = false;
             return;
         }
         if(this.ignoreFidgetHiding) return;
@@ -1040,14 +1667,14 @@ class DirectionGizmo extends Gizmo {
             new THREE.Vector3()
         );
 
-        const gizmoPos = this.object.getWorldPosition(
+        const gizmoPos = this.getWorldPosition(
             new THREE.Vector3()
         );
 
         const cameraDir = cameraPos.sub(gizmoPos).normalize();
 
         cameraDir.applyQuaternion(
-            this.object.getWorldQuaternion(
+            this.getWorldQuaternion(
                 new THREE.Quaternion()
             ).invert()
         );
@@ -1095,22 +1722,94 @@ class DirectionGizmo extends Gizmo {
     }
 }
 
-const worldGizmo = new DirectionGizmo(UICamera);
+const worldGizmo = new DirectionGizmo(UICamera, {
+    hideBackfacingFidgets: 1
+});
 worldGizmo.applyOpacity(.7);
 
-UI.add(worldGizmo.object);
+UI.add(worldGizmo);
 
 
-const selection3DGizmo = new DirectionGizmo(camera, {
-    x: {color: "#9900ff"},
-    y: {color: "#ffff00"},
-    z: {color: "#006aff"},
-});
 
-selection3DGizmo.pos.y = .5;
-selection3DGizmo.pos.x = -1;
-selection3DGizmo.pos.z = 15;
-scene.add(selection3DGizmo.object);
+/* 
+CREATES A EQUIVALENT TO
+element.stye.top / right / bottom / left
+
+USAGE:
+
+// create a ScreenToScene instance, pass in the size of the scene
+// the size is used to calculate the offset on the screen width to the Height
+
+const sceneToScreen = new ScreenToScene(7.2);
+const myObject = new THREE.Object3D();
+
+
+const { top, right, bottom, left } = sceneToScreen;
+myObject.position.x = left(50); // places teh object close to 50 pixels from the left
+myObject.position.y = top(50); // places the object close to 50 pixels from the top
+
+// for a percentage of the screen, equivalent to vw unit or %, use the vw* functions
+
+const { vwLeft, vwRight, vwTop, vwBottom } = sceneToScreen;
+myObject.position.x = vwLeft(50); // places the object close to 50% of the screen from the left
+myObject.position.y = vwTop(50); // places the object close to 50% of the screen from the top
+*/
+class ScreenToScene {
+    constructor(sceneSize) {
+        this.setSize(sceneSize);
+        window.addEventListener("resize", () => this.setSize(sceneSize));
+    }
+    setSize(sceneSize) {
+        this.sceneHeight = sceneSize;
+        this.sceneWidth = sceneSize * (window.innerWidth / window.innerHeight);
+    }
+    height() {
+        if(camera.perspective == "orthographic")
+            return this.sceneHeight * 1.3
+
+        return this.sceneHeight
+    }
+    width() {
+        if(camera.perspective == "orthographic")
+            return this.sceneWidth * 1.3;
+        return this.sceneWidth;
+    }
+
+    vwLeft(vw) {
+        return this.left((vw/100) * window.innerWidth);
+    }
+    vwRight(vw) {
+        return this.right((vw/100) * window.innerWidth);
+    }
+    vwTop(vw) {
+        return this.top((vw/100) * window.innerHeight);
+    }
+    vwBottom(vw) {
+        return this.bottom((vw/100) * window.innerHeight);
+    }
+
+    left(offset) {
+        const porc = offset / window.innerWidth;
+        const endPos = ((this.width() * 2) * porc) - this.width();
+        return endPos;
+    }
+    right(offset) {
+        return this.left(window.innerWidth - offset);
+    }
+    top(offset) {
+        const porc = offset / window.innerHeight;
+        const endPos = ((this.height() * 2) * porc) - this.height();
+        return -endPos;
+    }
+    bottom(offset) {
+        return this.top(window.innerHeight - offset);
+    }
+}
+const screenToScene = new ScreenToScene(7.2);
+
+
+
+
 
 
 function getScreenDirection(object, camera) {
@@ -1178,25 +1877,59 @@ function getAxisScreenDirection(object, axis, camera){
     };
 }
 
+
+// fazer gizmo ficar com tamanho expecifico independente da distancia ou zoom da camera
+const selection3DGizmo = new DirectionGizmo(camera, {
+    x: {color: "#9900ff"},
+    y: {color: "#ffff00"},
+    z: {color: "#006aff"},
+});
+
+selection3DGizmo.pos.y = 5;
+selection3DGizmo.pos.x = -1;
+selection3DGizmo.pos.z = 15;
+selection3DGizmo.scale.multiplyScalar(10);
+
+scene.add(selection3DGizmo);
+
+
+
+// INPUT MANAGING
+const inputManager = new InputManager(canvas);
+const {InputAction} = inputManager;
+
+inputManager.preventDefault = false;
+inputManager.button.debug.log = 0;
+const movement = new InputAction.Linear3dLerp(.01, "a", "d", "w", "s", "q", "e", { preventDefault: true });
+const mouseMovement = inputManager.mouse.delta;
+const mousePosition = inputManager.mouse.position;
+const lookAtMouse = new InputAction.Button("MouseLeft");
+const mouseLeft = new InputAction.ButtonBool("MouseLeft");
+
+const mouseRight = new InputAction.ButtonBool("MouseRight", { preventDefault: true });
+
+const wheelZoom = inputManager.mouse.wheel.delta;
+
+const perspective = new InputAction.Button("p");
+
+
 let onMouseRotation = false;
 
 let doMouseRotate = true;
 let doMouseMove = true;
 
-let zoom = 10;
+let zoom = 1000;
+let moveSpeed = 1;
+
 
 let lockSelectionmovement = false; // REMOVER
 const overloader = new Overloader((frame, loop) => {
-    cube.rotation.x += 0.01;
-    cube.rotation.y += 0.01;
 
-    const selection3dGizmoAny = selection3DGizmo.isMouseOverAny;    
-    
-    if(selection3dGizmoAny.direct && mouseLeft.get() && !onMouseRotation || lockSelectionmovement) {
+    if(selection3DGizmo.isMouseOver.direct && mouseLeft.get() && !onMouseRotation || lockSelectionmovement) {
         doMouseRotate = false;
-
-
-        const { url, direction } = selection3DGizmo.x.toCursor();
+        
+        // TODO - lembrar de soltar o fidget persistente com DirectionGizmo.releaseMantainedFidget()
+        const { url, direction } = selection3DGizmo.getDirectFidget(1).toCursor();
 
         setCursor(url);
         lockMouse(1);
@@ -1208,22 +1941,50 @@ const overloader = new Overloader((frame, loop) => {
         selection3DGizmo.pos.x += delta.x * 0.01;
 
         lockSelectionmovement = true;
-    } else {
-        selection3DGizmo.applyOpacity(.7);
-
         
-    if(selection3dGizmoAny.direct || lockSelectionmovement)
-        selection3dGizmoAny.directGizmo.applyOpacity(1);
+    } else {
+        // TODO - lembrar de soltar o fidget persistente depois de usar DirectionGizmo.getDirectFidget(true)
+        selection3DGizmo.releaseMantainedFidget();
+        selection3DGizmo.applyOpacity(.7);
+        
+        if(selection3DGizmo.getDirectFidget() || lockSelectionmovement) {
+            selection3DGizmo.getDirectFidget().applyOpacity(1);
+            selection3DGizmo.getDirectFidget().oppositeFidgets(fidget => fidget.applyOpacity(1));
+        }
     }
     if(mouseLeft.is("up")) {
         lockSelectionmovement = false;
     }
-    
-    
-    const gizmoAny = worldGizmo.isMouseOverAny;
 
-    if(gizmoAny.direct) 
+
+    // same thing but new way
+    /* if(selection3DGizmo.isMouseOver.intersects) {
+        const fidget = selection3DGizmo.getIntersectingFidgets();
+        fidget.forEach(f => f.applyOpacity(1));
+    } */
+
+
+    
+
+
+
+
+
+
+
+
+
+
+    const gizmoAny = worldGizmo.isMouseOver;
+
+    if(gizmoAny.direct) {
+        
         gizmoAny.directGizmo.applyOpacity(1);
+
+        if(gizmoAny.directGizmo.fidgetType == "plane") {
+            //console.log(gizmoAny.directGizmo.getDirection());
+        }
+    }
     else 
         worldGizmo.applyOpacity(.7);
 
@@ -1239,23 +2000,169 @@ const overloader = new Overloader((frame, loop) => {
 
         let move = 0;
 
+        
         if(gizmoFidget.fidgetType == "plane") {
             const localDir = direction.direction.clone();
-            
-            let localMove = 
-                localDir.x != 0 && localDir.y != 0  ?
-                    new THREE.Vector3(mouseMovement.x, mouseMovement.y, 0) :
-                localDir.x != 0 && localDir.z != 0 ?
-                    new THREE.Vector3(mouseMovement.x, 0, -mouseMovement.y) :
-                localDir.y != 0 && localDir.z != 0 ?
-                    new THREE.Vector3(0, mouseMovement.y, -mouseMovement.x) :
-                new THREE.Vector3(0, 0, 0);
+            const {front} = direction;
+            const camera = worldGizmo.camera;
 
-            localDir.y = Math.abs(localDir.y);            
-            
-            localMove *= localDir;         
+
+            const sign = new THREE.Vector3(
+                Math.sign(localDir.x),
+                Math.sign(localDir.y),
+                Math.sign(localDir.z)
+            );
+
+            localDir.x = Math.abs(localDir.x);
+            localDir.y = Math.abs(localDir.y);
+            localDir.z = Math.abs(localDir.z);
+
+
+            // --------------------------------------------------
+            // MOVIMENTO DA TELA
+            // --------------------------------------------------
+
+            let localMove;
+
+            const applyMove = (x, y, z) => {
+
+                const v = new THREE.Vector3(
+                    x || 0,
+                    y || 0,
+                    z || 0
+                );
+
+                v.applyAxisAngle(
+                    new THREE.Vector3(0, 1, 0),
+                    camera.rotation.y
+                );
+
+                return v;
+            };
+
+
+            // --------------------------------------------------
+            // XY
+            // --------------------------------------------------
+
+            if (localDir.x && localDir.y) {
+
+                localMove = applyMove(
+                    mouseMovement.x,
+                    mouseMovement.y,
+                    0
+                );
+
+                localMove.z = 0;
+            }
+
+
+            // --------------------------------------------------
+            // XZ
+            // --------------------------------------------------
+
+            else if (localDir.x && localDir.z) {
+
+                localMove = applyMove(
+                    mouseMovement.x,
+                    0,
+                    -mouseMovement.y
+                );
+            }
+
+
+            // --------------------------------------------------
+            // YZ
+            // --------------------------------------------------
+
+            else if (localDir.y && localDir.z) {
+
+                /*
+                * NÃO usamos applyMove() aqui.
+                *
+                * O problema dos planos zRy/zRyR acontece porque
+                * o movimento X da tela é transformado pela rotação
+                * Y da câmera e depois o componente X é eliminado
+                * pelo localDir.
+                *
+                * Aqui compensamos diretamente essa projeção.
+                */
+
+                const angle = camera.rotation.y;
+                const cos = Math.cos(angle);
+
+                let horizontal = 0;
+
+                if (Math.abs(cos) > 0.05) {
+                    horizontal =
+                        -mouseMovement.x / cos;
+                }
+
+                localMove = new THREE.Vector3(
+                    0,
+                    mouseMovement.y,
+                    horizontal
+                );
+            }
+
+
+            // --------------------------------------------------
+            // NENHUM PLANO
+            // --------------------------------------------------
+
+            else {
+
+                localMove = new THREE.Vector3();
+
+            }
+
+
+            // --------------------------------------------------
+            // MÁSCARA DO PLANO
+            // --------------------------------------------------
+
+            localMove.multiply(localDir);
+
+
+            // --------------------------------------------------
+            // SINAIS DOS EIXOS
+            // --------------------------------------------------
+
+            if (sign.x)
+                localMove.x *= sign.x;
+
+            if (sign.y)
+                localMove.y *= sign.y;
+
+            if (sign.z)
+                localMove.z *= sign.z;
+
+
+            // --------------------------------------------------
+            // XZ INVERTIDO
+            // --------------------------------------------------
+
+    const keys = gizmoFidget.gizmoKeys;
+
+            if (keys.includes("xz") && !front)
+                localMove.z *= -1;
 
             move = localMove;
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             
         } else {
@@ -1299,24 +2206,16 @@ const overloader = new Overloader((frame, loop) => {
         camera.perspective = camera.perspective == "perspective" ? "orthographic" : "perspective";
 
 
-    let movSpeed = 0.1;
     camera.pos += 
-        camera.dir.forward * -(camera.perspective == "perspective" ? movement.get().ver : 0) * movSpeed +
-        camera.dir.right * movement.get().hoz * movSpeed +
-        camera.dir.up * (camera.perspective == "perspective" ? movement.get().dep : -movement.get().ver) * movSpeed;
+        camera.dir.forward * -(camera.perspective == "perspective" ? movement.get().ver : 0) * moveSpeed +
+        camera.dir.right * movement.get().hoz * moveSpeed +
+        camera.dir.up * (camera.perspective == "perspective" ? movement.get().dep : -movement.get().ver) * moveSpeed;
 
 
-    let calcZoom = zoom + wheelZoom.y * 0.1;
+    let calcZoom = zoom + wheelZoom.y * .5;
     zoom = calcZoom < 0.001 ? 0.001 : calcZoom;
 
-    if(camera.perspective == "perspective") {
-        camera.translateObject.position.set(0, 0, zoom);
-
-    } else if(camera.perspective == "orthographic") {
-        camera.translateObject.position.set(0, 0, 1000);
-        camera.orthographicCamera.zoom = (window.__auxOrthoZoom || 13) / zoom;
-        camera.orthographicCamera.updateProjectionMatrix();
-    }
+    camera.setZoom(zoom);
 
     
 
@@ -1324,7 +2223,7 @@ const overloader = new Overloader((frame, loop) => {
         onMouseRotation = true;
         setCursor("rotate.png");
         lockMouse(1);
-        const sensibility = 0.0007;
+        const sensibility = 0.0035;
         
         camera.rot.y -= inputManager.mouse.delta.x * sensibility;
         camera.rot.x += inputManager.mouse.delta.y * sensibility;
@@ -1339,9 +2238,9 @@ const overloader = new Overloader((frame, loop) => {
     if(mouseRight.get() && doMouseRotate) {
         setCursor("translate.png");   
         lockMouse(1);      
-        let mouseMovSpeed = (window.__auxMouseMovSpeed || 0.05);
+        let mouseMovSpeed = moveSpeed/2;
 
-        camera.position +=
+        camera.pos +=
             camera.directions.right * mouseMovement.x * mouseMovSpeed +
             camera.directions.up * mouseMovement.y * mouseMovSpeed;
     }
@@ -1355,46 +2254,17 @@ const overloader = new Overloader((frame, loop) => {
 
 const ENGINE_LOOP = new LOOP.pre(overloader.execute);
 
-const PRE_LOOP = new ENGINE_LOOP.loopBefore(() => {   
-    const aspect = window.innerWidth / window.innerHeight;
-
-    if (camera.perspective == "perspective") {
-        camera.selectedCamera = camera.perspectiveCamera;
-        camera.selectedCamera.aspect = aspect;
-
-        UICamera.selectedCamera = UICamera.perspectiveCamera;
-        UICamera.selectedCamera.aspect = aspect;
-
-    } else if (camera.perspective == "orthographic") {
-        camera.selectedCamera = camera.orthographicCamera;
-        const size = 10;
-
-        camera.selectedCamera.left = -size * aspect;
-        camera.selectedCamera.right = size * aspect;
-        camera.selectedCamera.top = size;
-        camera.selectedCamera.bottom = -size;
-
-        UICamera.selectedCamera = UICamera.orthographicCamera;
-
-        UICamera.selectedCamera.left = -size * aspect;
-        UICamera.selectedCamera.right = size * aspect;
-        UICamera.selectedCamera.top = size;
-        UICamera.selectedCamera.bottom = -size;
-    }
-
-    UICamera.pos = camera.pos;
-    UICamera.rot = camera.rot;
-
-
-    camera.selectedCamera.updateProjectionMatrix();
-    UICamera.selectedCamera.updateProjectionMatrix();
+const PRE_LOOP = new ENGINE_LOOP.loopBefore(() => {
+    SpaceCAD.axesHelper.update();
+    UICamera.copyFrom(camera);
+    PivotCamera.updateAll();
 });
 
 const POST_LOOP = new LOOP.post(() => {
     doMouseMove = true;
     doMouseRotate = true;
     
-    Gizmo.update();
+    Gizmo.updateAll();
     inputManager.update();
 
     if(!mouseLock.state)

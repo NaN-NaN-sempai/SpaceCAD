@@ -22,6 +22,10 @@ app.get("/", (req, res) => {
   res.sendFile("index.html", { root: "./src/routes" });
 });
 
+app.get("/api", (req, res) => {
+    res.send("API");
+});
+
 
 
 httpServer.listen(3000, () => {
