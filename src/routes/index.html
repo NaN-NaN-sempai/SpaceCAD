@@ -3,48 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> LHS Unnamed Custom Furnture App </title>
+    <title> SpaceCAD </title>
  
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background-color: #a2e5ff;
-        }
-
-        #tempCursor {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 25px;
-            height: 25px;
-            
-            background-repeat: no-repeat;
-            background-position: center;
-            background-size: contain;
-            border-radius: 50%;
-            pointer-events: none;
-            transform: translate(-50%, -50%);
-            right: 50%;
-            bottom: 50%;
-            display: none;
-        }
-
-        #a {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            margin: 20px;
-            z-index: 999;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="tempCursor"></div>
 
+    <div class="fileIndicator">
+        <!-- only one file -->
+        <button id="openFile">📁 open file</button>
+        <div class="fileList">
+
+        </div>
+    </div>
+
     <button id="a">mostrar cantos</button>
-    
-</body>
+</body> 
 <script type="importmap">
 {
   "imports": {
@@ -84,6 +59,137 @@
     loadScript("./scripts/lib/overloadOperator.js", "./scripts/engine.js");
 </script>
 
+<script>
+    const fileIndicator = document.querySelector(".fileIndicator");
+    const fileInput = fileIndicator.querySelector("#openFile");
+    const fileList = fileIndicator.querySelector(".fileList");
+
+    const electronStore = new Proxy({}, {
+        get(_, key) {
+            return window.electronStoreAPI.get(key);
+        },
+
+        set(_, key, value) {
+            window.electronStoreAPI.set(key, value);
+            return true;
+        }
+    });
+
+    if(!electronStore.savedFiles)
+        electronStore.savedFiles = [];
+
+    const selectDOM = (fileDom, file) => {
+        document.querySelector(".fileList .selected")?.classList.remove("selected");
+        fileDom.classList.add("selected");
+        document.title = `SpaceCAD - ${fileDom.innerText}`;
+
+        watchFile(file);
+    }
+    const fileDom = () => {
+        // empty liekist
+        fileList.innerHTML = "";
+
+        fileArray.forEach((file) => {
+            const fileDom = document.createElement("button");
+            fileDom.classList.add("file");
+            fileDom.innerText = file.name;
+            fileDom.title = file.fullName+"\n"+file.path;
+
+            const x = document.createElement("button");
+            x.classList.add("removeFile");
+            
+            x.addEventListener("click", (evt) => {
+                evt.stopPropagation();
+                removeFile(file, fileDom);
+            });
+
+            fileDom.appendChild(x);
+            fileDom.addEventListener("click", () => selectDOM(fileDom, file));
+            fileList.appendChild(fileDom);
+        });
+    }
+
+
+    const fileArray = electronStore.savedFiles;
+
+    const fileIsInArray = (file) => {
+        return fileArray.find((f) => 
+            f.path == file.path
+        );
+    }
+    const saveLS = () => {
+        fileDom();
+        electronStore.savedFiles = fileArray;
+    }
+    const addFile = (file, setSelected = false) => {
+        if(fileIsInArray(file)) return;
+
+        fileArray.push(file);
+        saveLS();
+
+        if(setSelected){
+            selectDOM(fileList.querySelector(".file"), file);
+        }
+    }
+
+    const removeFile = (file, dom) => {
+        if(dom.classList.contains("selected"))
+            removeWatcher();
+        
+        fileArray.splice(fileArray.indexOf(file), 1);
+        saveLS();
+    }
+
+    fileDom();
+
+    const watchFile = file => {
+        const load = syncFetch("/watchFile", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                path: file.path
+            })
+        });
+
+        SpaceCAD.run(load.text)
+    }
+    const removeWatcher = () => fetch("/removeWatcher");
+
+
+
+    fileInput.addEventListener("click", async () => {
+        let path = await electron.openFile();
+
+        const fullName = path.split("\\").pop();
+        const name = fullName.split(".spacecad")[0];
+
+        const fileObject = {
+            path,
+            fullName,
+            name
+        };
+
+        addFile(fileObject, 1);
+    });
+
+    const serverEval = code => {
+        fetch("/serverScope", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                code
+            })
+        }).then(res => res.text())
+        .then(res => {
+            console.log(res);
+        });
+    }
+</script>
+
 <script src="/socket.io/socket.io.js"></script>
 <script> // SOCKET.IO
     const socket = io();
@@ -101,6 +207,12 @@
     });
 
 
+    socket.on("warn", (data) => {
+        console.warn(data);
+    });
+    socket.on("fileChanged", (data) => {
+        SpaceCAD.run(data.content);
+    });
 
     socket.on('res', (data) => {
         console.log('Received message:', data);

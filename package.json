@@ -2,12 +2,19 @@
     "dependencies": {
         "acorn": "^8.18.0",
         "astring": "^1.9.0",
+        "electron-store": "^11.0.2",
         "express": "^5.2.1",
+        "nodemon": "^3.1.14",
         "socket.io": "^4.8.3",
         "three": "^0.185.1"
     },
+    "main": "server.js",
     "type": "module",
     "scripts": {
-        "dev": "node --watch-path=./ ."
+        "dev": "concurrently \"nodemon\" \"electron electron.cjs\""
+    },
+    "devDependencies": {
+        "concurrently": "^10.0.4",
+        "electron": "^43.4.0"
     }
 }

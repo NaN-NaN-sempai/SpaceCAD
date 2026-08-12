@@ -1,0 +1,121 @@
+
+* {
+    box-sizing: border-box;
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+    outline: none;
+}
+body {
+    margin: 0;
+    overflow: hidden;
+    background-color: #a2e5ff;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    padding: 10px 15px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    line-height: 1;
+}
+
+#tempCursor {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 25px;
+    height: 25px;
+    
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    border-radius: 50%;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    right: 50%;
+    bottom: 50%;
+    display: none;
+}
+
+#a {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    margin: 20px;
+    z-index: 999;
+}
+
+.fileIndicator {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin: 5px;
+    height: 2rem;
+    gap: 15px;
+
+    & button {
+        background: rgb(35, 40, 44);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        transition: all 0.1s ;
+        border-radius: 5px;
+        &:hover {
+            background: rgb(75, 86, 95);
+        }
+    }
+
+    & .fileList {
+        display: flex;
+        flex-direction: row;
+        height: 100%;
+        max-width: 100%;
+        overflow-x: scroll;
+        gap: 5px;
+
+        
+        &::-webkit-scrollbar {
+            display: none;
+        }
+
+
+        & .file {
+            padding: 10px 7px 10px 10px;
+
+            &:hover {
+                cursor: pointer;
+            }
+
+            &.selected {
+                background: rgb(33, 78, 114);
+            }
+
+            & .removeFile {
+                background: rgb(196, 196, 196);
+                color: rgb(56, 58, 69);
+                width: 1rem;
+                height: 1rem;
+                border-radius: 50%;
+                border: none;
+                margin-left: 5px;
+                padding: 5px;
+                
+                &:hover {
+                    cursor: pointer;
+                    background: red;
+                    color: white;
+                }
+                &:after {
+                    content: 'x';
+                }
+            }
+        }
+    }
+}

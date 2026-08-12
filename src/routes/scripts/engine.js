@@ -343,6 +343,7 @@ THREE.Euler.prototype.__overload_anyAssignArithmetic = function (that, operator)
         return new Error(`Invalid Assign Arithmetic operation between ${typeof this} and ${typeof that}`);
 };
 
+// array propagate [0, 5].pupulate -> [0,1,2,3,4,5]
 
 
 
@@ -368,11 +369,18 @@ function isClass(value) {
 function syncFetch(url, config = {}) {
     config = recursiveProxy(config, {
         method: "GET",
+        headers: {},
+        body: undefined
     });
     const xhr = new XMLHttpRequest();
 
     xhr.open(config.method, url, false); // false = síncrono
-    xhr.send();
+
+    for (const [key, value] of Object.entries(config.headers)) {
+        xhr.setRequestHeader(key, value);
+    }
+
+    xhr.send(config.body);
 
     Object.defineProperties(xhr, {
         json: {
@@ -406,8 +414,18 @@ class SpaceCAD {
     static store = function (name) {
         return this;
     }
-    static load = (name) => {
+    static access = (name) => {
         // import Logic
+    }
+    static loadFromObject(obj) {
+
+    }
+
+    static deleteAll = () => SpaceCAD.instances.forEach(instance => instance.delete());
+    static run = code => {
+        SpaceCAD.deleteAll();
+        const fn = new Function(code);
+        Overloader.eval(fn);
     }
 
     static currentSpace = null;
@@ -476,6 +494,34 @@ class SpaceCAD {
             else {
                 SpaceCAD.roots.push(this);
                 scene.add(this);
+            }
+        }
+
+        delete() {
+            [...this.children].forEach(child => {
+                if (typeof child.delete === "function")
+                    child.delete();
+                else
+                    child.removeFromParent();
+            });
+
+            const index = SpaceCAD.instances.indexOf(this);
+            SpaceCAD.instances.splice(index, 1);
+
+            const rootIndex = SpaceCAD.roots.indexOf(this);
+            if (rootIndex !== -1)
+                SpaceCAD.roots.splice(rootIndex, 1);
+
+            this.removeFromParent();
+
+            if (this.geometry)
+                this.geometry.dispose();
+
+            if (this.material) {
+                if (Array.isArray(this.material))
+                    this.material.forEach(mat => mat.dispose());
+                else
+                    this.material.dispose();
             }
         }
         
