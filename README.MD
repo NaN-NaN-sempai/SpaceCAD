@@ -37,17 +37,6 @@ new MeuModulo(...);
 
 * **Acorn & Astring** — Processamento de AST para o Overloading de operadores de nativo.
 
-### 🛠️ Bibliotecas Criadas No SpaceCAD
-* **storage.js** — Equivalente ao `localStorage` para Node.js (back-end)
-
-* **inputManager.js** — Gerenciador de inputs robusto. (browser/back-end <- não implementado)
-
-* **loopManager.js** — Gerenciador de loops robusto. (browser/back-end <- não implementado)
-
-* **mouseLock.js** — Gerenciador de trava do mouse. (browser)
-
-* **overloadOperator.js** — Overloading de operadores no Javascript nativo. (browser/back-end <- não implementado) 
-
 ## 📦 Instalação e Execução
 **Clone o repositório**:
 
@@ -114,3 +103,27 @@ const ArmarioPlanejado = SpaceCAD.module.ArmarioPlanejado.constructor;
 const meuArmario = new ArmarioPlanejado(80, 200, 50);
 
 ```
+
+
+## 🛠️ Bibliotecas/Recursos Criadas No SpaceCAD
+* **storage.js** — Equivalente ao `localStorage` para Node.js (back-end)
+
+* **inputManager.js** — Gerenciador de inputs robusto. (browser/back-end <- não implementado)
+
+* **loopManager.js** — Gerenciador de loops robusto. (browser/back-end <- não implementado)
+
+* **mouseLock.js** — Gerenciador de trava do mouse. (browser)
+
+* **overloadOperator.js** — Overloading de operadores no Javascript nativo. (browser/back-end <- não implementado) 
+
+#
+
+* **`syncFetch`** — Equivalente ao fetch porem sem `Promise`. (browser)
+
+* **`recursiveProxy`** — Cria um objeto com valores padrões recursivamente. (browser/back-end) 
+
+* **`[Array].populate`** — Gera uma array populada entre os valores Int da array original. (browser/back-end) 
+
+* **`watchFilePath / cancelWatch`** — Observa mudanças em um arquivo expecifico em qualquer localização. (browser) 
+
+
