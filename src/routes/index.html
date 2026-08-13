@@ -211,6 +211,7 @@
         console.warn(data);
     });
     socket.on("fileChanged", (data) => {
+        
         SpaceCAD.run(data.content);
     });
 

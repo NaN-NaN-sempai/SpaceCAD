@@ -175,6 +175,7 @@ Object.defineProperties(THREE.Group.prototype, {
     },
 });
 
+
 // THREE OVERLOADING
 THREE.Vector2.prototype.__overload_anyArithmetic = function (that, operator) {
     if(that?.x != undefined && that?.y != undefined)
@@ -343,7 +344,9 @@ THREE.Euler.prototype.__overload_anyAssignArithmetic = function (that, operator)
         return new Error(`Invalid Assign Arithmetic operation between ${typeof this} and ${typeof that}`);
 };
 
-// ARRAY UTILS
+
+
+// UTILS
 Object.defineProperties(Array.prototype, {
     populate: {
         get: function (value) {
@@ -361,7 +364,7 @@ Object.defineProperties(Array.prototype, {
 
             const generate = (from, to, ignoreFirst = false) => {
                 const arr = [];
-                
+
                 if(from > to) 
                     for (let i = from; i >= to; i--) 
                         arr.push(i);
@@ -386,12 +389,6 @@ Object.defineProperties(Array.prototype, {
         set: () => {}
     }
 });
-
-// array propagate [0, 5].pupulate -> [0,1,2,3,4,5]
-
-
-
-// UTILS
 const recursiveProxy = (config, defaults) => {
     return new Proxy(config, {
         get(target, key) {
@@ -426,7 +423,15 @@ function syncFetch(url, config = {}) {
 
     xhr.send(config.body);
 
+    if(xhr.status != 200) {
+        console.warn(`Error fetching ${url} - ${xhr.status}: ${xhr.statusText}`);
+    }
+
     Object.defineProperties(xhr, {
+        error: {
+            get: () => xhr.status != 200,
+            enumerable: false
+        },
         json: {
             get: () => {
                 let ret;
@@ -456,11 +461,73 @@ function syncFetch(url, config = {}) {
 // class - SpaceCAD
 class SpaceCAD {
     static store = function (name) {
+        let cls = isClass(this)? this : this.constructor;
+
+        if([SpaceCAD, SpaceCAD.Root, SpaceCAD.Mesh, SpaceCAD.Group, SpaceCAD.RootObject, SpaceCAD.Object].includes(cls))
+            return console.warn("SpaceCAD cannot be stored");
+
+        // saving object
+        if(!isClass(this)) {
+            const json = JSON.stringify(this.toJSON());
+            
+        }
+
+        const dependencies = cls.dependencies || [];
+        const classBody = cls.toString();
+        const usage = cls.usage;
+
+        syncFetch("/store/class", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name: cls.name,
+                dependencies,
+                classBody,
+                usage
+            })
+        })
+        
+
         return this;
     }
-    static access = (name) => {
-        // import Logic
-    }
+    static module = new Proxy(
+        function(name) {
+            const req = syncFetch(`/store/class/${name}`);
+
+            if (req.error) return;
+
+            const {
+                dependencies,
+                classBody
+            } = req.json;
+
+            return {
+                dependencies: dependencies.map(name => SpaceCAD.access(name)),
+                class: new Function(
+                    `return (${classBody})`
+                )()
+            };
+            
+            // loading object
+            if(0) { // object
+                // fetch object 
+                const loader = new THREE.ObjectLoader();
+                const object = loader.parse(json);
+
+                return {
+                    new: () => scene.add(object)
+                }
+            }
+        },
+        {
+            get(target, name) {
+                return target(name);
+            }
+        }
+    );
+
     static loadFromObject(obj) {
 
     }
@@ -660,6 +727,7 @@ class SpaceCAD {
 
 
     static RootObject = CLASS => class extends CLASS {
+        static store = SpaceCAD.store;
         constructor(prop = {}, ...args) {
             super(...args);
 
@@ -1259,17 +1327,6 @@ class Metalom extends SpaceCAD.Object {
     }
 }
 const metalom = (...args) => new Metalom(...args);
-
-metalom().space(function(){
-    /* console.log(this)
-    metalom().position.set(-2, 0, 0);
-    metalom().space(()=>{
-        
-        metalom().position.set(-2, 0, 0);
-        metalom().position.set(-2, 0, 0);
-    })
-    metalom().position.set(-2, 0, 0); */
-});
 
 
 

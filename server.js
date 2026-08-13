@@ -3,6 +3,8 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import fs from "fs";
 
+import storage from "./lib/storage.js";
+
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer);
@@ -33,7 +35,7 @@ const watchFilePath = (filePath) => {
     cancelWatch();
 
     if(!fs.existsSync(filePath)){
-        io.emit("warn", "File does not exist");
+        io.emit("warn", `File does not exist: "${filePath}"`);
         return ""; 
     }
 
@@ -80,6 +82,44 @@ app.get("/removeWatcher", (req, res) => {
     res.send("file")
 });
 
+
+const setupClasses = () => {
+    if(storage.classes === undefined)
+        storage.classes = {};
+}
+app.post("/store/:type", (req, res) => {
+    const type = req.params.type;
+
+    if(type === "class"){
+        const {name, dependencies, classBody, usage} = req.body;
+        
+        setupClasses();
+
+        if(storage.classes[name] !== undefined)
+            io.emit("warn", `SpaceCAD Module "${name}" will be overwritten.`);
+
+        storage.classes[name] = {
+            dependencies,
+            classBody,
+            usage
+        };
+
+        res.send("ok");
+    }
+});
+app.get("/store/:type/:name", (req, res) => {
+    const type = req.params.type;
+    const name = req.params.name;
+
+    if(type === "class"){
+        setupClasses();
+
+        if(storage.classes[name] === undefined)
+            res.status(404).send(`Module not found: ${name}`);
+
+        res.json(storage.classes[name]);
+    }
+})
 
 
 
