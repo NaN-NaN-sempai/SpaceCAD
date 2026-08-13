@@ -503,11 +503,15 @@ class SpaceCAD {
                 classBody
             } = req.json;
 
+            const constructor = new Function(
+                `return (${classBody})`
+            )();
+            const operator = (...args) => new constructor(...args);
+
             return {
                 dependencies: dependencies.map(name => SpaceCAD.access(name)),
-                class: new Function(
-                    `return (${classBody})`
-                )()
+                constructor,
+                operator
             };
             
             // loading object
@@ -523,6 +527,9 @@ class SpaceCAD {
         },
         {
             get(target, name) {
+                return target(name);
+            },
+            set(target, name) {
                 return target(name);
             }
         }
