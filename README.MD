@@ -29,7 +29,7 @@ new MeuModulo(...);
 ## 🛠️ Tecnogias Utilizadas
 * **Node.js** — Ambiente de execução back-end/desktop.
 
-* **Socket.io/Express.js** — Conversação entre back-end e browser.
+* **Socket.io & Express.js** — Conversação entre back-end e browser.
 
 * **Electron** — Framework para interface desktop.
 
