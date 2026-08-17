@@ -1,20 +1,39 @@
 {
+    "name": "SpaceCAD",
+    "version": "0.0.1",
     "dependencies": {
         "acorn": "^8.18.0",
         "astring": "^1.9.0",
         "electron-store": "^11.0.2",
         "express": "^5.2.1",
         "nodemon": "^3.1.14",
+        "open": "^11.0.1",
         "socket.io": "^4.8.3",
         "three": "^0.185.1"
     },
-    "main": "server.js",
+    "main": "electron.cjs",
     "type": "module",
     "scripts": {
-        "dev": "concurrently \"nodemon\" \"electron electron.cjs\""
+        "dev": "electron electron.cjs",
+        "build": "electron-builder"
+    },
+    "build": {
+        "appId": "com.spacecad.app",
+        "productName": "SpaceCAD",
+        "directories": {
+            "output": "build"
+        },
+        "files": [
+            "**/*",
+        "node_modules/three/examples/jsm/**/*"
+        ],
+        "win": {
+            "target": "nsis"
+        }
     },
     "devDependencies": {
         "concurrently": "^10.0.4",
-        "electron": "^43.4.0"
+        "electron": "^43.4.0",
+        "electron-builder": "^26.15.3"
     }
 }

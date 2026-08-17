@@ -1,4 +1,4 @@
-const {app, BrowserWindow, dialog, ipcMain} = require('electron');
+const {app, BrowserWindow, dialog, ipcMain, Menu} = require('electron');
 const path = require('path');
 
 
@@ -9,6 +9,7 @@ const store = new Store();
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
 
 const fs = require("fs");
+const { spawn } = require('child_process');
 
 const port = Number(
     fs.readFileSync("port.js", "utf8")
@@ -36,12 +37,24 @@ const loadUrl = (port) => {
 
 
 app.whenReady().then(() => {
+    Menu.setApplicationMenu(null);
+
     win = new BrowserWindow({
         title: 'SpaceCAD',
         width: 800,
         height: 600,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js')
+        }
+    });
+    win.webContents.on("before-input-event", (event, input) => {
+        if (
+            (input.control &&
+            input.shift &&
+            input.key.toLowerCase() === "i") ||
+            input.key.toLowerCase() === "f12"
+        ) {
+            win.webContents.toggleDevTools();
         }
     });
 
@@ -70,4 +83,19 @@ app.whenReady().then(() => {
 
         return result.filePaths[0];
     });
+});
+
+
+
+app.on("before-quit", () => {
+    server.kill();
+}); 
+
+const server = spawn("npx.cmd", [app.isPackaged ? "node" : "nodemon", "server.js"], {
+    env: {
+        ...process.env,
+        USER_DATA_PATH: app.getPath('userData')
+    },
+    stdio: 'inherit',
+        shell: true
 });

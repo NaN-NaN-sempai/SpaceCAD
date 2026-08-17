@@ -568,7 +568,8 @@ class Overloader {
         }),
     }
 
-    static eval = (fn) => new Overloader(fn).execute();
+    static eval = (fn, onError) => new Overloader(fn).onError(onError).execute();
+    static evalArgs = (fn, onError) => new Overloader(fn).onError(onError).execute;
 
     constructor(callback) {
         const transform = (node, parent, key) => {
@@ -631,11 +632,23 @@ class Overloader {
         Overloader.transformHandlers[type] = handler;
     }
 
-    execute = (...args) => {
-        const execute = new Function(`
-            return ${this.generated}
-        `)();
-        
-        return execute(...args);
+    onError(callback) {
+        if(typeof callback != "function") return this;
+        this.__errorCallback = callback;
+        return this;
+
     }
+    execute = (...args) => {
+        let execute;
+        try {
+            execute = new Function(`
+                return ${this.generated}
+            `)()(...args);
+        } catch(e) {
+            if(this.__errorCallback) this.__errorCallback(e);
+        }
+        
+        return execute;
+    }
+    
 }

@@ -11,40 +11,86 @@
     <div id="tempCursor"></div>
 
     <div class="fileIndicator">
-        <!-- only one file -->
-        <button id="openFile">📁 open file</button>
+        <button id="openFile">📁 abrir arquivo</button>
         <div class="fileList">
 
         </div>
     </div>
 
-    <button id="a">mostrar cantos</button>
+    <div class="bottomItens">
+        <button id="setDefaultCamera">
+            redefinir camera
+        </button>
+
+        <div class="btnList ignore">
+            <button>posição</button>
+            <button>orientação</button>
+            <button>zoom</button>
+            <button>perspectiva</button>
+        </div>
+
+        <button id="a">mostrar cantos</button>
+    
+        <div id="logger" class="toggleable">
+            <label class="buttonLike checkBoxButton hasUnread">
+                registros
+                <input type="checkbox">
+                <div class="unread hide"></div>
+            </label>
+            <div class="body">
+                <div class="title">Registros de Execução</div>
+                <div class="list"></div>
+            </div>
+        </div>
+    </div>
 </body> 
 <script type="importmap">
 {
   "imports": {
+    "lib/": "/lib/",
+
     "three": "/node_modules/three/build/three.module.js",
-    "three/addons/": "/node_modules/three/examples/jsm/",
+    "three/addons/": "/lib/threeAddons/",
 
     "astring": "/node_modules/astring/dist/astring.mjs"
   }
 }
 </script>
+<script>
+    if(window.electronStoreAPI == undefined) {
+        document.body.innerHTML = "SpaceCAD App is not supported in this environment";
+        throw new Error("SpaceCAD App is not supported in this environment");
+    }
+</script>
 
 <script src="./scripts/lib/inputManager.js"></script>
 <script src="./scripts/lib/loopManager.js"></script>
 <script src="./scripts/lib/mouseLock.js"></script>
+<script src="./scripts/lib/logger.js"></script>
+<script src="./scripts/lib/utils.js"></script>
 
 <script src="/node_modules/acorn/dist/acorn.js"></script>
 <script type="module"> // globalize astring 
+    import JSHON from "lib/JSHON.js";
+    window.JSHON = JSHON;
+
     import * as astring from "astring";
     window.astring = astring;
 
     import * as THREE from "three";
-    window.THREE = THREE;
-
+    import { Line2 } from 'three/addons/lines/Line2.js';
+    import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
+    import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
+    import { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
     import {RoomEnvironment} from "three/addons/environments/RoomEnvironment.js";
-    window.RoomEnvironment = RoomEnvironment;
+    window.THREE = {
+        ...THREE,
+        Line2,
+        LineGeometry,
+        LineMaterial,
+        SVGLoader,
+        RoomEnvironment
+    };
 
     const loadScript = (...list) => {
         const src = list[0];
@@ -52,17 +98,108 @@
         if(src == undefined) return;
         const script = document.createElement("script");
         script.src = src;
-        script.onload = () => loadScript(...list.slice(1));
+        script.onload = () => {
+            if(typeof list[1] == "function") {
+                list[1]();
+                list.splice(1, 1);
+            }
+            loadScript(...list.slice(1))
+        };
         document.head.appendChild(script);
     }
 
-    loadScript("./scripts/lib/overloadOperator.js", "./scripts/engine.js");
+    loadScript(
+        "./scripts/lib/overloadOperator.js",
+        "./scripts/lib/SpaceCAD.js", 
+        "./scripts/engine.js", () => {
+            const input = document.querySelector("#logger .checkBoxButton input");
+            const domList = document.querySelector("#logger .list");
+            const unread = document.querySelector("#logger .checkBoxButton .unread");
+
+            input.checked = electronStore.logListState || false;
+            
+            logger.beforePush = (obj, list) => {
+                if(input.checked)
+                    obj.read = true;
+
+                const unreadAmount = [...list, obj].filter(log => !log.read).length;
+                unread.innerText = unreadAmount;
+                unread.classList.toggle("hide", unreadAmount == 0);
+                unread.dataset.lastType = obj.type;
+
+                domList.scrollTop = domList.scrollHeight + 1000;
+
+                return obj;
+            }
+            input.addEventListener("input", function(evt){
+                const state = evt.target.checked;
+
+                if(state)
+                    logger.logList = logger.logList.map(log => ({...log, read: true}));
+
+                electronStore.logListState = state;
+
+                unread.classList.toggle("hide", true);
+            });
+
+            
+            const resetCamera = document.querySelector("#setDefaultCamera")
+            resetCamera.addEventListener("click", () => {
+                cameraSetDefault();
+            });
+
+            const buttonList = [...resetCamera.parentElement.querySelector(".btnList").children];
+
+            const fnList = [
+                cameraSetDefaultPos,
+                cameraSetDefaultRot,
+                cameraSetDefaultZoom,
+                cameraSetDefaultPerspective
+            ];
+
+            buttonList.forEach((el, index) => {
+                el.closeMenu = true;
+                
+                el.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    fnList[index]();
+                });
+            });
+
+            setupContextMenu(resetCamera, buttonList);
+
+            const loggerDom = document.querySelector("#logger");
+            
+            setupContextMenu(loggerDom, [
+                createElement("button", e => {
+                    e.innerText = "limpar registros";
+                    e.addEventListener("click", () => {
+                        logger.clear();
+                        unread.classList.toggle("hide", true);
+                    });
+                })
+            ]);
+        }
+        );
 </script>
 
-<script>
+<script> // FILE MANAGMENT
     const fileIndicator = document.querySelector(".fileIndicator");
     const fileInput = fileIndicator.querySelector("#openFile");
     const fileList = fileIndicator.querySelector(".fileList");
+
+    window.addEventListener("dragover", e => {
+        e.preventDefault();
+    });
+    window.addEventListener("drop", event => {
+        event.preventDefault();
+
+        for(const [index, file] of [...event.dataTransfer.files].entries()){
+            const path = window.electron.getFilePath(file);
+    
+            addPath(path, index == event.dataTransfer.files.length - 1);
+        }
+    });
 
     const electronStore = new Proxy({}, {
         get(_, key) {
@@ -83,6 +220,9 @@
         fileDom.classList.add("selected");
         document.title = `SpaceCAD - ${fileDom.innerText}`;
 
+        electronStore.selectedFile = file;
+        SpaceCAD.deleteAll();
+
         watchFile(file);
     }
     const fileDom = () => {
@@ -94,6 +234,7 @@
             fileDom.classList.add("file");
             fileDom.innerText = file.name;
             fileDom.title = file.fullName+"\n"+file.path;
+            fileDom.dataset.path = file.path;
 
             const x = document.createElement("button");
             x.classList.add("removeFile");
@@ -103,8 +244,27 @@
                 removeFile(file, fileDom);
             });
 
+            
+            const openInEditor = document.createElement("button");
+            openInEditor.innerText = "abrir no editor";
+            openInEditor.addEventListener("click", (evt) => {
+                evt.stopPropagation();
+
+                syncFetch("/openInEditor", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        path: file.path
+                    })
+                })
+            });
+            openInEditor.closeMenu = true;
+
             fileDom.appendChild(x);
             fileDom.addEventListener("click", () => selectDOM(fileDom, file));
+
+            setupContextMenu(fileDom, [
+                openInEditor,
+            ]);
             fileList.appendChild(fileDom);
         });
     }
@@ -122,7 +282,12 @@
         electronStore.savedFiles = fileArray;
     }
     const addFile = (file, setSelected = false) => {
-        if(fileIsInArray(file)) return;
+        if(fileIsInArray(file))
+            return selectDOM(
+                [...fileList.children]
+                .find(el => el.dataset.path === file.path),
+                file
+            );
 
         fileArray.push(file);
         saveLS();
@@ -153,15 +318,17 @@
             })
         });
 
-        SpaceCAD.run(load.text)
+        SpaceCAD.run(load.text);
     }
     const removeWatcher = () => fetch("/removeWatcher");
 
 
 
-    fileInput.addEventListener("click", async () => {
-        let path = await electron.openFile();
 
+    const addPath = (path, setSelected = true) => {
+        if(!path || !path.includes(".spacecad.js"))
+            return console.error(`unsupported file type`);
+        
         const fullName = path.split("\\").pop();
         const name = fullName.split(".spacecad")[0];
 
@@ -172,7 +339,21 @@
         };
 
         addFile(fileObject, 1);
+    }
+    fileInput.addEventListener("click", async () => {
+        let path = await electron.openFile();
+
+        addPath(path);
     });
+
+
+    
+    if(electronStore.selectedFile) {
+        setTimeout(() => {
+            watchFile(electronStore.selectedFile);
+            selectDOM([...fileList.children].find(el => el.dataset.path === electronStore.selectedFile.path), electronStore.selectedFile);
+        }, 250)
+    }
 
     const serverEval = code => {
         fetch("/serverScope", {
@@ -189,6 +370,8 @@
         });
     }
 </script>
+
+
 
 <script src="/socket.io/socket.io.js"></script>
 <script> // SOCKET.IO
@@ -208,15 +391,14 @@
 
 
     socket.on("warn", (data) => {
-        console.warn(data);
+        logger.warn(data);
     });
     socket.on("fileChanged", (data) => {
-        
         SpaceCAD.run(data.content);
     });
 
     socket.on('res', (data) => {
-        console.log('Received message:', data);
+        logger.log('Received message:', data);
         return
 
         if(data == "server_restart"){

@@ -174,7 +174,18 @@ Object.defineProperties(THREE.Group.prototype, {
         writable: false,
     },
 });
+THREE.Object3D.prototype.erase = function () {
+    this.traverse(object => {
+        object.geometry?.dispose();
 
+        if (Array.isArray(object.material))
+            object.material.forEach(material => material.dispose());
+        else
+            object.material?.dispose();
+    });
+
+    this.removeFromParent();
+};
 
 // THREE OVERLOADING
 THREE.Vector2.prototype.__overload_anyArithmetic = function (that, operator) {
@@ -345,620 +356,14 @@ THREE.Euler.prototype.__overload_anyAssignArithmetic = function (that, operator)
 };
 
 
-
-// UTILS
-Object.defineProperties(Array.prototype, {
-    populate: {
-        get: function (value) {
-            let allNumber = this.map(e => typeof e == "number").reduce((a, b) => a && b, true);
-            if(!allNumber) {
-                console.warn("Array must only contain numbers to be populated");
-                return this;
-            }
-            if(this.length < 2) {
-                console.warn("Array must have at least 2 values to be populated");
-                return this;
-            }
-
-            const array = [];
-
-            const generate = (from, to, ignoreFirst = false) => {
-                const arr = [];
-
-                if(from > to) 
-                    for (let i = from; i >= to; i--) 
-                        arr.push(i);
-                else 
-                    for (let i = from; i <= to; i++) 
-                        arr.push(i);
-
-                if(ignoreFirst)
-                    arr.shift();
-
-                return arr;
-            }
-
-            this.forEach((v, i) => {
-                if(this[i + 1] == undefined) return;
-                const arr = generate(this[i], this[i+1], i != 0);
-                array.push(...arr);
-            })
-
-            return array;
-        },
-        set: () => {}
-    }
-});
-const recursiveProxy = (config, defaults) => {
-    return new Proxy(config, {
-        get(target, key) {
-            const value = target[key];
-            const defaultValue = defaults?.[key];
-
-            if (value && typeof value === "object") {
-                return recursiveProxy(value, defaultValue);
-            }
-
-            return value ?? defaultValue;
-        }
-    });
-};
-function isClass(value) {
-    return typeof value === "function" &&
-        /^class\s/.test(Function.prototype.toString.call(value));
-}
-function syncFetch(url, config = {}) {
-    config = recursiveProxy(config, {
-        method: "GET",
-        headers: {},
-        body: undefined
-    });
-    const xhr = new XMLHttpRequest();
-
-    xhr.open(config.method, url, false); // false = síncrono
-
-    for (const [key, value] of Object.entries(config.headers)) {
-        xhr.setRequestHeader(key, value);
-    }
-
-    xhr.send(config.body);
-
-    if(xhr.status != 200) {
-        console.warn(`Error fetching ${url} - ${xhr.status}: ${xhr.statusText}`);
-    }
-
-    Object.defineProperties(xhr, {
-        error: {
-            get: () => xhr.status != 200,
-            enumerable: false
-        },
-        json: {
-            get: () => {
-                let ret;
-                try {
-                    ret = JSON.parse(xhr.responseText);
-                } catch (e) {
-                    console.warn(`Error parsing JSON - ${e}`);
-                    ret = null;
-                }
-                return ret;
-            },
-            enumerable: false
-        },
-        text: {
-            get: () => xhr.responseText,
-            enumerable: false
-        }
-    });
-
-    return xhr
-}
-
-
-
-
-// PROJECT CLASSES
-// class - SpaceCAD
-class SpaceCAD {
-    static store = function (name) {
-        let cls = isClass(this)? this : this.constructor;
-
-        if([SpaceCAD, SpaceCAD.Root, SpaceCAD.Mesh, SpaceCAD.Group, SpaceCAD.RootObject, SpaceCAD.Object].includes(cls))
-            return console.warn("SpaceCAD cannot be stored");
-
-        // saving object
-        if(!isClass(this)) {
-            const json = JSON.stringify(this.toJSON());
-            
-        }
-
-        const dependencies = cls.dependencies || [];
-        const classBody = cls.toString();
-        const usage = cls.usage;
-
-        syncFetch("/store/class", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                name: cls.name,
-                dependencies,
-                classBody,
-                usage
-            })
-        })
-        
-
-        return this;
-    }
-    static module = new Proxy(
-        function(name) {
-            const req = syncFetch(`/store/class/${name}`);
-
-            if (req.error) return;
-
-            const {
-                dependencies,
-                classBody
-            } = req.json;
-
-            const constructor = new Function(
-                `return (${classBody})`
-            )();
-            const operator = (...args) => new constructor(...args);
-
-            return {
-                dependencies: dependencies.map(name => SpaceCAD.access(name)),
-                constructor,
-                operator
-            };
-            
-            // loading object
-            if(0) { // object
-                // fetch object 
-                const loader = new THREE.ObjectLoader();
-                const object = loader.parse(json);
-
-                return {
-                    new: () => scene.add(object)
-                }
-            }
-        },
-        {
-            get(target, name) {
-                return target(name);
-            },
-            set(target, name) {
-                return target(name);
-            }
-        }
-    );
-
-    static loadFromObject(obj) {
-
-    }
-
-    static deleteAll = () => SpaceCAD.instances.forEach(instance => instance.delete());
-    static run = code => {
-        SpaceCAD.deleteAll();
-        const fn = new Function(code);
-        Overloader.eval(fn);
-    }
-
-    static currentSpace = null;
-
-    static instances = [];
-    static roots = [];
-
-    // implement
-    static DOMList = () => {
-        const arr = [];
-        const ns = (obj, list) => {
-            const name = obj.name;
-
-            if(!list) {
-                arr.push(`root: ${name}`);
-            } else if(list.indexOf(obj) == 0 && list.length == 1) {
-                arr.push(`singular start and end: ${name}`);
-            } else if(list.indexOf(obj) == 0) {
-                arr.push(`start: ${name}`);
-            } else if(list.indexOf(obj) == list.length - 1) {
-                arr.push(`end: ${name}`);
-            } else {
-                arr.push(`between: ${name}`);
-            }
-
-
-            if(obj.children.length)
-                obj.children.forEach(child => ns(child, obj.children));
-
-
-            return arr;
-        }
-
-        SpaceCAD.roots.forEach(root => ns(root));
-
-        return arr;
-    }
-
-    static Root = CLASS => class extends CLASS {
-        constructor(...args) {
-            // setting static
-            CLASS.store = SpaceCAD.store;
-
-            super(...args);
-
-            this.isSpaceCAD = true;
-            this.name = this._name = CLASS.name;
-
-            Object.defineProperties(this, {
-                name: {
-                    get: () => this._name,
-                    set: (name) => {
-                        if(typeof name !== "string")
-                            return this._name;
-                        else 
-                            return this._name = name;
-                    }
-                },
-                
-            });
-
-            SpaceCAD.instances.push(this);
-            
-            if(SpaceCAD.currentSpace)
-                SpaceCAD.currentSpace.add(this);
-            else {
-                SpaceCAD.roots.push(this);
-                scene.add(this);
-            }
-        }
-
-        delete() {
-            [...this.children].forEach(child => {
-                if (typeof child.delete === "function")
-                    child.delete();
-                else
-                    child.removeFromParent();
-            });
-
-            const index = SpaceCAD.instances.indexOf(this);
-            SpaceCAD.instances.splice(index, 1);
-
-            const rootIndex = SpaceCAD.roots.indexOf(this);
-            if (rootIndex !== -1)
-                SpaceCAD.roots.splice(rootIndex, 1);
-
-            this.removeFromParent();
-
-            if (this.geometry)
-                this.geometry.dispose();
-
-            if (this.material) {
-                if (Array.isArray(this.material))
-                    this.material.forEach(mat => mat.dispose());
-                else
-                    this.material.dispose();
-            }
-        }
-        
-        store = SpaceCAD.store;
-
-        space (callback) {
-            if(typeof callback !== "function") return this;
-
-            const previousSpace = SpaceCAD.currentSpace;
-
-            SpaceCAD.currentSpace = this;
-             
-            try {
-                callback.call(this);
-            } finally {
-                SpaceCAD.currentSpace = previousSpace;
-            }
-
-            return this;
-        }
-
-        setPosition (x, y, z) {
-            this.position.set(x, y, z);
-            return this;
-        }
-        setPos = this.setPosition;
-        setRotation (...args) {
-            this.rotation.set(...args.map(x => x * (Math.PI / 180)));
-            return this;
-        }
-        setRot = this.setRotation;
-        setRotationPI (x, y, z) {
-            this.rotation.set(x, y, z);
-            return this;
-        }
-        setRotPI = this.setRotationPI;
-        setScale (x, y, z) {
-            this.scale.set(x, y, z);
-            return this;
-        }
-        setScl = this.setScale;
-        mirror (x, y, z) {
-            this.scale.set(
-                x ? -1 : 1,
-                y ? -1 : 1,
-                z ? -1 : 1
-            );
-            return this;
-        }
-    }
-    static Mesh = class extends SpaceCAD.Root(THREE.Mesh) {
-        static instances = [];
-        constructor(geometry, material) {
-            super(geometry, material);
-
-            this.edgeHilighting = SpaceCAD.edgeHilighting;
-            this.toggleEdgeHilighting(this.edgeHilighting);
-
-            SpaceCAD.Mesh.instances.push(this);
-        }
-
-        toggleEdgeHilighting (togle) {
-            if(togle) {
-                const edges = new THREE.EdgesGeometry(this.geometry);
-
-                const line = new THREE.LineSegments(
-                    edges,
-                    new THREE.LineBasicMaterial({ color: "#ffffff" })
-                );
-
-                line.name = `__edges`;
-
-                this.add(line);
-
-            } else {
-                const edges = this.children.find(child => child.name == "__edges");
-                edges?.removeFromParent?.();
-            }
-        }
-        
-    }
-    static mesh = (...args) => new SpaceCAD.Mesh(...args);
-    static Group = class extends SpaceCAD.Root(THREE.Group) {
-        static instances = [];
-        constructor() {
-            super();
-
-            SpaceCAD.Group.instances.push(this);
-        }
-    }
-    static group = (...args) => new SpaceCAD.Group(...args);
-
-
-    static RootObject = CLASS => class extends CLASS {
-        static store = SpaceCAD.store;
-        constructor(prop = {}, ...args) {
-            super(...args);
-
-            this.constructorProps = prop;
-
-            const position = prop.pos || prop.position;
-            if(position && (Array.isArray(position) || position instanceof THREE.Vector3) )
-                if(Array.isArray(position)) this.position.set(...position);
-                else this.position.copy(position);
-            
-            const rotation = prop.rot || prop.rotation;
-            if(rotation && (Array.isArray(rotation) || rotation instanceof THREE.Vector3) )
-                if(Array.isArray(rotation)) this.rotation.set(...rotation);
-                else this.rotation.copy(rotation);
-
-            const scale = prop.scl || prop.scale;
-            if(scale && (Array.isArray(scale) || scale instanceof THREE.Vector3) )
-                if(Array.isArray(scale)) this.scale.set(...scale);
-                else this.scale.copy(scale);
-
-        }
-    }
-
-    static Object = class extends SpaceCAD.RootObject(SpaceCAD.Mesh) {};
-
-
-
-    // others
-    static AxesHelper = class extends THREE.LineSegments {
-        constructor(pivotCamera ,  color = 0x000000, size = 100000, opacity = .2) {
-            const vertices = [
-                -size, 0, 0,	size, 0, 0,
-                0, -size, 0,	0, size, 0,
-                0, 0, -size,	0, 0, size
-            ];
-
-            const colors = [
-                1, 0, 0,	1, 0.6, 0,
-                0, 1, 0,	0.6, 1, 0,
-                0, 0, 1,	0, 0.6, 1
-            ];
-
-
-            
-
-
-
-            const geometry = new THREE.BufferGeometry();
-            geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-            geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
-
-            const material = new THREE.LineBasicMaterial( {
-                vertexColors: true, 
-                toneMapped: false,
-                transparent: true,
-                opacity
-            } );
-
-            super( geometry, material );
-
-            this.camera = pivotCamera;
-            this.ogVertices = vertices;
-
-            this.size = size;
-
-            this.setColors( color );
-
-            this.type = 'AxesHelper';
-
-        }
-
-        setColors( xAxisColor, yAxisColor, zAxisColor ) {
-            yAxisColor = yAxisColor || xAxisColor;
-            zAxisColor = zAxisColor || xAxisColor;
-
-            const color = new THREE.Color();
-            const array = this.geometry.attributes.color.array;
-
-            color.set( xAxisColor );
-            color.toArray( array, 0 );
-            color.toArray( array, 3 );
-
-            color.set( yAxisColor );
-            color.toArray( array, 6 );
-            color.toArray( array, 9 );
-
-            color.set( zAxisColor );
-            color.toArray( array, 12 );
-            color.toArray( array, 15 );
-
-            this.geometry.attributes.color.needsUpdate = true;
-
-            return this;
-
-        }
-
-        dispose() {
-
-            this.geometry.dispose();
-            this.material.dispose();
-
-        }
-
-        toggle(toggle) {
-            this.visible = Stoggle === undefined
-                ? !this.visible
-                : !!toggle;
-        }
-
-        toggleSpacing(toggle) {
-            this.spacingIndicator = toggle === undefined
-                ? !this.spacing
-                : !!toggle;
-
-            if(this.spacingIndicator)
-                this.spacingHelper();
-            else
-                this.setVertices();
-        }
-        spacingHelper(spacing = 50, width = 3) {
-            const vertices = [];
-            for(let i = -this.size/10, j =0; i <= this.size/10; i += spacing, j++) {
-                if(i == 0)
-                    continue;
-
-                vertices.push(
-                    j%2? -width : -width * 2 , i, 0,
-                    0, i, 0
-                );
-            }
-
-            this.setVertices(vertices);
-        }
-
-        setVertices(arr = []) {
-            const array = [...this.ogVertices, ...arr];
-            this.geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( array, 3 ) );
-        }
-
-        update() {
-            if(this.spacingIndicator && this.pivotCamera) {
-                if(this.pivotCamera.perspective == "perspective"){
-                    const worldCameraPos = this.pivotCamera.selectedCamera.getWorldPosition(new THREE.Vector3());
-                    const dist = this.position.distanceTo(worldCameraPos);
-                    
-                    const width = dist/50;
-    
-                    this.spacingHelper(50, width);
-
-                } else if(this.pivotCamera.perspective == "orthographic"){
-                    const width = .32 / camera.selectedCamera.zoom;
-    
-                    this.spacingHelper(50, width);
-                }
-            }
-
-        }
-        
-    }
-    static axesHelper = new SpaceCAD.AxesHelper();
-
-    //TODO: SPACE CAD
-    // TEXT FROM CANVAS
-
-    // HELPER LINE WITH WIDTH
-
-    // RULER -> LINE AND TEXT (DISTANCE, ANGLE - OPTIONAL)
-    // RULER UPDATE -> AWAYS LOOK AT CAMERA
-
-    // HINTER -> LINE AND TEXT AT END POSITION
-    // HINTER UPDATE -> AWAYS LOOK AT CAMERA, TEXT AWAYS OUTSIDE OF LINE WAY
-
-
-    // OBJECT HINTER -> LINE FROM OBJECT WITH TEXT (NAME, SIZE, MORE INFO)
-    // OBJECT HINTER UPDATE -> AWAYS LOOK AT CAMERA, AWAYS SHOW OR SHOW ONMOUSEOVER OR DISABLED
-    
-    // TODO: SPACE CAD
-
-
-
-    static edgeHilighting = false;
-    static toggleEdgeHilight = (toggle) => {
-        SpaceCAD.edgeHilighting = toggle === undefined
-            ? !SpaceCAD.edgeHilighting
-            : !!toggle;
-
-        SpaceCAD.Mesh.instances.forEach(mesh => {
-            mesh.toggleEdgeHilighting(SpaceCAD.edgeHilighting);
-        });
-    }
-
-
-
-    static setPosition = (...args) => {
-        const obj = new SpaceCAD.Group();
-        obj.position.setRotation(...args);
-        return obj;
-    }
-    static setPos = SpaceCAD.setPosition;
-    static setRotation = (...args) => {
-        const obj = new SpaceCAD.Group();
-        obj.rotation.setRotation(...args);
-        return obj;
-    }
-    static setRot = SpaceCAD.setRotation;
-    static setRotationPI = (...args) => {
-        const obj = new SpaceCAD.Group();
-        obj.rotation.setRotation(...args);
-        return obj;
-    }
-    static setRotPI = SpaceCAD.setRotationPI;
-    static setScale = (...args) => {
-        const obj = new SpaceCAD.Group();
-        obj.scale.setSale(...args);
-        return obj;
-    }
-    static setScl = SpaceCAD.setScale;
-    static mirror = (...args) => {
-        const obj = new SpaceCAD.Group();
-        obj.scale.mirror(...args);
-        return obj;
-    }
-
-}
+// GLOBALS
+const v2 = (...ags) => new THREE.Vector2(...ags);
+const v3 = (...ags) => new THREE.Vector3(...ags);
+const v4 = (...ags) => new THREE.Vector4(...ags);
+const v0 = new THREE.Vector3(0, 0, 0);
+const vx = new THREE.Vector3(1, 0, 0);
+const vy = new THREE.Vector3(0, 1, 0);
+const vz = new THREE.Vector3(0, 0, 1);
 
 
 // arrow
@@ -1001,6 +406,7 @@ class Arrow extends THREE.Group {
 }
 
 
+const logger = new Logger(document.querySelector("#logger .body .list"), 5000);
 
 
     
@@ -1012,6 +418,7 @@ document.querySelector("#a").addEventListener("click", () => {
 
 const scene = new THREE.Scene();
 const UIScene = new THREE.Scene();
+
 
 
 // pivot camera object
@@ -1103,11 +510,58 @@ class PivotCamera extends THREE.Object3D {
 // CAMERAS
 const camera = new PivotCamera(scene);
 const UICamera = new PivotCamera(UIScene);
+const cameraDefaultPos = [500, 1000, 0];
+const cameraDefaultRot = [0, 0, 0];
+const cameraDefaultZoom = 2000;
+const cameraRot = electronStore.cameraRot || cameraDefaultPos;
+const cameraPos = electronStore.cameraPos || cameraDefaultPos;
+setInterval(() => {
+    electronStore.cameraRot = camera.rotation.toArray();
+    electronStore.cameraPos = camera.position.toArray();
+    electronStore.cameraPerspective = camera.perspective;
+    electronStore.cameraZoom = zoom;
+}, 2000);
 
-camera.position.set(20, 20, 10);
+camera.rotation.set(...cameraRot);
+camera.position.set(...cameraPos);
+camera.perspective = electronStore.cameraPerspective || "perspective";
+
+const cameraSetDefaultPos = () => {
+    camera.position.set(...cameraDefaultPos);
+}
+const cameraSetDefaultRot = () => {
+    camera.rotation.set(...cameraDefaultRot);
+}
+const cameraSetDefaultZoom = () => {
+    zoom = cameraDefaultZoom;
+}
+const cameraSetDefaultPerspective = () => {
+    camera.perspective = "perspective";
+}
+const cameraSetDefault = () => {
+    cameraSetDefaultPos();
+    cameraSetDefaultRot();
+    cameraSetDefaultZoom();
+    cameraSetDefaultPerspective();
+}
 
 camera.rotation.order = "YXZ";
 
+scene.camera = camera;
+const SpaceCAD = generateSpaceCAD(scene, logger);
+SpaceCAD.setPreloads();
+
+const {
+    setPosition,
+    setPos,
+    setRotation,
+    setRot,
+    setRotationPI,
+    setRotPI,
+    setScale,
+    setScl,
+    mirror
+} = SpaceCAD;
 
 // RENDERER
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -1118,7 +572,7 @@ document.body.appendChild(renderer.domElement);
 
 const pmremGenerator = new THREE.PMREMGenerator(renderer);
 const environmentMap = pmremGenerator.fromScene(
-    new RoomEnvironment(),
+    new THREE.RoomEnvironment(),
     0.04
 ).texture;
 
@@ -1148,7 +602,6 @@ scene.add(light);
 
 
 SpaceCAD.axesHelper.toggleSpacing(1);
-SpaceCAD.axesHelper.pivotCamera = camera;
 scene.add(SpaceCAD.axesHelper);
 
 
@@ -1156,184 +609,6 @@ scene.add(SpaceCAD.axesHelper);
 
 
 
-
-
-
-
-
-
-
-
-
-
-// custom object
-
-const {
-    mesh, group, setPosition, setPos, setRotation, setRot, setScale, setScl, mirror
-} = SpaceCAD;
-
-
-// FAZER OBJETOS FICAREM COM ARESTAS VISIVEIS
-class Metalom extends SpaceCAD.Object {
-    static instances = [];
-    
-    static defaultGlobalSettings = {
-        color: "#000000",
-        roughness: .2,
-        metalness: 0
-    };
-    static globalSettings = { ...Metalom.defaultGlobalSettings }
-
-    static globalSettings(prop) {
-        Metalom.globalSettings = {
-            ...Metalom.defaultGlobalSettings,
-            ...prop
-        }
-    }
-    static restoreSettings() {
-        Metalom.globalSettings = {
-            ...Metalom.defaultGlobalSettings
-        }
-    }
-
-    constructor(prop = {}) {
-        prop = recursiveProxy(prop, {
-            width: 50,
-            type: [20,20],
-            ...Metalom.globalSettings,
-            cap: false, 
-            capTop: false,
-            capBottom: false,
-            cutTop: 0,
-            cutBottom: 0,
-        });
-
-        prop.cap = prop.capTop && prop.capBottom? true : prop.cap;
-
-        const metalomShape = (pWidth, pHeight, pDepth) => {
-            const getIntersection = (y, angle) => {
-                angle = THREE.MathUtils.degToRad(angle);
-
-                return y / Math.tan(angle)
-            }
-            
-
-            const shape = new THREE.Shape();
-
-            const w = pWidth;
-            const h = pHeight;
-
-            const bottom = prop.cutBottom;
-            const top = prop.cutTop;
-
-            let bottomX = 0;
-            let topX = w;
-
-            if (bottom !== 0) {
-                const x = getIntersection(h, bottom);
-
-                bottomX = -x;
-            }
-
-            if (top !== 0) {
-                const x = getIntersection(h, top);
-
-                topX = -x;
-            }
-
-            shape.moveTo(bottomX > 0? bottomX: 0, 0);
-
-            shape.lineTo(w - (topX == w? 0: topX > 0? topX : 0), 0);
-            shape.lineTo(w - (topX > 0? 0 : -topX), h);
-            shape.lineTo(0 + (bottomX > 0? 0 : -bottomX), h);
-            
-
-            shape.closePath();
-
-            const geometry = new THREE.ExtrudeGeometry(shape, {
-                depth: pDepth,
-                bevelEnabled: false
-            });
-
-            geometry.clearGroups();
-
-            geometry.addGroup(0, 12, 0);  // frente/trás
-            geometry.addGroup(12, 6, 1);  // bottom
-            geometry.addGroup(18, 6, 2);  // right
-            geometry.addGroup(24, 6, 3);  // top
-            geometry.addGroup(30, 6, 4);  // left
-
-
-
-            // criar materiais
-            const material = new THREE.MeshStandardMaterial(defaultFace);
-
-            const capBottom = new THREE.MeshStandardMaterial({
-                ...defaultFace,
-                transparent: !prop.capBottom,
-                opacity: prop.capBottom ? 1 : 0
-            });
-
-            const capTop = new THREE.MeshStandardMaterial({
-                ...defaultFace,
-                transparent: !prop.capTop,
-                opacity: prop.capTop ? 1 : 0
-            });
-
-            return {
-                geometry,
-                materials: [
-                    material,
-                    material,
-                    capTop,
-                    material,
-                    capBottom,
-                ]
-            };
-        };
-
-        
-        const defaultFace = {
-            color: prop.color,
-            side: !prop.cap ? THREE.DoubleSide : THREE.FrontSide,
-            roughness: prop.roughness,
-            metalness: prop.metalness
-        }
-
-        const {geometry, materials} = metalomShape(prop.width, prop.type[0], prop.type[1]);
-
-        super(prop, geometry, materials);
-
-        this._width = this.width = prop.width;
-
-        
-        this._metalomType = this.metalomType = prop.type;
-        this.name = `Metalom - ${this.metalomType[0]}x${this.metalomType[1]}`;
-
-        Object.defineProperties(this, {
-            metalomType: {
-                get: () => this._metalomType,
-                set: (value) => {
-                    if(!Array.isArray(value)) throw new Error("value must be an array");
-                    this.geometry = metalomShape(this.width, value[0], value[1]).geometry;
-                    this._metalomType = value;
-                }
-            },
-            width: {
-                get: () => this._width,
-                set: (value) => {
-                    if(typeof value !== "number") throw new Error("value must be a number");
-                    this.geometry = metalomShape(value, this.metalomType[0], this.metalomType[1]).geometry;
-                    this._width = value;
-                }
-            },
-            
-        })
-
-        Metalom.instances.push(this);
-    }
-}
-const metalom = (...args) => new Metalom(...args);
 
 
 
@@ -2044,6 +1319,8 @@ selection3DGizmo.pos.x = -1;
 selection3DGizmo.pos.z = 15;
 selection3DGizmo.scale.multiplyScalar(10);
 
+selection3DGizmo.visible = false;
+
 scene.add(selection3DGizmo);
 
 
@@ -2072,8 +1349,8 @@ let onMouseRotation = false;
 let doMouseRotate = true;
 let doMouseMove = true;
 
-let zoom = 1000;
-let moveSpeed = 1;
+let zoom = 2000;
+let moveSpeed = 10;
 
 
 let lockSelectionmovement = false; // REMOVER
@@ -2366,7 +1643,7 @@ const overloader = new Overloader((frame, loop) => {
         camera.dir.up * (camera.perspective == "perspective" ? movement.get().dep : -movement.get().ver) * moveSpeed;
 
 
-    let calcZoom = zoom + wheelZoom.y * .5;
+    let calcZoom = zoom + wheelZoom.y * 1;
     zoom = calcZoom < 0.001 ? 0.001 : calcZoom;
 
     camera.setZoom(zoom);

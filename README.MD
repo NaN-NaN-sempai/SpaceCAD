@@ -1,10 +1,12 @@
-# SpaceCAD
+# SpaceCAD 👷 README em constrção 👷
 
-**SpaceCAD** é um ambiente de modelagem e projeto 3D focado no design e desenvolvimento de móveis, rodando em **Node.js** com interface gráfica em **Electron** e renderização via **Three.js**.
+**SpaceCAD** é um ambiente de modelagem e projeto 3D focado no design e desenvolvimento através de código, baseado no OpenSCAD.
 
-O projeto permite criar, carregar e parametrizar objetos 3D de forma simples através de código JavaScript otimizado.
+Rodando em **Node.js** com interface gráfica em **Electron** e renderização via **Three.js**.
 
----
+O SpaceCAD permite criar, carregar e parametrizar objetos 3D de forma simples através de código JavaScript otimizado.
+
+
 
 ## 🎨 Características Principais
 
@@ -106,6 +108,8 @@ const meuArmario = new ArmarioPlanejado(80, 200, 50);
 
 
 ## 🛠️ Bibliotecas/Recursos Criadas No SpaceCAD
+* **SpaceCAD** — Biblioteca principal do projeto. `(browser)`
+
 * **storage.js** — Equivalente ao `localStorage` para Node.js `(back-end)`
 
 * **inputManager.js** — Gerenciador de inputs robusto. `(browser/back-end <- não implementado)`
@@ -114,16 +118,22 @@ const meuArmario = new ArmarioPlanejado(80, 200, 50);
 
 * **mouseLock.js** — Gerenciador de trava do mouse. `(browser)`
 
-* **overloadOperator.js** — Overloading de operadores no Javascript nativo. `(browser/back-end <- não implementado)` 
+* **overloadOperator.js** — Overloading de operadores no Javascript nativo. `(browser/back-end <- não implementado)`
+
+* **logger.js** — Console customisado dentro da página. `(browser/back-end <- não implementado)` 
+
+* **JSHON.js** — **JavaScript High Object Notation** - Traduz valores para string e visseversa, suporta setters e getters de objetos (alternativa mais robusta ao JSON stringify/parse) `(browser/back-end)` 
+
 
 #
-
-* **`syncFetch`** — Equivalente ao fetch porem sem `Promise`. `(browser)`
-
-* **`recursiveProxy`** — Cria um objeto com valores padrões recursivamente. `(browser/back-end)` 
 
 * **`[Array].populate`** — Gera uma array populada entre os valores Int da array original. `(browser/back-end)` 
 
 * **`watchFilePath / cancelWatch`** — Observa mudanças em um arquivo expecifico em qualquer localização. `(back-end)` 
+* **`utils/recursiveProxy`** — Cria um objeto com valores padrões recursivamente. `(browser/back-end)` 
 
+* **`utils/syncFetch`** — Equivalente ao fetch porem sem `Promise`. `(browser)`
 
+* **`utils/createElement`** — Cria elementos HTML de forma simples e rápida. `(browser)` 
+
+* **`utils/setupContextMenu`** — Cria menus de contexto de forma simples e rápida. `(browser)` 
