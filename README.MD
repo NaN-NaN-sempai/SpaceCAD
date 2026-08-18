@@ -150,9 +150,10 @@ const meuArmario = new ArmarioPlanejado(80, 200, 50);
   - `typeis` — `identificador.typeis()` retorna o tipo do identificador. `identificador.typeis.tipo` retorna true se o tipo igual a chave passada. Exemplo:
   ```javascript
   const meuItem = 2;
+  meuItem.typeis() // => 'number'
   meuItem.typeis.number // => true
 
-  // ⚠️ undefined é primitivo e não possui propriedades
+  // ⚠️ 'undefined' e 'null' são primitivos e não possuem propriedades
   // portanto acessar typeis causa erro em casos como:
   undefined.typeis // ⛔️ Cannot read properties of undefined
   (undefined).typeis // ⛔️ Cannot read properties of undefined 
