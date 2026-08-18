@@ -59,9 +59,10 @@ npm run dev
 ```
 
 ## 📐 Exemplo de Uso (.spacecad.js)
-```JavaScript
-// Exemplo básico de criação de um módulo de móvel
+Exemplo de criação e reutilização de um modulo
 
+`arquivo.spacecad.js`
+```JavaScript
 // crie uma classe extendendo SpaceCAD.Object
 class ArmarioPlanejado extends SpaceCAD.Object {
   constructor(props = {}) {
@@ -77,7 +78,7 @@ class ArmarioPlanejado extends SpaceCAD.Object {
 
     super(props, geometry, material);
 
-    // o objeto será geralto altomaticamente no mundo
+    // o objeto será gerado altomaticamente no mundo
 
     // logica do seu armario...
   }
@@ -97,13 +98,14 @@ console.log(meuArmario2.position); // Vector3 - 20, 0, 0
 
 
 // Exemplo básico de carregamento de modulo
-ArmarioPlanejado.store(); // salva módulo no servidor para ser usado em outros arquivos
+ArmarioPlanejado.store(); // salva módulo no servidor
+```
 
-// em outro arquivo
+`outroArquivo.spacecad.js`
+```javascript
 const ArmarioPlanejado = SpaceCAD.module.ArmarioPlanejado.constructor;
 
 const meuArmario = new ArmarioPlanejado(80, 200, 50);
-
 ```
 
 
