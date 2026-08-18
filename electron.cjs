@@ -11,21 +11,21 @@ process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
 const fs = require("fs");
 const { spawn } = require('child_process');
 
-const port = Number(
-    fs.readFileSync("port.js", "utf8")
-        .match(/\d+/)[0]
-);
 
 
+const watchport = () => {
+    if(fs.existsSync("port.js"))
+        fs.watch("port.js", () => {
+            const port = Number(
+                fs.readFileSync("port.js", "utf8")
+                    .match(/\d+/)[0]
+            );
 
-fs.watch("port.js", () => {
-    const port = Number(
-        fs.readFileSync("port.js", "utf8")
-            .match(/\d+/)[0]
-    );
-
-    loadUrl(port);
-});
+            loadUrl(port);
+        });
+    else
+        setTimeout(watchport, 1000);
+}
 
 
 let win; 
@@ -37,6 +37,7 @@ const loadUrl = (port) => {
 
 
 app.whenReady().then(() => {
+    watchport();
     Menu.setApplicationMenu(null);
 
     win = new BrowserWindow({
