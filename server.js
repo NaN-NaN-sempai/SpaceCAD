@@ -5,6 +5,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import fs from "fs";
 
+
 import storage from "./lib/storage.js";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -79,17 +80,6 @@ const cancelWatch = () => {
 
     return "";
 };
-
-app.post("/openInEditor", (req, res) => {
-    const path = req.body.path;
-
-    if(fs.existsSync(path))
-        open(path);
-    else
-        io.emit("warn", `File does not exist: "${path}"`);
-
-    res.send("ok");
-});
 app.post("/watchFile", (req, res) => {
     const path = req.body.path;
 
@@ -101,6 +91,62 @@ app.post("/watchFile", (req, res) => {
 app.get("/removeWatcher", (req, res) => {
     cancelWatch();
     res.send("file")
+});
+
+
+app.post("/openPath", (req, res) => {
+    const directory = req.body.directory ?? false;
+    let reqPath = req.body.path;
+
+    if(directory)
+        reqPath = path.dirname(reqPath);
+
+    if(fs.existsSync(reqPath))
+        open(reqPath);
+    else
+        io.emit("warn", `File does not exist: "${reqPath}"`);
+
+    res.send("ok");
+});
+
+app.post("/renameFile", (req, res) => {
+    let name = req.body.name;
+    const filePath = req.body.path;
+
+    if(!name || !filePath) {
+        io.emit("warn", `File does not exist or name not provided: name: "${name}", path: "${filePath}"`);
+        res.status(400).send("error");
+        return;
+    }
+
+    name = name + ".spacecad.js";
+
+    const newPath = path.dirname(filePath) + "/" + name;
+
+    if(fs.existsSync(newPath)){
+        io.emit("warn", `File already exists: "${newPath}"`);
+        res.status(400).send("error");
+        return;
+    }
+
+    fs.renameSync(filePath, newPath);
+    
+    io.emit("fileRename", {
+        newName: name,
+        oldPath: filePath,
+        newPath
+    });
+
+
+    if(watchFile.path === filePath){
+        const text = watchFilePath(newPath);
+        res.send(text);
+    }
+
+
+    res.send("ok")
+
+        
 });
 
 

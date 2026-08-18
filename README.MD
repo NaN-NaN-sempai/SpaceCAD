@@ -108,7 +108,7 @@ const meuArmario = new ArmarioPlanejado(80, 200, 50);
 
 
 ## 🛠️ Bibliotecas/Recursos Criadas No SpaceCAD
-* **SpaceCAD** — Biblioteca principal do projeto. `(browser)`
+* **SpaceCAD.js** — Biblioteca principal do projeto. `(browser)`
 
 * **storage.js** — Equivalente ao `localStorage` para Node.js `(back-end)`
 
@@ -127,8 +127,6 @@ const meuArmario = new ArmarioPlanejado(80, 200, 50);
 
 #
 
-* **`[Array].populate`** — Gera uma array populada entre os valores Int da array original. `(browser/back-end)` 
-
 * **`watchFilePath / cancelWatch`** — Observa mudanças em um arquivo expecifico em qualquer localização. `(back-end)` 
 * **`utils/recursiveProxy`** — Cria um objeto com valores padrões recursivamente. `(browser/back-end)` 
 
@@ -136,4 +134,41 @@ const meuArmario = new ArmarioPlanejado(80, 200, 50);
 
 * **`utils/createElement`** — Cria elementos HTML de forma simples e rápida. `(browser)` 
 
-* **`utils/setupContextMenu`** — Cria menus de contexto de forma simples e rápida. `(browser)` 
+* **`utils/setupDropdown`** — Cria menus flutuantes de forma simples e rápida. `(browser)` 
+
+* **`utils/class ObjectForm`** — Gerenciador de form HTML, trasnforma os valores do form em objeto de forma simples. `(browser)` 
+
+* **`utils/class Modal`** — Cria Modals de forma dinamica. `(browser)` 
+
+* **`utils/class Interval`** — Gerenciador de intervalos robusto. `(browser/back-end)` 
+
+* **`{HTMLElement}.dropdown`** — Propriedade em Elementos HTML para usar o `setupDropdown`. `(browser)` 
+
+* **`[Array].populate`** — Gera uma array populada entre os valores Int da array original. `(browser/back-end)` 
+
+* **`{/* qualquer tipo */}` uteis**: `(browser)` 
+  - `typeis` — `identificador.typeis()` retorna o tipo do identificador. `identificador.typeis.tipo` retorna true se o tipo igual a chave passada. Exemplo:
+  ```javascript
+  const meuItem = 2;
+  meuItem.typeis.number // => true
+
+  // ⚠️ undefined é primitivo e não possui propriedades
+  // portanto acessar typeis causa erro em casos como:
+  undefined.typeis // ⛔️ Cannot read properties of undefined
+  (undefined).typeis // ⛔️ Cannot read properties of undefined 
+  let semValor; 
+  semValor.typeis // ⛔️ Cannot read properties of undefined
+  ```
+* **`{HTMLElement}` uteis**: `(browser)` 
+  - `on` — Equivalente ao addEventListener mas mais robusto.
+  - `query/all` — Simplifacação do querySelector/querySelectorAll.
+  - `{FORM}.objectForm` — Maneira de acessar o ObjectForm no form.
+  - `{FORM}.asObject` — Maneira de acessar os valores do form como objeto usando o ObjectForm.
+  - `{element[modal]}.modal` — Maneira de acessar o Modal no elemento.
+* **`{NodeList/HTMLCollection}` uteis**: `(browser)`
+  - `// array operations` — `map`, `filter`, `forEach` e outros.
+  - `on` — Executa `{HTMLElement}.on` em todos os elementos da lista.
+  - `query` — Retorna a primeira instancia na lista.
+  - `queryMap` — Retorna as primeiras instancias de todos os itens da lista.
+  - `queryAll` — Retorna todas instancias de todos os itens da lista.
+

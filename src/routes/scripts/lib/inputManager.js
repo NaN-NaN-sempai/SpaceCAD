@@ -487,6 +487,7 @@ class ButtonClass {
 }
 class ButtonManager {
     constructor(parent = {}) {
+        this.disabled = false;
         this.parent = parent;
         this.managerName = "button";
 
@@ -507,6 +508,8 @@ class ButtonManager {
         const DOMOrigin = this.parent.DOMOrigin;
     
         const emitEvent = (event, state) => {
+            if(this.disabled) return;
+
             let button = typeof event.code == "string" ? event.code : event;
             button = button.replace("Key", "").replace("Digit", "");
             if(button.length == 1) button = button.toLowerCase();

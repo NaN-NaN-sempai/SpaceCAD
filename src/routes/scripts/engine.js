@@ -411,7 +411,7 @@ const logger = new Logger(document.querySelector("#logger .body .list"), 5000);
 
     
 // UI
-document.querySelector("#a").addEventListener("click", () => {
+document.querySelector("#showEdges").addEventListener("click", () => {
     SpaceCAD.toggleEdgeHilight();
 });
 
