@@ -247,84 +247,153 @@ Object.defineProperties(String.prototype, {
         set: () => {}
     }
 });
-Object.defineProperties(HTMLElement.prototype, {
-    query: {
-        get: function () {
-            return (value) => this.querySelector(value);
-        },
-        set: () => {}
-    },
-    all: {
-        get: function () {
-            return (value) => this.querySelectorAll(value);
-        },
-        set: () => {}
-    },
-    on: {
-        get: () => function (...args) {
-            let i = 0;
-            while(args.length) {
-                let type;
-                if(typeof args[0] == "string" || Array.isArray(args[0])) {
-                    type = Array.isArray(args[0]) ? args.shift() : [args.shift()];
-                } else {
-                    throw new Error("Event type must be a string. At 'DOM.on' index: " + i);
-                }
-                let callback;
-                if(typeof args[0] == "function") {
-                    const fn =  args.shift();
-                    callback = evt => fn(evt, this);
-                } else {
-                    throw new Error("Event callback must be a function. At 'DOM.on' index: " + i);
-                }
-                let options = typeof args[0] == "object" ? args.shift() : null;
-                let useCapture = typeof args[0] == "boolean" ? args.shift() : null;
+const on = function (...args) {
+    let events = [];
+    let i = 0;
+    while(args.length) {
+        let type;
+        if(typeof args[0] == "string" || Array.isArray(args[0])) {
+            type = Array.isArray(args[0]) ? args.shift() : [args.shift()];
+        } else {
+            throw new Error("Event type must be a string. At 'DOM.on' index: " + i);
+        }
+        let callback;
+        if(typeof args[0] == "function") {
+            const fn =  args.shift();
+            callback = evt => fn(evt, this);
+        } else {
+            throw new Error("Event callback must be a function. At 'DOM.on' index: " + i);
+        }
+        let options = typeof args[0] == "object" ? args.shift() : null;
+        let useCapture = typeof args[0] == "boolean" ? args.shift() : null;
 
-                
-                type.forEach(t => {
-                    this.addEventListener(t, callback, options, useCapture);
-                });
-                i++;
-            }
-        },
-        set: () => {}
-    },
-
-    dropdown: {
-        get: () => function (...agrs) {
-            setupDropdown(this, ...agrs);
-        },
-        set: () => {}
-    },
-    modal: {
-        get: function () {
-            if(this.getAttribute("modal") == null) 
-                return null;
-
-            return new Modal(this);
-        },
-        set: () => {}
-    },
-    asObject: {
-        get: function () {
-            if(this.tagName != "FORM") 
-                return null;
-
-            return ObjectForm.on(this).get();
-        },
-        set: () => {}
-    },
-    objectForm: {
-        get: function () {
-            if(this.tagName != "FORM") 
-                return null;
-
-            return (...args) => ObjectForm.on(this, ...args)
-        },
-        set: () => {}
+        
+        events.push({type, callback, options, useCapture});
+        type.forEach(t => {
+            this.addEventListener(t, callback, options, useCapture);
+        });
+        i++;
     }
-    
+
+    return events;
+};
+const off = function (...args) {
+    let events = [];
+    let i = 0;
+    while(args.length) {
+        let type;
+        if(typeof args[0] == "string" || (Array.isArray(args[0]) && args[0].every(e => typeof e !== "object"))) {
+            type = Array.isArray(args[0]) ? args.shift() : [args.shift()];
+
+        } else if (Array.isArray(args[0]) && args[0].every(e => typeof e == "object")) {
+            args[0].forEach(e => {
+                e.type.forEach(t => {
+                    this.removeEventListener(t, e.callback, e.options, e.useCapture);
+                })
+            });
+
+            args.shift();
+            i++;
+            continue;
+
+        } else {
+            throw new Error("Event type must be a string. At 'DOM.off' index: " + i);
+        }
+        
+        let callback;
+        if(typeof args[0] == "function") {
+            const fn =  args.shift();
+            callback = evt => fn(evt, this);
+        } else {
+            throw new Error("Event callback must be a function. At 'DOM.off' index: " + i);
+        }
+        let options = typeof args[0] == "object" ? args.shift() : null;
+        let useCapture = typeof args[0] == "boolean" ? args.shift() : null;
+
+        type.forEach(t => {
+            this.removeEventListener(t, callback, options, useCapture);
+        });
+        i++;
+    }
+}
+window.on = on;
+window.off = off;
+[HTMLDocument, HTMLElement].forEach(proto => {
+    Object.defineProperties(proto.prototype, {
+        query: {
+            get: function () {
+                return (value) => this.querySelector(value);
+            },
+            set: () => {}
+        },
+        all: {
+            get: function () {
+                return (value) => this.querySelectorAll(value);
+            },
+            set: () => {}
+        },
+        on: {
+            get: function () {
+                return on.bind(this);
+            },
+            set: () => {}
+        },
+        off: {
+            get: function () {
+                return off.bind(this);
+            },
+            set: () => {}
+        },
+        rect: {
+            get: function () {
+                return this.getBoundingClientRect();
+            },
+            set: () => {}
+        },
+        childIndex: {
+            get: function () {
+                return this.parentNode.children.indexOf(this);
+            },
+            set: () => {} 
+        },
+
+        dropdown: {
+            get: () => function (...agrs) {
+                setupDropdown(this, ...agrs);
+            },
+            set: () => {}
+        },
+        modal: {
+            get: function () {
+                if(this.getAttribute("modal") == null) 
+                    return null;
+
+                return new Modal(this);
+            },
+            set: () => {}
+        },
+        asObject: {
+            get: function () {
+                if(this.tagName != "FORM") 
+                    return null;
+
+                return ObjectForm.on(this).get();
+            },
+            set: () => {}
+        },
+        objectForm: {
+            get: function () {
+                if(this.tagName != "FORM") 
+                    return null;
+
+                return (...args) => ObjectForm.on(this, ...args)
+            },
+            set: () => {}
+        }
+        
+    });
 });
+
 [NodeList.prototype, HTMLCollection.prototype].forEach(collection => {
     Object.defineProperties(collection, {
         forEach: {
@@ -383,8 +452,20 @@ Object.defineProperties(HTMLElement.prototype, {
             },
             set: () => {}
         },
+        off: {
+            get: () => function (...args) {
+                for (const element of this) {
+                    element.off(...args);
+                }
+            },
+            set: () => {}
+        },
         query: {
-            // TODO CRIAR
+            get: function () {
+                // returns the first instance
+                return (...args) => Array.from(this).find(element => element.query(...args));
+            },
+            set: () => {}
         },
         queryMap: {
             get: function () {
@@ -392,8 +473,7 @@ Object.defineProperties(HTMLElement.prototype, {
             },
             set: () => {}
         },
-        // todo TESTAR SE ALL EXISTE
-        queryAll: {
+        all: {
             get: function () {
                 return (...args) => Array.from(this).map(element => element.queryAll(...args));
             },
@@ -610,15 +690,19 @@ const setupDropdown = (...args) => {
     const closeDropdown = () => {
         menu.classList.toggle("hidden", true);
     }
+    const closeIfOutside = (evt) => {
+        if (!dom.contains(evt.target) && !menu.contains(evt.target))
+            closeDropdown();
+    }
 
     dom.addEventListener(eventType, (evt) => {
         if(eventType === "contextmenu") evt.preventDefault();
         openDropdown();
     });
-    dom.addEventListener("mouseleave", closeDropdown);
+    window.addEventListener("mousemove", closeIfOutside);
 
     if(eventType === "contextmenu")
-        window.addEventListener("click", closeDropdown);
+        window.addEventListener("click", closeIfOutside);
 
     
 
@@ -661,6 +745,56 @@ const formData = (form) => {
     });
 
     return data;
+}
+
+
+function moveChild(element, index) {
+    const container = element.parentElement;
+    const items = [...container.children];
+
+    const first = new Map(
+        items.map(el => [el, el.getBoundingClientRect()])
+    );
+
+    const currentIndex = items.indexOf(element);
+
+    if (index < 0 || index >= items.length)
+        return;
+
+    const target = container.children[index];
+
+    if (target && target !== element) {
+        if (index > currentIndex)
+            container.insertBefore(element, target.nextSibling);
+        else
+            container.insertBefore(element, target);
+    }
+
+    const last = new Map(
+        items.map(el => [el, el.getBoundingClientRect()])
+    );
+
+    for (const el of items) {
+        const a = first.get(el);
+        const b = last.get(el);
+
+        const x = a.left - b.left;
+        const y = a.top - b.top;
+
+        if (x === 0 && y === 0)
+            continue;
+
+        el.animate(
+            [
+                { transform: `translate(${x}px, ${y}px)` },
+                { transform: "translate(0, 0)" }
+            ],
+            {
+                duration: 100,
+                easing: "ease-in-out"
+            }
+        );
+    }
 }
 
 

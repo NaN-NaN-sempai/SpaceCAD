@@ -44,6 +44,8 @@ app.whenReady().then(() => {
         title: 'SpaceCAD',
         width: 800,
         height: 600,
+        frame: false,
+        titleBarStyle: 'hidden',
         webPreferences: {
             preload: path.join(__dirname, 'preload.js')
         }
@@ -57,6 +59,9 @@ app.whenReady().then(() => {
         ) {
             win.webContents.toggleDevTools();
         }
+
+        if(input.key.toLowerCase() === "f11" && input.type === "keyDown")
+            win.setFullScreen(!win.isFullScreen());
     });
 
     ipcMain.on('store-get', (event, key) => {
@@ -66,6 +71,30 @@ app.whenReady().then(() => {
     ipcMain.on('store-set', (event, { key, value }) => {
         store.set(key, value);
         event.returnValue = value;
+    });
+    ipcMain.on('window:minimize', () => {
+        win.minimize();
+    });
+    win.on('enter-full-screen', () => {
+        win.webContents.send('fullscreen', true);
+    });
+
+    win.on('leave-full-screen', () => {
+        win.webContents.send('fullscreen', false);
+    });
+    ipcMain.handle("is-fullscreen", () => {
+        return win.isFullScreen();
+    });
+
+    ipcMain.on('window:maximize', () => {
+        if (win.isMaximized())
+            win.unmaximize();
+        else
+            win.maximize();
+    });
+
+    ipcMain.on('window:close', () => {
+        win.close();
     });
 
     ipcMain.on('set-title', (event, title) => {

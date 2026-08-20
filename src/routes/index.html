@@ -6,18 +6,28 @@
     <title> SpaceCAD </title>
  
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="titlebar.css">
 </head>
 <body>
+    <div class="titlebar">
+        <div class="fileIndicator">
+            <button id="options">
+                <i class="hamburger"></i>
+            </button>
+            <div class="fileList">
+
+            </div>
+        </div>
+        <div class="window-buttons">
+            <button id="minimize">−</button>
+            <button id="maximize">□</button>
+            <button id="close">×</button>
+        </div>
+
+    </div>
+
     <div id="tempCursor"></div>
 
-    <div class="fileIndicator">
-        <button id="options">
-            <i class="hamburger"></i>
-        </button>
-        <div class="fileList">
-
-        </div>
-    </div>
 
     <div class="bottomItens">
         <button id="setDefaultCamera">
@@ -46,8 +56,8 @@
         </div>
     </div>
 
-    <div modal modalopen class="question">
-        <div class="title">TODO</div>
+    <div modal modalopen id="changelog" class="question">
+        <div class="title">A Fazer</div>
         arquivos -> caso retorne 404 apagar arquivo do dom
         <br><br>
         novo arquivo -> inserir nome e escolher diretorio
@@ -57,6 +67,13 @@
         exportar/importar libs/modulos -> opção de sobreescrever ou incluir
         <br><br>
         SpaceCAD -> plane com text do canvas // tentar adicionar html dentro do plane
+        <br><br>
+        logo -> ideias no whatsapp -> fazer foguete no Three do jeito que eu quero
+        <br><br>
+        <div class="title">Atualizações</div>
+        info -> janela de changelog
+        <br><br>
+        electron -> barra de titulo
     </div>
 
     <form modal id="renameModal" class="question">
@@ -70,6 +87,20 @@
         </div>
     </form>
 </body> 
+<script> // TITLE BAR
+    const minimize = document.querySelector("#minimize");
+    const maximize = document.querySelector("#maximize");
+    const close = document.querySelector("#close");
+
+    minimize.addEventListener("click", titlbar.minimize);
+    maximize.addEventListener("click", titlbar.maximize);
+    close.addEventListener("click", titlbar.close);
+
+    electron.isFullscreen().then(b => document.body.classList.toggle('fullscreen', b));
+    window.electron.onFullscreen(fullscreen => {
+        document.body.classList.toggle('fullscreen', fullscreen);
+    });
+</script>
 <script type="importmap">
 {
   "imports": {
@@ -259,14 +290,13 @@
         watchFile(file);
     }
     const fileDom = () => {
-        // empty liekist
         fileList.innerHTML = "";
 
         fileArray.forEach((file) => {
             const fileDom = document.createElement("button");
             fileDom.classList.add("file");
             fileDom.innerText = file.name;
-            fileDom.title = file.fullName+"\n"+file.path;
+            //fileDom.title = file.fullName+"\n"+file.path;
             fileDom.dataset.path = file.path;
 
             const x = document.createElement("button");
@@ -276,10 +306,46 @@
                 evt.stopPropagation();
                 removeFile(file, fileDom);
             });
+            
+
+
+
+
+            fileDom.on("mousedown", (ogevt, e) => {
+                const move = (evt) => {
+                    let next = e.nextSibling;
+                    let prev = e.previousSibling;
+
+                    e.style.position = "relative";
+                    e.style.left = (evt.movementX * 2) + "px";
+
+                    if(evt.clientX > next?.rect.left + next?.rect.width/2){
+                        moveChild(e, e.childIndex + 1);
+                        moveInList(file, fileArray.indexOf(file) + 1);
+                    }
+
+                    else if(evt.clientX < prev?.rect.left + prev?.rect.width/2) {
+                        moveChild(e, e.childIndex - 1);
+                        moveInList(file, fileArray.indexOf(file) - 1);
+                    }
+                };
+
+                const up = () => {
+                    e.style.position = "";
+                    e.style.left = "";
+                    document.off(listeners);
+                    document.body.classList.remove("cursrorVer");
+                };
+
+                document.body.classList.add("cursrorVer");
+
+                let listeners = document.on("mousemove", move, "mouseup", up);
+            });
+
 
 
             fileDom.appendChild(x);
-            fileDom.addEventListener("click", () => selectDOM(fileDom, file));
+            fileDom.on("click", () => selectDOM(fileDom, file));
 
             setupDropdown(fileDom, "contextmenu", [
                 createElement("button", e => { e.innerText = "📄 abrir no editor";
@@ -293,14 +359,6 @@
                                 path: file.path
                             })
                         })
-                    });
-                }),
-                createElement("button", e => { e.innerText = "📝 renomear";
-                    e.closeMenu = true;
-                    e.addEventListener("click", (evt) => {
-                        evt.stopPropagation();
-                        renameModal.modal.data = file;
-                        renameModal.modal.toggle();
                     });
                 }),
                 createElement("button", e => { 
@@ -318,6 +376,14 @@
                     });
                     e.closeMenu = true;
                 }),
+                createElement("button", e => { e.innerText = "📝 renomear";
+                    e.closeMenu = true;
+                    e.addEventListener("click", (evt) => {
+                        evt.stopPropagation();
+                        renameModal.modal.data = file;
+                        renameModal.modal.toggle();
+                    });
+                }),
             ]);
             fileList.appendChild(fileDom);
         });
@@ -331,8 +397,9 @@
             f.path == file.path
         );
     }
-    const saveLS = () => {
-        fileDom();
+    const saveLS = (run = true) => {
+        if(run)
+            fileDom();
         electronStore.savedFiles = fileArray;
     }
     const addFile = (file, setSelected = false) => {
@@ -372,6 +439,12 @@
         el.dataset.path = newFile.path;
 
         saveLS();
+    }
+
+    const moveInList = (file, index) => {
+        fileArray.splice(fileArray.indexOf(file), 1);
+        fileArray.splice(index, 0, file);
+        saveLS(0);
     }
 
     fileDom();
@@ -419,6 +492,12 @@
 
     setupDropdown(fileIndicator.querySelector("#options"), [
         createElement("button", e => {
+            e.innerHTML = "📄 novo arquivo ⚠️ WOK";
+            e.addEventListener("click", async () => {
+                alert("not implemented");
+            });
+        }),
+        createElement("button", e => {
             e.innerHTML = "📁 abrir arquivo";
             e.addEventListener("click", async () => {
                 let path = await electron.openFile();
@@ -427,11 +506,21 @@
             });
         }),
         createElement("button", e => {
-            e.innerHTML = "📄 novo arquivo";
+            e.innerHTML = "📁 abrir diretorio ⚠️ WOK";
             e.addEventListener("click", async () => {
                 alert("not implemented");
             });
-        })
+        }),
+        createElement("hr"),
+        
+        createElement("button", e => {
+            e.innerHTML = "📄 notas da atualização";
+            e.on("click", async () => {
+                const changelog = document.query("#changelog");
+                changelog.modal.toggle();
+            });
+            e.closeMenu = true;
+        }),
     ]);
 
 

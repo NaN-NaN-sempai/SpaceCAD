@@ -163,15 +163,17 @@ const meuArmario = new ArmarioPlanejado(80, 200, 50);
   semValor.typeis // ⛔️ Cannot read properties of undefined
   ```
 * **`{HTMLElement}` uteis**: `(browser)` 
-  - `on` — Equivalente ao addEventListener mas mais robusto.
+  - `on/off` — Equivalente ao `addEventListener` e `removeEventListener` mas mais robusto.
   - `query/all` — Simplifacação do querySelector/querySelectorAll.
+  - `rect` — Simplificação de `getBoundingClientRect()`.
+  - `childIndex` — Retorna o indice do elemento no seu elemento pai.
   - `{FORM}.objectForm` — Maneira de acessar o ObjectForm no form.
   - `{FORM}.asObject` — Maneira de acessar os valores do form como objeto usando o ObjectForm.
   - `{element[modal]}.modal` — Maneira de acessar o Modal no elemento.
 * **`{NodeList/HTMLCollection}` uteis**: `(browser)`
   - `// array operations` — `map`, `filter`, `forEach` e outros.
-  - `on` — Executa `{HTMLElement}.on` em todos os elementos da lista.
+  - `on/off` — Executa `{HTMLElement}.on/off` em todos os elementos da lista.
   - `query` — Retorna a primeira instancia na lista.
   - `queryMap` — Retorna as primeiras instancias de todos os itens da lista.
-  - `queryAll` — Retorna todas instancias de todos os itens da lista.
+  - `all` — Retorna todas instancias de todos os itens da lista.
 
