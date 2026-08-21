@@ -9,7 +9,7 @@
 
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
 
     z-index: 999999;
 
@@ -25,8 +25,21 @@
     -webkit-app-region: no-drag;
 }
 
+/* exchange for LOGO when ready */
+.titlebar .title {
+    -webkit-app-region: drag;
+    margin-inline: 10px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--tertiary);
+    & span {
+        font-size: .7rem;
+    }
+}
+
 .window-buttons {
     position: relative;
+    margin-left: auto;
     top: -3px;
     right: 0;
     display: flex;

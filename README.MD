@@ -10,10 +10,10 @@ O SpaceCAD permite criar, carregar e parametrizar objetos 3D de forma simples at
 
 ## 🎨 Características Principais
 
-* **JavaScript Dinâmico (`.spacecad.js`)**: Gere móveis e objetos 3D programaticamente com facilidade.
+* **JavaScript Dinâmico (`.spacecad.js`)**: Gere objetos 3D programaticamente com facilidade usando o THREE.js.
 * **Sintaxe Inspirada no OpenSCAD**: Código em JavaScript nativo desenvolvido para suportar operações geométricas intuitivas, transformações e modelagem paramétrica de forma fluida.
 * **Overloading de Operadores**: Suporte nativo a overload de operadores no JS para manipulação vetorial e matemática fluida no código dos projetos.
-* **Sistema de Módulos Simples**: Crie classes reutilizáveis facilemente em outros arquivos:
+* **Sistema de Módulos Simples**: Crie classes e bibliotecas reutilizáveis facilemente em outros arquivos:
 ```javascript
 // arquivo A — salvando o modulo
 class MeuModulo extends SpaceCAD.Object {
@@ -52,7 +52,7 @@ cd spacecad
 npm install
 ```
 
-**Inicie a aplicação** (em desenvolvimento):
+**Inicie a aplicação em modo de desenvolvimento**:
 
 ```Bash
 npm run dev

@@ -1,6 +1,6 @@
 {
     "watch": ["."],
-    "ignore": ["port.js"],
+    "ignore": ["port.js", "version.json"],
     "ext": "*",
     "exec": "node server.js"
 }

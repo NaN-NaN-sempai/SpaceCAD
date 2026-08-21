@@ -10,6 +10,9 @@
 </head>
 <body>
     <div class="titlebar">
+        <div class="title">
+            SpaceCAD <span>v. 26.8.1 - pA</span>
+        </div>
         <div class="fileIndicator">
             <button id="options">
                 <i class="hamburger"></i>
@@ -59,15 +62,21 @@
 
     <div modal open id="changelog" class="question">
         <div class="title">A Fazer</div>
-        pastas no filelist -> selecionar pasta, ler todos .spacecad.js e colocar na pasra, pode criar arquivos na pasta tambem
-        <br><br>
         SpaceCAD -> plane com text do canvas // tentar adicionar html dentro do plane
+        <br><br>
+        SpaceCAD -> botões de setar orientação da cameta: direita, cima, baixo, etc
+        <br><br>
+        UI -> sistema de tradução
         <br><br>
         logo -> ideias no whatsapp -> fazer foguete no Three do jeito que eu quero
         <br><br>
         <div class="title">Atualizações</div>
         
-        import/export resources, new file, remove on 404, move file scroll
+        <span style="background: var(--primary);">version control</span>
+        <hr>
+        (21/08/2026 - 19:01) projeto -> setup de versões
+        
+        <span style="background: var(--primary);">import/export resources, new file, remove on 404, move file scroll</span>
         <hr>
         (21/08/2026 - 17:55) exportar/importar libs/modulos -> opção de sobreescrever ou incluir
         <br><br>
@@ -77,8 +86,8 @@
         <br><br>
         (20/08/2026 - 17:30) arquivos -> ao mover arquivo -> scroll into view
         
-        <br><br><br>
-        titble bar, changelog,  ui move file
+        <br><br>
+        <span style="background: var(--primary);">titble bar, changelog,  ui move file</span>
         <hr>
         (19/08/2026 - 17:00) info -> janela de changelog
         <br><br>
@@ -176,6 +185,8 @@
     window.electron.onFullscreen(fullscreen => {
         document.body.classList.toggle('fullscreen', fullscreen);
     });
+
+    fetch("/version").then(res => res.json()).then(v => document.querySelector(".titlebar .title span").innerText = `v${v.year}.${v.month}.${v.version}${v.type? " - "+v.type : ""}`);
 </script>
 <script type="importmap">
 {
@@ -653,11 +664,13 @@
         const resources = JSON.parse(data.filedata);
 
         if(data.overwrite) {
+            if(data.libs)
             Object.entries(SpaceCAD.libs).forEach(([key, value]) => {
                 logger.warn(`Removing lib ${key}`);
                 SpaceCAD.libs[key] = {};
             });
 
+            if(data.modules)
             Object.entries(SpaceCAD.modules).forEach(([key, value]) => {
                 logger.warn(`Removing module ${key}`);
                 SpaceCAD.modules[key] = {};

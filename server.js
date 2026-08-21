@@ -100,6 +100,11 @@ app.get("/removeWatcher", (req, res) => {
     cancelWatch();
     res.send("file")
 });
+app.get("/version", (req, res) => {
+    const v = JSON.parse(fs.readFileSync("version.json", "utf8"));
+   
+    res.json(v);
+});
 
 
 
@@ -282,6 +287,35 @@ app.post("/serverScope", (req, res) => {
 });
  
 
+const setupVersion = (obj ={} ) => {
+    const month = obj.month ?? new Date().getMonth() + 1;
+    const year = obj.year ?? new Date().getFullYear().toString().slice(-2);
+    const version = obj.version ?? 0;
+    const type = obj.type ?? "dev";
+
+    fs.writeFileSync("version.json", JSON.stringify({
+        month,
+        year,
+        version,
+        type
+    }));
+}
+if(!fs.existsSync("version.json"))
+    setupVersion();
+else {
+    const old = JSON.parse(fs.readFileSync("version.json", "utf8"));
+
+    
+    const nowYear = new Date().getFullYear().toString().slice(-2);
+    const nowMonth = new Date().getMonth() + 1;
+    old.version = old.month != nowMonth? 0 : old.version + 1;
+    old.month = nowMonth;
+    old.year = nowYear;
+    old.type = "pA";
+
+    setupVersion(old);
+}
+    
 
 
 httpServer.listen(0, () => {
