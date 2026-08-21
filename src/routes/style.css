@@ -26,7 +26,7 @@ body {
     display: none !important;
 }
 
-button, .buttonLike {
+button, .buttonLike, input[type="button"], input[type="submit"] {
     cursor: pointer;
     border: none;
     padding: 10px 15px;
@@ -51,6 +51,9 @@ button, .buttonLike {
     }
 }
 
+.checkBoxIndicator:has(input:checked) {
+    background: green;
+}
 
 .question {
     background: var(--tertiary);
@@ -337,7 +340,8 @@ hr {
     align-items: center;
     margin: 5px;
     height: 2rem;
-    width: 100%;
+    max-width: 100%;
+    overflow: auto;
     gap: 15px;
 
     & button {
@@ -355,6 +359,7 @@ hr {
         max-width: 100%;
         overflow-x: scroll;
         gap: 5px;
+        flex: 1;
 
         
         &::-webkit-scrollbar {
@@ -363,10 +368,15 @@ hr {
 
 
         & .file {
+            flex: 0 0 auto;
             padding: 10px 7px 10px 10px;
 
             &:hover {
                 cursor: pointer;
+            }
+
+            &.moving {
+                opacity: .5;
             }
 
             &.selected {

@@ -381,7 +381,7 @@ class MouseManager {
             delta: 0,
         }
     }
-
+    
     onBrowser() {
         const DOMOrigin = this.parent.DOMOrigin;
         
@@ -508,6 +508,16 @@ class ButtonManager {
         const DOMOrigin = this.parent.DOMOrigin;
     
         const emitEvent = (event, state) => {
+            const target = document.activeElement;
+
+            if (
+                target instanceof HTMLInputElement ||
+                target instanceof HTMLTextAreaElement ||
+                target.isContentEditable
+            ) {
+                return;
+            }
+            
             if(this.disabled) return;
 
             let button = typeof event.code == "string" ? event.code : event;

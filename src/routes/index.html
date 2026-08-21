@@ -19,6 +19,7 @@
             </div>
         </div>
         <div class="window-buttons">
+            <button id="move">✥</button>
             <button id="minimize">−</button>
             <button id="maximize">□</button>
             <button id="close">×</button>
@@ -56,34 +57,109 @@
         </div>
     </div>
 
-    <div modal modalopen id="changelog" class="question">
+    <div modal open id="changelog" class="question">
         <div class="title">A Fazer</div>
-        arquivos -> caso retorne 404 apagar arquivo do dom
-        <br><br>
-        novo arquivo -> inserir nome e escolher diretorio
-        <br><br>
         pastas no filelist -> selecionar pasta, ler todos .spacecad.js e colocar na pasra, pode criar arquivos na pasta tambem
-        <br><br>
-        exportar/importar libs/modulos -> opção de sobreescrever ou incluir
         <br><br>
         SpaceCAD -> plane com text do canvas // tentar adicionar html dentro do plane
         <br><br>
         logo -> ideias no whatsapp -> fazer foguete no Three do jeito que eu quero
         <br><br>
         <div class="title">Atualizações</div>
-        info -> janela de changelog
+        
+        import/export resources, new file, remove on 404, move file scroll
+        <hr>
+        (21/08/2026 - 17:55) exportar/importar libs/modulos -> opção de sobreescrever ou incluir
         <br><br>
-        electron -> barra de titulo
+        (21/08/2026 - 16:55) novo arquivo -> inserir nome e escolher diretorio
+        <br><br>
+        (20/08/2026 - 17:54) arquivos -> caso retorne 404 apagar arquivo do dom
+        <br><br>
+        (20/08/2026 - 17:30) arquivos -> ao mover arquivo -> scroll into view
+        
+        <br><br><br>
+        titble bar, changelog,  ui move file
+        <hr>
+        (19/08/2026 - 17:00) info -> janela de changelog
+        <br><br>
+        (19/08/2026 - 16:30) electron -> barra de titulo
     </div>
+
+    <form modal id="newFileModal" class="question">
+        <div class="title">Novo SpaceCAD</div>
+        <p>Nome do Arquivo</p>
+        <input type="text" name="name" placeholder="nome do arquivo">
+        <hr>
+        <p>Diretorio</p>
+        <input type="text" name="path" placeholder="ex: C:\Users\user\Desktop">
+        <input type="button" id="selectDir" value="selecionar diretorio">
+        <hr>
+        <div class="buttons">
+            <input type="button" class="cancel" value="cancelar" closemodal>
+            <input type="submit" class="confirm" value="criar">
+        </div>
+    </form>
 
     <form modal id="renameModal" class="question">
         <div class="title">Renomear Arquivo</div>
         <p>Renomeando <span class="name"></span></p>
         <input type="text" name="name" placeholder="novo nome">
         <input type="hidden" name="path">
+        <hr>
         <div class="buttons">
             <input type="button" class="cancel" value="cancelar" closemodal>
             <input type="submit" class="confirm" value="renomear">
+        </div>
+    </form>
+
+    <form modal id="importResources" class="question">
+        <div class="title">Importar Resursos</div>
+        <input type="text" name="path" placeholder="ex: C:\Users\user\Desktop\spacecad.resources.json">
+        <input type="hidden" name="filedata">
+        <input type="button" id="selectFile" value="selecionar arquivo">
+        <hr>
+        <span>importando os seguintes recursos:</span>
+        <label class="buttonLike checkBoxButton checkBoxIndicator">
+            bibliotecas
+            <input type="checkbox" name="libs" checked>
+            <div class="hide"></div>
+        </label>
+        <label class="buttonLike checkBoxButton checkBoxIndicator">
+            modulos
+            <input type="checkbox" name="modules" checked>
+            <div class="hide"></div>
+        </label>
+        <hr>
+        <label class="buttonLike checkBoxButton checkBoxIndicator">
+            sobreescrever todos os recursos
+            <input type="checkbox" name="overwrite">
+            <div class="hide"></div>
+        </label>
+        <span>se selecionado, seus recursos serão apagados e os novos adicionados.</span>
+        <hr>
+        <div class="buttons">
+            <input type="button" class="cancel" value="cancelar" closemodal>
+            <input type="submit" class="confirm" value="importar">
+        </div>
+    </form>
+
+    <form modal id="shareResources" class="question">
+        <div class="title">Exportar Resursos</div>
+            <label class="buttonLike checkBoxButton checkBoxIndicator">
+                exportar bibliotecas
+                <input type="checkbox" name="libs">
+                <div class="hide"></div>
+            </label>
+        <hr>
+            <label class="buttonLike checkBoxButton checkBoxIndicator">
+                exportar modulos
+                <input type="checkbox" name="modules">
+                <div class="hide"></div>
+            </label>
+        <hr>
+        <div class="buttons">
+            <input type="button" class="cancel" value="cancelar" closemodal>
+            <input type="submit" class="confirm" value="exportar">
         </div>
     </form>
 </body> 
@@ -280,6 +356,7 @@
         electronStore.savedFiles = [];
 
     const selectDOM = (fileDom, file) => {
+        if(!fileDom) return logger.warn("file not found: ", file.fullName);
         document.querySelector(".fileList .selected")?.classList.remove("selected");
         fileDom.classList.add("selected");
         document.title = `SpaceCAD - ${fileDom.innerText}`;
@@ -313,8 +390,10 @@
 
             fileDom.on("mousedown", (ogevt, e) => {
                 const move = (evt) => {
+                    e.classList.toggle("moving", true);
                     let next = e.nextSibling;
                     let prev = e.previousSibling;
+                    let parent = e.parentElement;
 
                     e.style.position = "relative";
                     e.style.left = (evt.movementX * 2) + "px";
@@ -328,11 +407,16 @@
                         moveChild(e, e.childIndex - 1);
                         moveInList(file, fileArray.indexOf(file) - 1);
                     }
+
+                    e.scrollIntoView({
+                        block: "nearest"
+                    });
                 };
 
                 const up = () => {
                     e.style.position = "";
                     e.style.left = "";
+                    e.classList.toggle("moving", false);
                     document.off(listeners);
                     document.body.classList.remove("cursrorVer");
                 };
@@ -410,7 +494,7 @@
                 file
             );
 
-        fileArray.push(file);
+        fileArray.unshift(file);
         saveLS();
 
         if(setSelected){
@@ -460,12 +544,16 @@
             })
         });
 
-        SpaceCAD.run(load.text);
+        try {
+            SpaceCAD.run(load.text);
+        } catch (error) {
+            setTimeout(() => watchFile(file), 500);
+        }
+
     }
     const removeWatcher = () => fetch("/removeWatcher");
 
 
-    const fileInput = fileIndicator.querySelector("#options");
 
 
     const addPath = (path, setSelected = true) => {
@@ -481,20 +569,17 @@
             name
         };
 
-        addFile(fileObject, 1);
+        addFile(fileObject, setSelected);
     }
-    fileInput.addEventListener("click", async () => {
-        return;
-        let path = await electron.openFile();
 
-        addPath(path);
-    });
+    
+    const fileInput = fileIndicator.querySelector("#options");
 
-    setupDropdown(fileIndicator.querySelector("#options"), [
+    setupDropdown(fileInput, [
         createElement("button", e => {
-            e.innerHTML = "📄 novo arquivo ⚠️ WOK";
-            e.addEventListener("click", async () => {
-                alert("not implemented");
+            e.innerHTML = "📄 novo arquivo";
+            e.addEventListener("click", () => {
+                newFileModal.modal.toggle();
             });
         }),
         createElement("button", e => {
@@ -505,11 +590,24 @@
                 if(path) addPath(path);
             });
         }),
+        createElement("hr"),
         createElement("button", e => {
-            e.innerHTML = "📁 abrir diretorio ⚠️ WOK";
-            e.addEventListener("click", async () => {
-                alert("not implemented");
+            e.innerHTML = "📥 importar recursos";
+            e.addEventListener("click", () => {
+                importResources.modal.toggle();
             });
+        }),
+        createElement("button", e => {
+            e.innerHTML = "📤 exportar recursos";
+            e.addEventListener("click", () => {
+                shareResources.modal.toggle();
+            });
+        }),
+        createElement("hr"),
+
+        createElement("button", e => {
+            e.innerHTML = "🔃 recarregar página";
+            e.on("click", () => location.reload());
         }),
         createElement("hr"),
         
@@ -523,8 +621,7 @@
         }),
     ]);
 
-
-    fileIndicator.querySelector("#options").on(["mouseenter", "mouseleave"], (evt, el) => {
+    fileInput.on(["mouseenter", "mouseleave"], (evt, el) => {
         const type = evt.type;
         
         if(type == "mouseenter")
@@ -535,6 +632,134 @@
             Interval.clear("hoverOptions");
     })
 
+    // import resources
+    const importResources = document.querySelector("#importResources");
+    importResources.query("#selectFile").on("click", () => {
+        electron.openFile(["spacecad.resources.json"], true).then(data => {
+            importResources.query('[name="path"]').value = data.path;
+            importResources.query('[name="filedata"]').value = data.content;
+        });
+    });
+    importResources.onForm((evt, form) => {
+        evt.preventDefault();
+        const data = form.get();
+
+        if(!data.path)
+            return alert("selecione um arquivo");
+
+        if(!data.libs && !data.modules)
+            return alert("nenhum tipo de recurso selecionado");
+
+        const resources = JSON.parse(data.filedata);
+
+        if(data.overwrite) {
+            Object.entries(SpaceCAD.libs).forEach(([key, value]) => {
+                logger.warn(`Removing lib ${key}`);
+                SpaceCAD.libs[key] = {};
+            });
+
+            Object.entries(SpaceCAD.modules).forEach(([key, value]) => {
+                logger.warn(`Removing module ${key}`);
+                SpaceCAD.modules[key] = {};
+            });
+        }
+
+        if(data.libs)
+            Object.entries(resources.libs).forEach(([key, value]) => {
+                if(SpaceCAD.libs[key])
+                    logger.warn(`Overwriting lib ${key}`);
+                SpaceCAD.libs[key] = value;
+            });
+
+        if(data.modules)
+            Object.entries(resources.modules).forEach(([key, value]) => {
+                if(SpaceCAD.modules[key])
+                    logger.warn(`Overwriting module ${key}`);
+                SpaceCAD.modules[key] = value;
+            });
+            
+        importResources.modal.toggle();
+    });
+
+    // share resources
+    const shareResources = document.querySelector("#shareResources");
+    shareResources.onForm((evt, form) => {
+        evt.preventDefault();
+        const data = form.get();
+
+        const aux = {};
+
+        if(data.libs)
+            aux.libs = SpaceCAD.libs;
+
+        if(data.modules)
+            aux.modules = SpaceCAD.modules;
+
+        if(!data.libs && !data.modules)
+            return alert("selecione ao menos uma opção");
+
+            
+        const str = JSON.stringify(aux, null, 4);
+
+        const blob = new Blob([str], {
+            type: "application/json"
+        });
+
+        const url = URL.createObjectURL(blob);
+
+        const date = new Date().toLocaleString("pt-BR", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false
+        }).replaceAll("/","-").replaceAll(":","-").replaceAll(", ","_");
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `[${date}].spacecad.resources.json`;
+        a.click();
+
+        URL.revokeObjectURL(url);
+
+        shareResources.modal.close();
+    });
+
+
+    // new file
+    const newFileModal = document.querySelector("#newFileModal");
+    newFileModal.query("#selectDir").on("click", async () => {
+        let path = await electron.openDirectory();
+        newFileModal.query('[name="path"]').value = path;
+    });
+    newFileModal.modal.onOpen(() => {
+        newFileModal.reset();
+        newFileModal.query('[name="name"]').focus();
+    });
+    newFileModal.onForm((evt, form) => {
+        evt.preventDefault();
+        const {name, path} = form.get();
+
+        
+        if(!isValidFileName(name)) return alert("Nome inválido");
+        if(!path) return alert("Preencha o caminho");
+        
+        let res = syncFetch("/createFile", {
+            body: JSON.stringify({name, path})
+        });
+
+        if(res.error) return alert(res.error);
+
+        addPath(res.json.path);
+
+        logger.info("File created", res.json.fullName);
+
+        newFileModal.modal.close();
+    });
+
+
+
     
     if(electronStore.selectedFile) {
         setTimeout(() => {
@@ -543,12 +768,8 @@
         }, 250)
     }
 
-    
+    // rename file
     const renameModal = document.querySelector("#renameModal");
-    renameModal.querySelectorAll("input[name]").on(["focus", "focusout"], (evt) => {
-        const type = evt.type;
-        inputManager.button.disabled = type == "focus";
-    });
     renameModal.modal.onOpen(() => {
         const {data} = renameModal.modal;
         renameModal.query("span.name").innerText = data.name;
@@ -556,8 +777,8 @@
         renameModal.query('input[name="name"]').focus();
         renameModal.query('input[name="path"]').value = data.path;
     });
-
-    ObjectForm.on(renameModal, (form) => {
+    renameModal.onForm((evt, form) => {
+        evt.preventDefault();
         const {name, path} = form.get();
 
         if(name == renameModal.modal.data.name) return alert("Nome igual ao anterior")
@@ -570,7 +791,8 @@
         renameModal.modal.close();
     });
 
-    const serverEval = code => {
+    const debug = {};
+    debug.serverEval = code => {
         fetch("/serverScope", {
             method: "POST",
             headers: {
@@ -606,6 +828,20 @@
 
 
     socket.on("warn", (data) => {
+        if(data?.error == 404) {
+            logger.warn(data.message);
+            const el = fileList.children
+                    .find(el => el.dataset.path === data.path);
+
+            if(!el) return; 
+
+            const file = fileArray.find(f => f.path == data.path);
+            removeFile(file, el);
+
+            return;
+        }
+
+
         logger.warn(data);
     });
     socket.on("fileChanged", (data) => {

@@ -381,7 +381,7 @@ window.off = off;
             },
             set: () => {}
         },
-        objectForm: {
+        onForm: {
             get: function () {
                 if(this.tagName != "FORM") 
                     return null;
@@ -441,6 +441,12 @@ window.off = off;
         map: {
             get: function () {
                 return (...args) => Array.from(this).map(...args);
+            },
+            set: () => {}
+        },
+        array: {
+            get: function () {
+                return Array.from(this);
             },
             set: () => {}
         },
@@ -825,7 +831,7 @@ class Modal {
             this.closeModal.addEventListener("click", () => this.close());
         const {hiddenContainer} = this;
 
-        const isOpen = this.element.getAttribute("modalopen") != null;
+        const isOpen = this.element.getAttribute("open") != null;
         this.isOpen = isOpen;
 
         const closeOnOut = this.element.getAttribute("nooutclose") == null;

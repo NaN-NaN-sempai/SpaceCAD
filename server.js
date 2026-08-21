@@ -36,6 +36,13 @@ app.get("/", (req, res) => {
 });
 
 
+const file404 = (message, path) => {
+    io.emit("warn", {
+        error: 404,
+        path,
+        message
+    });
+}
 
 let watchTimeout = null;
 let fileWatcher = null;
@@ -44,7 +51,8 @@ const watchFilePath = (filePath) => {
     cancelWatch();
 
     if(!fs.existsSync(filePath)){
-        io.emit("warn", `File does not exist: "${filePath}"`);
+        console.log("FILE NO EXIST")
+        file404( `File does not exist: "${filePath}"`, filePath);
         watchFile = {};
         return ""; 
     }
@@ -94,6 +102,7 @@ app.get("/removeWatcher", (req, res) => {
 });
 
 
+
 app.post("/openPath", (req, res) => {
     const directory = req.body.directory ?? false;
     let reqPath = req.body.path;
@@ -104,7 +113,8 @@ app.post("/openPath", (req, res) => {
     if(fs.existsSync(reqPath))
         open(reqPath);
     else
-        io.emit("warn", `File does not exist: "${reqPath}"`);
+        file404(`File does not exist: "${reqPath}"`, reqPath);
+        //io.emit("warn", `File does not exist: "${reqPath}"`);
 
     res.send("ok");
 });
@@ -147,6 +157,32 @@ app.post("/renameFile", (req, res) => {
     res.send("ok")
 
         
+});
+
+app.post("/createFile", (req, res) => {
+    const name = req.body.name;
+    const dirPath = req.body.path;
+
+    if(!fs.existsSync(dirPath)) {
+        io.emit("warn", `Directory does not exist: "${dirPath}"`);
+        res.status(400).send("error");
+        return;
+    }
+
+    const fullPath = path.join(dirPath, name + ".spacecad.js");
+
+    if(fs.existsSync(fullPath)){
+        io.emit("warn", `File already exists: "${fullPath}"`);
+        res.status(400).send("error");
+        return;
+    }
+
+    fs.writeFileSync(fullPath, "");
+    res.json({
+        path: fullPath,
+        fullName: path.basename(fullPath),
+        name: path.basename(fullPath, ".spacecad.js")
+    });
 });
 
 

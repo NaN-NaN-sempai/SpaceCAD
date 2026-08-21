@@ -5,6 +5,7 @@
     right: 0;
 
     width: 100%;
+    max-width: 100%;
 
     display: flex;
     align-items: center;
@@ -13,6 +14,12 @@
     z-index: 999999;
 
     -webkit-app-region: drag;
+}
+.titlebar .fileIndicator{
+    -webkit-app-region: drag;
+}.titlebar .fileIndicator .fileList {
+
+    -webkit-app-region: no-drag;
 }
 .titlebar button {
     -webkit-app-region: no-drag;
@@ -42,13 +49,20 @@
     cursor: pointer;
 }
 
+.window-buttons #move {
+    font-weight: normal;
+    -webkit-app-region: drag;
+}
+
 .window-buttons button:hover {
     color: white;
     background: var(--primary);
 }
 
-body.fullscreen #minimize, body.fullscreen #maximize {
-    display: none;
+body.fullscreen {
+    & #minimize, & #maximize, & #move {
+        display: none;
+    }
 }
 
 #close:hover {

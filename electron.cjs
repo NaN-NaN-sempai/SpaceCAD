@@ -100,18 +100,31 @@ app.whenReady().then(() => {
     ipcMain.on('set-title', (event, title) => {
         BrowserWindow.fromWebContents(event.sender).setTitle(`SpaceCAD${title ? ` - ${title}` : ''}`);
     });
-    ipcMain.handle('open-file', async () => {
+    ipcMain.handle('open-file', async (event, extensions = ["spacecad.js"], content = false) => {
         const result = await dialog.showOpenDialog(win, {
             properties: ['openFile'],
             filters: [
-                { name: "SpaceCAD", extensions: ["spacecad.js"] }
+                { name: "SpaceCAD", extensions }
             ]   
         });
 
         if (result.canceled)
             return null;
 
+        if(content)
+            return {
+                path: result.filePaths[0],
+                content: fs.readFileSync(result.filePaths[0], "utf8")
+            }
         return result.filePaths[0];
+    });
+
+    ipcMain.handle("select-directory", async () => {
+        const result = await dialog.showOpenDialog(win, {
+            properties: ["openDirectory"]
+        });
+
+        return result.canceled ? null : result.filePaths[0];
     });
 });
 
