@@ -56,7 +56,12 @@ button, .buttonLike, input[type="button"], input[type="submit"] {
 }
 .svgIcon {
     height: 1.5em;
+
+    &.minnor {
+        height: 1em;
+    }
 }
+
 
 .checkBoxIndicator:has(input:checked) {
     background: green;

@@ -57,6 +57,10 @@
             redefinir camera
         </button>
 
+        <button class="iconButton" id="changePerspective" title="camera perspectiva">
+            <img class="svgIcon" src="./svg/perpective.svg" alt="camera">
+        </button>
+
         <div class="btnList ignore">
             <button>posição</button>
             <button>orientação</button>
@@ -68,6 +72,7 @@
     
         <div id="logger" class="toggleable">
             <label class="buttonLike checkBoxButton hasUnread">
+                <img class="svgIcon minnor" style="margin-right: 5px;" src="./svg/options/file.svg" alt="camera">
                 registros
                 <input type="checkbox">
                 <div class="unread hide"></div>
@@ -160,8 +165,13 @@
     <!-- CHANGELOG -->
     <div modal id="changelog" class="question">
         <div class="title">A Fazer</div>
-        SpaceCAD -> concertar perspectiva ortográfica
+        SpaceCad -> hinter: linha com texto na posição final
         <br><br>
+        SpaceCad -> hinter de objeto: linha do objeto até uma posição, mostra informações como nome, tamanho e informações custom
+        <br><br>
+        SpaceCad -> hinter de objeto: sempre mostra ou mostras quando passar o mouse sobre o objeto
+        <br><br>
+
         SpaceCAD -> configurar loops dos arquivos executados
         <br><br>
         UI -> sistema de tradução
@@ -174,6 +184,14 @@
         <br><br>
 
         <div class="title">Ultimas Atualizações</div>
+
+        <span style="background: var(--primary);">perspective change fix</span>
+        (22/08/2026 - 04:19) SpaceCAD UI -> botão que muda perspectiva
+        <br><br>
+        (22/08/2026 - 03:54) SpaceCAD -> concertar perspectiva ortográfica
+        <br><br>
+        (22/08/2026 - 03:42) UI -> botão do github nas opções
+        <br><br>
         
         
         <span style="background: var(--primary);">text, ruler</span>
@@ -659,16 +677,25 @@
             e.addEventListener("click", () => {
                 importResources.modal.toggle();
             });
+            e.closeMenu = true;
         }),
         createElement("button", e => {
             createSvgIcon(e, "./svg/options/export.svg", "exportar recursos");
             e.addEventListener("click", () => {
                 shareResources.modal.toggle();
             });
+            e.closeMenu = true;
         }),
         createElement("hr"),
 
 
+        createElement("button", e => {
+            createSvgIcon(e, "./svg/options/desselect.svg", "descarregar arquivo");
+            e.on("click", () => {
+                electronStore.selectedFile = null;
+                location.reload();
+            });
+        }),
         createElement("button", e => {
             createSvgIcon(e, "./svg/options/reload.svg", "recarregar página");
             e.on("click", () => location.reload());
@@ -684,21 +711,22 @@
                     document.documentElement.requestFullscreen();
                 }
             });
-        }),
-        createElement("button", e => {
-            createSvgIcon(e, "./svg/options/desselect.svg", "descarregar arquivo atual");
-            e.on("click", () => {
-                electronStore.selectedFile = null;
-                location.reload();
-            });
+            e.closeMenu = true;
         }),
         createElement("hr"),
         
         createElement("button", e => {
-        createSvgIcon(e, "./svg/options/file.svg", "notas da atualização");
-            e.on("click", async () => {
+            createSvgIcon(e, "./svg/options/file.svg", "notas da atualização");
+            e.on("click", () => {
                 const changelog = document.query("#changelog");
                 changelog.modal.toggle();
+            });
+            e.closeMenu = true;
+        }),
+        createElement("button", e => {
+            createSvgIcon(e, "./svg/options/github.svg", "SpaceCAD GitHub");
+            e.on("click", () => {
+                electron.openUrl("https://github.com/NaN-NaN-sempai/SpaceCAD");
             });
             e.closeMenu = true;
         }),

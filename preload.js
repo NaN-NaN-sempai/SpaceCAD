@@ -7,7 +7,8 @@ contextBridge.exposeInMainWorld('electron', {
     getFilePath: file => webUtils.getPathForFile(file),
     isFullscreen: () => ipcRenderer.invoke("is-fullscreen"),
     onFullscreen: (callback) =>
-        ipcRenderer.on('fullscreen', (_, value) => callback(value))
+        ipcRenderer.on('fullscreen', (_, value) => callback(value)),
+    openUrl: url => ipcRenderer.invoke('open-url', url)
 });
 contextBridge.exposeInMainWorld('electronStoreOG', {
     get: key => ipcRenderer.sendSync('store-get', key),

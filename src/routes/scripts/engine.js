@@ -450,7 +450,7 @@ class PivotCamera extends THREE.Object3D {
             size * aspect,
             size,
             -size,
-            0.1,
+            -100000,
             100000
         );
         this.perspectiveCamera = new THREE.PerspectiveCamera(
@@ -514,7 +514,7 @@ class PivotCamera extends THREE.Object3D {
 // CAMERAS
 const camera = new PivotCamera(scene);
 const UICamera = new PivotCamera(UIScene);
-const cameraDefaultPos = [500, 1000, 0];
+const cameraDefaultPos = [0, 0, 0];
 const cameraDefaultRot = [0, 0, 0];
 const cameraDefaultZoom = 2000;
 const cameraRot = electronStore.cameraRot || cameraDefaultPos;
@@ -566,6 +566,24 @@ const {
     setScl,
     mirror
 } = SpaceCAD;
+
+const changePerspectiveButton = document.querySelector("#changePerspective");
+const setPerspectiveDom = () => {
+    changePerspectiveButton.title = "mudar para " + ( camera.perspective !== "perspective" ? "camera perspectiva" : "camera ortogonal");
+    changePerspectiveButton.query("img").src = `./svg/${camera.perspective == "perspective" ? "perpective" : "orthographic"}.svg`;
+}
+const changePerspective = () => {
+    const isPerspective = camera.perspective == "perspective";
+    camera.perspective = isPerspective ? "orthographic" : "perspective";
+    
+    setPerspectiveDom();
+}
+changePerspectiveButton.on("click", changePerspective);
+setPerspectiveDom();
+
+
+
+
 
 // RENDERER
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -1671,7 +1689,7 @@ const overloader = new Overloader((frame, loop) => {
 
 
     if(perspective.is("up"))
-        camera.perspective = camera.perspective == "perspective" ? "orthographic" : "perspective";
+        changePerspective();
 
 
     camera.pos += 

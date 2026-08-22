@@ -1,4 +1,4 @@
-const {app, BrowserWindow, dialog, ipcMain, Menu} = require('electron');
+const {app, BrowserWindow, dialog, ipcMain, Menu, shell} = require('electron');
 const path = require('path');
 
 
@@ -42,8 +42,6 @@ app.whenReady().then(() => {
 
     win = new BrowserWindow({
         title: 'SpaceCAD',
-        width: 800,
-        height: 600,
         frame: false,
         titleBarStyle: 'hidden',
         webPreferences: {
@@ -91,6 +89,9 @@ app.whenReady().then(() => {
             win.unmaximize();
         else
             win.maximize();
+    });
+    ipcMain.handle('open-url', (event, url) => {
+        shell.openExternal(url);
     });
 
     ipcMain.on('window:close', () => {
