@@ -138,6 +138,8 @@ const meuArmario = new ArmarioPlanejado(80, 200, 50);
 
 * **`utils/setupDropdown`** — Cria menus flutuantes de forma simples e rápida. `(browser)` 
 
+* **`utils/cssVar`** — Retorna uma variavel css de um elemento `cssVar(meuElemento).cor // => "rgb(255, 0, 0)`, para pegar da root: `cssVar.cor // => #ff00ff`  `(browser)` 
+
 * **`utils/class ObjectForm`** — Gerenciador de form HTML, trasnforma os valores do form em objeto de forma simples. `(browser)` 
 
 * **`utils/class Modal`** — Cria Modals de forma dinamica. `(browser)` 

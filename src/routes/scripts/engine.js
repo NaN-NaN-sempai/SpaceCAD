@@ -162,6 +162,9 @@ Object.defineProperties(THREE.Object3D.prototype, {
         value: isAboveMouse,
         writable: false,
     },
+    worldPosition: {
+        get: function () { return this.getWorldPosition(new THREE.Vector3())},
+    }
 
 });
 Object.defineProperties(THREE.Group.prototype, {
@@ -359,6 +362,7 @@ THREE.Euler.prototype.__overload_anyAssignArithmetic = function (that, operator)
 // GLOBALS
 const v2 = (...ags) => new THREE.Vector2(...ags);
 const v3 = (...ags) => new THREE.Vector3(...ags);
+const v = (...ags) => new THREE.Vector3(...ags);
 const v4 = (...ags) => new THREE.Vector4(...ags);
 const v0 = new THREE.Vector3(0, 0, 0);
 const vx = new THREE.Vector3(1, 0, 0);
@@ -1382,7 +1386,7 @@ let onMouseRotation = false;
 let doMouseRotate = true;
 let doMouseMove = true;
 
-let zoom = 2000;
+let zoom = electronStore.cameraZoom ?? 2000;
 let moveSpeed = 10;
 
 
@@ -1719,6 +1723,7 @@ const overloader = new Overloader((frame, loop) => {
 const ENGINE_LOOP = new LOOP.pre(overloader.execute);
 
 const PRE_LOOP = new ENGINE_LOOP.loopBefore(() => {
+    SpaceCAD.instancesUpdate();
     SpaceCAD.axesHelper.update();
     UICamera.copyFrom(camera);
     PivotCamera.updateAll();

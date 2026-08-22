@@ -274,6 +274,10 @@ const SpaceCAD = class SpaceCAD {
     static instances = [];
     static roots = [];
 
+    static instancesUpdate = () => {
+        SpaceCAD.instances.forEach(instance => instance.update?.());
+    }
+
     // implement
     static DOMList = () => {
         const arr = [];
@@ -780,6 +784,7 @@ const SpaceCAD = class SpaceCAD {
                 });
                 if(prop.angle) prop.startHeadAngle = prop.endHeadAngle = prop.angle;
                 if(prop.headSize) prop.startHeadSize = prop.endHeadSize = prop.headSize;
+
                 const {startHead, endHead, startHeadSize, endHeadSize, startHeadAngle, endHeadAngle} = prop;
 
                 if(endHead) {
@@ -812,8 +817,8 @@ const SpaceCAD = class SpaceCAD {
     }
     static Arrow = class extends SpaceCAD.GroupObject {
         constructor(...args) {
-            const propIsObject = args[args.length - 1] instanceof Object && !args[args.length - 1] instanceof THREE.Vector3;
-            let prop = propIsObject? {} : args.pop();
+            const propIsObject = args.at(-1) instanceof Object && !(args.at(-1) instanceof THREE.Vector3);
+            let prop = propIsObject? args.pop(): {};
             prop = recursiveProxy(prop, {
                 color: 0x000000,
                 width: 1,
@@ -832,7 +837,7 @@ const SpaceCAD = class SpaceCAD {
                     const lineProp = {
                         ...prop,
                         control: prop.controls[i] || new THREE.Vector3(0, 0, 0)
-                    }
+                    };
 
                     if(i === args.length - 2 || i === 0)
                         new SpaceCAD.ArrowBase(arg, args[i + 1], {
@@ -848,8 +853,8 @@ const SpaceCAD = class SpaceCAD {
     }
     static Line = class extends SpaceCAD.GroupObject {
         constructor(...args) {
-            const propIsObject = args[args.length - 1] instanceof Object && !args[args.length - 1] instanceof THREE.Vector3;
-            let prop = propIsObject? {} : args.pop();
+            const propIsObject = args.at(-1) instanceof Object && !(args.at(-1) instanceof THREE.Vector3);
+            let prop = propIsObject? args.pop(): {};
             prop = recursiveProxy(prop, {
                 color: 0x000000,
                 width: 1,
@@ -873,6 +878,93 @@ const SpaceCAD = class SpaceCAD {
             })
         }
     }
+    
+    static Ruler = class extends SpaceCAD.Arrow {
+        constructor(from = v0, to = v0, prop = {}) {
+            prop = recursiveProxy(prop, {
+                startHead: true,
+                endHead: true,
+                angle: 90,
+                width: 2,
+                toFixed: 0,
+                color: cssVar.primary,
+                
+                fontSize: 48,
+                font: `Arial`,
+                align: "center",
+                textColor: "white",
+                background: cssVar.primary,
+                borderRadius: 2,
+                border: [3, cssVar.tertiary],
+                padding: 5,
+                resolution: 1,
+
+                awaysLooking: true,
+
+                postfix: "mm",
+            });
+
+            super(from, to, prop);
+
+            this.arrow = this.children[0];
+
+            this.from = this.__from = from;
+            this.to = this.__to = to;
+            
+            const setOnchange = () => {
+                this.distance = (this.to - this.from).length();
+                const minSize = 200;
+                const fontSize = this.distance <= 200 ? prop.fontSize * (this.distance / 200) : prop.fontSize;
+
+                if(!this.text) {
+                    this.space(() => {
+                        this.text = new SpaceCAD.Text({
+                            resolution: prop.resolution,
+                        })
+                    });
+                }
+                
+                this.text.fontSize = fontSize;
+                this.text.position.copy(((this.from + this.to) / 2) + (vy * 40));
+                this.text.font = prop.font;
+                this.text.align = prop.align;
+                this.text.color = prop.textColor;
+                this.text.background = prop.background;
+                this.text.borderRadius = prop.borderRadius;
+                this.text.border = prop.border;
+                this.text.padding = prop.padding;
+                this.text.text = this.distance.toFixed(prop.toFixed) + (prop.postfix? " " + prop.postfix: "");
+                this.text.awaysLooking = prop.awaysLooking;
+                this.text.resolution = prop.resolution;
+
+                this.arrow.from = this.from;
+                this.arrow.to = this.to;    
+                this.arrow.width = prop.width;            
+            }
+
+            setOnchange();
+
+            Object.defineProperties(this, {
+                from: {
+                    get: () => this.__from,
+                    set: (value) => {
+                        this.__from = value;
+                        setOnchange();
+                    }
+                },
+                to: {
+                    get: () => this.__to,
+                    set: (value) => {
+                        this.__to = value;
+                        setOnchange();
+                    }
+                }
+            })
+
+            console.log(this.distance)
+        }
+    }
+
 
     // others
     static AxesHelper = class extends THREE.LineSegments {
@@ -1012,8 +1104,171 @@ const SpaceCAD = class SpaceCAD {
     }
     static axesHelper = new SpaceCAD.AxesHelper();
 
+    static Text = class extends SpaceCAD.Object {
+        constructor(prop = {}) {
+            const defaultProp = {
+                text: "text",
+                fontSize: 48,
+                font: `Arial`,
+                align: "center",
+                color: "white",
+                background: cssVar.primary,
+                borderRadius: 2,
+                border: [3, cssVar.tertiary],
+                padding: 5,
+            }
+            prop = recursiveProxy(prop, {
+                ...defaultProp,
+                awaysLooking: false,
+                resolution: 10,
+            });
+
+            const setText = (origin = prop) => {
+                const text = origin.text;
+                const fontSize = origin.fontSize;
+                const originFont = origin.font;
+                const textAlign = origin.align;
+                const color = origin.color;
+
+                const font = `${fontSize * origin.resolution}px ${originFont}`;
+
+                const canvas = auxCanvas();
+                const { ctx } = canvas;
+
+                ctx.font = font;
+
+                const lines = String(text).split("\n");
+                const padding = origin.padding * origin.resolution;
+                const lineHeight = fontSize * 1.2 * origin.resolution;
+
+                const width = Math.ceil(
+                    Math.max(...lines.map(line => ctx.measureText(line).width)) +
+                    padding * 2
+                );
+
+                const height = Math.ceil(
+                    lines.length * lineHeight +
+                    padding * 2
+                );
+
+                canvas.width = width;
+                canvas.height = height;
+                
+                const borderWidth = origin.border[0] * origin.resolution;
+                const borderColor = origin.border[1];
+
+                ctx.beginPath();
+
+                ctx.roundRect(
+                    borderWidth / 2,
+                    borderWidth / 2,
+                    width - borderWidth,
+                    height - borderWidth,
+                    origin.borderRadius * origin.resolution
+                );
+
+                ctx.fillStyle = origin.background;
+                ctx.fill();
+
+                ctx.lineWidth = borderWidth;
+                ctx.strokeStyle = borderColor;
+                ctx.stroke();
+
+
+                ctx.fillStyle = color;
+                ctx.textAlign = textAlign;
+
+                ctx.font = font;
+                ctx.fillStyle = color;
+                ctx.textAlign = textAlign;
+
+                ctx.textBaseline = "middle";
+
+                const x =
+                    textAlign === "left" ? padding :
+                    textAlign === "right" ? width - padding :
+                    width / 2;
+
+                lines.forEach((line, i) => {
+                    ctx.fillText(
+                        line,
+                        x,
+                        padding + lineHeight * (i + 0.5)
+                    );
+                });
+
+                const texture = new THREE.CanvasTexture(canvas);
+
+                const material = new THREE.MeshBasicMaterial({
+                    map: texture,
+                    transparent: true,
+                });
+
+                const backMaterial = material.clone();
+                backMaterial.map = texture.clone();
+                backMaterial.map.wrapS = THREE.RepeatWrapping;
+                backMaterial.map.repeat.x = 1;
+                backMaterial.map.needsUpdate = true;
+
+                const geometry = new THREE.PlaneGeometry(width / origin.resolution, height / origin.resolution);
+
+                return {
+                    material,
+                    backMaterial,
+                    geometry,
+                    height,
+                    width
+                };
+            };
+            
+            const ogText = setText(prop);
+            const {material, geometry} = ogText;
+            super(prop, geometry, material);
+
+            this.space(() => {
+                this.back = new SpaceCAD.Mesh(geometry, ogText.backMaterial);
+            })
+            this.back.rotation.y = Math.PI;
+            this.back.position.z = -.001;
+
+            const setTextReactiveProperty = (key) => {
+                this[key] = this[`_${key}`] = prop[key];
+
+                Object.defineProperty(this, key, {
+                    get: () => this[`_${key}`],
+                    set: value => {
+                        this[`_${key}`] = value;
+                        
+                        const {material, backMaterial, geometry, width, height} = setText(this);
+                        this.width = width;
+                        this.height = height;
+                        this.material = material;
+                        this.geometry = geometry;
+                        
+                        this.back.geometry = geometry;
+                        this.back.material = backMaterial;
+                    }
+                })
+            }
+
+            Object.keys(defaultProp).forEach(setTextReactiveProperty);
+            
+
+            this.width = ogText.width;
+            this.height = ogText.height;
+            this.resolution = prop.resolution;
+
+            this.awaysLooking = prop.awaysLooking;
+        }
+
+        update() {
+            if(this.awaysLooking) {
+                this.lookAt(camera.selectedCamera.worldPosition);
+            }
+        }
+    }
+
     // TODO: SPACE CAD
-    // TEXT FROM CANVAS
 
     // HELPER LINE WITH WIDTH
 

@@ -196,6 +196,10 @@ hr {
             width: 300px;
             bottom: 0;
 
+            &::-webkit-scrollbar-thumb {
+                background: var(--secondary);
+            }
+
             & .item:first-child {
                 margin-top: 5px;
             }
@@ -309,6 +313,7 @@ hr {
                     float: right;
                     font-size: .75rem;
                     color: rgb(255, 255, 255, 0.5);
+                    user-select: none;
                 }
 
                 & .stack {
@@ -450,6 +455,6 @@ i {
     display: none;
 }
 ::-webkit-scrollbar-thumb {
-    background: var(--primary);
+    background: linear-gradient(to bottom, transparent, var(--primary) 1.5% 98.5%, transparent);
     border-radius: 5px;
 }

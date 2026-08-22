@@ -73,55 +73,10 @@
                 <div class="unread hide"></div>
             </label>
             <div class="body">
-                <div class="title">Registros de Execução</div>
+                <h1 class="title">Registros de Execução <img class="svgIcon" src="./svg/options/file.svg" alt="arquivo"></h1>
                 <div class="list"></div>
             </div>
         </div>
-    </div>
-
-    <div modal id="changelog" class="question">
-        <div class="title">A Fazer</div>
-        SpaceCAD -> plane com text do canvas // tentar adicionar html dentro do plane
-        <br><br>
-        SpaceCAD -> concertar perspectiva ortográfica
-        <br><br>
-        UI -> sistema de tradução
-        <br><br>
-        logo -> ideias no whatsapp -> fazer foguete no Three do jeito que eu quero
-        <br><br>
-
-
-        <div class="title">Atualizações</div>
-
-        <span style="background: var(--primary);">svg icons, camera orientation buttons</span>
-        (21/08/2026 - 22:44) UI -> opção de tela cheia na lista de opções
-        <br><br>
-        (21/08/2026 - 22:17) UI -> icones em svg
-        <br><br>
-        (21/08/2026 - 21:22) SpaceCAD UI -> botões de setar orientação da cameta: direita, cima, baixo, etc
-        <br><br>
-        
-        <span style="background: var(--primary);">version control</span>
-        <hr>
-        (21/08/2026 - 19:01) projeto -> setup de versões
-        <br><br>
-        
-        <span style="background: var(--primary);">import/export resources, new file, remove on 404, move file scroll</span>
-        <hr>
-        (21/08/2026 - 17:55) exportar/importar libs/modulos -> opção de sobreescrever ou incluir
-        <br><br>
-        (21/08/2026 - 16:55) novo arquivo -> inserir nome e escolher diretorio
-        <br><br>
-        (20/08/2026 - 17:54) arquivos -> caso retorne 404 apagar arquivo do dom
-        <br><br>
-        (20/08/2026 - 17:30) arquivos -> ao mover arquivo -> scroll into view
-        
-        <br><br>
-        <span style="background: var(--primary);">titble bar, changelog,  ui move file</span>
-        <hr>
-        (19/08/2026 - 17:00) info -> janela de changelog
-        <br><br>
-        (19/08/2026 - 16:30) electron -> barra de titulo
     </div>
 
     <form modal id="newFileModal" class="question">
@@ -201,6 +156,66 @@
             <input type="submit" class="confirm" value="exportar">
         </div>
     </form>
+
+    <!-- CHANGELOG -->
+    <div modal id="changelog" class="question">
+        <div class="title">A Fazer</div>
+        SpaceCAD -> concertar perspectiva ortográfica
+        <br><br>
+        SpaceCAD -> configurar loops dos arquivos executados
+        <br><br>
+        UI -> sistema de tradução
+        <br><br>
+        logo -> ideias no whatsapp -> fazer foguete no Three do jeito que eu quero
+        <br><br>
+
+        <span style="background: var(--primary); font-weight: bold; ">(Não essenciais)</span>
+        SpaceCAD plane com text -> adicionar html dentro do plane 
+        <br><br>
+
+        <div class="title">Ultimas Atualizações</div>
+        
+        
+        <span style="background: var(--primary);">text, ruler</span>
+        (22/08/2026 - 03:23) SpaceCAD -> régua
+        <br><br>
+        (22/08/2026 - 01:02) SpaceCAD -> plane com text do canvas
+        <br><br>
+        (21/08/2026 - 23:05) SpaceCAD -> descelecionar arquivo aberto
+        <br><br>
+        (21/08/2026 - 22:58) UI -> estilo do scroll no registros de execução
+        <br><br>
+
+        <span style="background: var(--primary);">svg icons, camera orientation buttons</span>
+        (21/08/2026 - 22:44) UI -> opção de tela cheia na lista de opções
+        <br><br>
+        (21/08/2026 - 22:17) UI -> icones em svg
+        <br><br>
+        (21/08/2026 - 21:22) SpaceCAD UI -> botões de setar orientação da cameta: direita, cima, baixo, etc
+        <br><br>
+        
+        <span style="background: var(--primary);">version control</span>
+        <hr>
+        (21/08/2026 - 19:01) projeto -> setup de versões
+        <br><br>
+        
+        <span style="background: var(--primary);">import/export resources, new file, remove on 404, move file scroll</span>
+        <hr>
+        (21/08/2026 - 17:55) exportar/importar libs/modulos -> opção de sobreescrever ou incluir
+        <br><br>
+        (21/08/2026 - 16:55) novo arquivo -> inserir nome e escolher diretorio
+        <br><br>
+        (20/08/2026 - 17:54) arquivos -> caso retorne 404 apagar arquivo do dom
+        <br><br>
+        (20/08/2026 - 17:30) arquivos -> ao mover arquivo -> scroll into view
+        
+        <br><br>
+        <span style="background: var(--primary);">titble bar, changelog,  ui move file</span>
+        <hr>
+        (19/08/2026 - 17:00) info -> janela de changelog
+        <br><br>
+        (19/08/2026 - 16:30) electron -> barra de titulo
+    </div>
 </body> 
 <script> // TITLE BAR
     const minimize = document.querySelector("#minimize");
@@ -624,7 +639,7 @@
     const fileInput = fileIndicator.querySelector("#options");
 
     setupDropdown(fileInput, [
-        createElement("button", e => {
+        createElement("button", e => { 
             createSvgIcon(e, "./svg/options/newFile.svg", "novo arquivo");
             e.addEventListener("click", () => {
                 newFileModal.modal.toggle();
@@ -653,6 +668,7 @@
         }),
         createElement("hr"),
 
+
         createElement("button", e => {
             createSvgIcon(e, "./svg/options/reload.svg", "recarregar página");
             e.on("click", () => location.reload());
@@ -667,6 +683,13 @@
                 } else {
                     document.documentElement.requestFullscreen();
                 }
+            });
+        }),
+        createElement("button", e => {
+            createSvgIcon(e, "./svg/options/desselect.svg", "descarregar arquivo atual");
+            e.on("click", () => {
+                electronStore.selectedFile = null;
+                location.reload();
             });
         }),
         createElement("hr"),

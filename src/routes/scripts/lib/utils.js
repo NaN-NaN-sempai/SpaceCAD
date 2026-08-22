@@ -493,8 +493,33 @@ window.off = off;
         }
     })
 });
+const recursiveProxies = new WeakSet();
+const isProxy = obj =>
+    obj !== null &&
+    typeof obj === "object" &&
+    recursiveProxies.has(obj);
+
+const resolveProxy = (obj) => {
+    if (!isProxy(obj))
+        return obj;
+
+    const resolved = {};
+
+    for (const key of Reflect.ownKeys(obj)) {
+        const value = obj[key];
+
+        resolved[key] = isProxy(value)
+            ? resolveProxy(value)
+            : value;
+    }
+
+    return resolved;
+};
 const recursiveProxy = (config, defaults) => {
-    return new Proxy(config, {
+    if(isProxy(config)) 
+        config = resolveProxy(config);
+
+    const proxy =  new Proxy(config, {
         get(target, key) {
             const value = target[key];
             const defaultValue = defaults?.[key];
@@ -504,8 +529,36 @@ const recursiveProxy = (config, defaults) => {
             }
 
             return value ?? defaultValue;
+        },
+
+        getOwnPropertyDescriptor(target, key) {
+            const descriptor = Reflect.getOwnPropertyDescriptor(target, key);
+
+            if (descriptor)
+                return descriptor;
+
+            if (defaults && key in defaults) {
+                return {
+                    enumerable: true,
+                    configurable: true,
+                    writable: true,
+                    value: defaults[key]
+                };
+            }
+        },
+
+        ownKeys(target) {
+            return [
+                ...new Set([
+                    ...Reflect.ownKeys(target),
+                    ...Reflect.ownKeys(defaults ?? {})
+                ])
+            ];
         }
     });
+
+    recursiveProxies.add(proxy);
+    return proxy;
 };
 function isClass(value) {
     return typeof value === "function" &&
@@ -770,6 +823,22 @@ const formData = (form) => {
     return data;
 }
 
+const cssVar = new Proxy((el, ogKey) => {
+        if(ogKey) return getComputedStyle(el).getPropertyValue(ogKey.startsWith("--")? ogKey : `--${ogKey}`);
+
+        return new Proxy(key => {
+            key = key.startsWith("--")? key : `--${key}`;
+            return getComputedStyle(el).getPropertyValue(key);
+        }, {
+            get: (target, name) => {
+                return target(name);
+            }
+        });
+    }, {
+    get: (target, name) => {
+        return target(document.documentElement, name);
+    }
+})
 
 function moveChild(element, index) {
     const container = element.parentElement;
