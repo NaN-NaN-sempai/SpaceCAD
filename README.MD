@@ -167,6 +167,7 @@ const meuArmario = new ArmarioPlanejado(80, 200, 50);
   - `query/all` — Simplifacação do querySelector/querySelectorAll.
   - `rect` — Simplificação de `getBoundingClientRect()`.
   - `childIndex` — Retorna o indice do elemento no seu elemento pai.
+  - `appendText` — Insere um elemento de texto.
   - `{FORM}.objectForm` — Maneira de acessar o ObjectForm no form.
   - `{FORM}.asObject` — Maneira de acessar os valores do form como objeto usando o ObjectForm.
   - `{element[modal]}.modal` — Maneira de acessar o Modal no elemento.

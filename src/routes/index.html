@@ -34,6 +34,25 @@
 
 
     <div class="bottomItens">
+        <button class="cameraLook iconButton" title="olhar de cima">
+            <img class="svgIcon" src="./svg/lookTop.svg" alt="top">
+        </button>
+        <button class="cameraLook iconButton" title="olhar de baixo">
+            <img class="svgIcon" src="./svg/lookBottom.svg" alt="bottom">
+        </button>
+        <button class="cameraLook iconButton" title="olhar da direita">
+            <img class="svgIcon" src="./svg/lookRight.svg" alt="right">
+        </button>
+        <button class="cameraLook iconButton" title="olhar da esquerda">
+            <img class="svgIcon" src="./svg/lookLeft.svg" alt="left">
+        </button>
+        <button class="cameraLook iconButton" title="olhar de frente">
+            <img class="svgIcon" src="./svg/lookFront.svg" alt="front">
+        </button>
+        <button class="cameraLook iconButton" title="olhar de trás">
+            <img class="svgIcon" src="./svg/lookBack.svg" alt="back">
+        </button>
+
         <button id="setDefaultCamera">
             redefinir camera
         </button>
@@ -60,17 +79,27 @@
         </div>
     </div>
 
-    <div modal open id="changelog" class="question">
+    <div modal id="changelog" class="question">
         <div class="title">A Fazer</div>
         SpaceCAD -> plane com text do canvas // tentar adicionar html dentro do plane
         <br><br>
-        SpaceCAD -> botões de setar orientação da cameta: direita, cima, baixo, etc
+        SpaceCAD -> concertar perspectiva ortográfica
         <br><br>
         UI -> sistema de tradução
         <br><br>
         logo -> ideias no whatsapp -> fazer foguete no Three do jeito que eu quero
         <br><br>
+
+
         <div class="title">Atualizações</div>
+
+        <span style="background: var(--primary);">svg icons, camera orientation buttons</span>
+        (21/08/2026 - 22:44) UI -> opção de tela cheia na lista de opções
+        <br><br>
+        (21/08/2026 - 22:17) UI -> icones em svg
+        <br><br>
+        (21/08/2026 - 21:22) SpaceCAD UI -> botões de setar orientação da cameta: direita, cima, baixo, etc
+        <br><br>
         
         <span style="background: var(--primary);">version control</span>
         <hr>
@@ -96,7 +125,7 @@
     </div>
 
     <form modal id="newFileModal" class="question">
-        <div class="title">Novo SpaceCAD</div>
+        <div class="title">Novo SpaceCAD <img class="svgIcon" src="./svg/options/newFile.svg" alt="new file"></div>
         <p>Nome do Arquivo</p>
         <input type="text" name="name" placeholder="nome do arquivo">
         <hr>
@@ -111,7 +140,7 @@
     </form>
 
     <form modal id="renameModal" class="question">
-        <div class="title">Renomear Arquivo</div>
+        <div class="title">Renomear Arquivo <img class="svgIcon" src="./svg/options/editFile.svg" alt="rename"></div>
         <p>Renomeando <span class="name"></span></p>
         <input type="text" name="name" placeholder="novo nome">
         <input type="hidden" name="path">
@@ -123,7 +152,7 @@
     </form>
 
     <form modal id="importResources" class="question">
-        <div class="title">Importar Resursos</div>
+        <div class="title">Importar Resursos <img class="svgIcon" src="./svg/options/import.svg" alt="import resources"></div>
         <input type="text" name="path" placeholder="ex: C:\Users\user\Desktop\spacecad.resources.json">
         <input type="hidden" name="filedata">
         <input type="button" id="selectFile" value="selecionar arquivo">
@@ -154,7 +183,7 @@
     </form>
 
     <form modal id="shareResources" class="question">
-        <div class="title">Exportar Resursos</div>
+        <div class="title">Exportar Resursos <img class="svgIcon" src="./svg/options/export.svg" alt="export resources"></div>
             <label class="buttonLike checkBoxButton checkBoxIndicator">
                 exportar bibliotecas
                 <input type="checkbox" name="libs">
@@ -184,10 +213,15 @@
 
     electron.isFullscreen().then(b => document.body.classList.toggle('fullscreen', b));
     window.electron.onFullscreen(fullscreen => {
+        document.querySelector("#options #optionsFullscreen img").src = `./svg/options/${fullscreen? "fullscreenOut" : "fullscreen"}.svg`;
         document.body.classList.toggle('fullscreen', fullscreen);
     });
 
-    fetch("/version").then(res => res.json()).then(v => document.querySelector(".titlebar .title span").innerText = `v${v.year}.${v.month}.${v.version}${v.type? " - "+v.type : ""}`);
+    let version = "";
+    fetch("/version").then(res => res.json()).then(v => {
+        version = `v${v.year}.${v.month}.${v.version}${v.type? " - "+v.type : ""}`;
+        document.querySelector(".titlebar .title span").innerText = version;
+    });
 </script>
 <script type="importmap">
 {
@@ -371,7 +405,7 @@
         if(!fileDom) return logger.warn("file not found: ", file.fullName);
         document.querySelector(".fileList .selected")?.classList.remove("selected");
         fileDom.classList.add("selected");
-        document.title = `SpaceCAD - ${fileDom.innerText}`;
+        document.title = `SpaceCAD ${version} - ${fileDom.innerText}`;
 
         electronStore.selectedFile = file;
         SpaceCAD.deleteAll();
@@ -444,7 +478,8 @@
             fileDom.on("click", () => selectDOM(fileDom, file));
 
             setupDropdown(fileDom, "contextmenu", [
-                createElement("button", e => { e.innerText = "📄 abrir no editor";
+                createElement("button", e => {
+                    createSvgIcon(e, "./svg/options/file.svg", "abrir no editor");
                     e.closeMenu = true;
                     e.addEventListener("click", (evt) => {
                         evt.stopPropagation();
@@ -457,8 +492,8 @@
                         })
                     });
                 }),
-                createElement("button", e => { 
-                    e.innerText = "📂 abrir no explorador";
+                createElement("button", e => {
+                    createSvgIcon(e, "./svg/options/openFile.svg", "abrir no explorador");
                     e.on("click", (evt) => {
                         evt.stopPropagation();
                         
@@ -472,7 +507,8 @@
                     });
                     e.closeMenu = true;
                 }),
-                createElement("button", e => { e.innerText = "📝 renomear";
+                createElement("button", e => {
+                    createSvgIcon(e, "./svg/options/editFile.svg", "renomear");
                     e.closeMenu = true;
                     e.addEventListener("click", (evt) => {
                         evt.stopPropagation();
@@ -589,13 +625,13 @@
 
     setupDropdown(fileInput, [
         createElement("button", e => {
-            e.innerHTML = "📄 novo arquivo";
+            createSvgIcon(e, "./svg/options/newFile.svg", "novo arquivo");
             e.addEventListener("click", () => {
                 newFileModal.modal.toggle();
             });
         }),
         createElement("button", e => {
-            e.innerHTML = "📁 abrir arquivo";
+            createSvgIcon(e, "./svg/options/openFile.svg", "abrir arquivo");
             e.addEventListener("click", async () => {
                 let path = await electron.openFile();
 
@@ -604,13 +640,13 @@
         }),
         createElement("hr"),
         createElement("button", e => {
-            e.innerHTML = "📥 importar recursos";
+            createSvgIcon(e, "./svg/options/import.svg", "importar recursos");
             e.addEventListener("click", () => {
                 importResources.modal.toggle();
             });
         }),
         createElement("button", e => {
-            e.innerHTML = "📤 exportar recursos";
+            createSvgIcon(e, "./svg/options/export.svg", "exportar recursos");
             e.addEventListener("click", () => {
                 shareResources.modal.toggle();
             });
@@ -618,13 +654,25 @@
         createElement("hr"),
 
         createElement("button", e => {
-            e.innerHTML = "🔃 recarregar página";
+            createSvgIcon(e, "./svg/options/reload.svg", "recarregar página");
             e.on("click", () => location.reload());
+        }),
+
+        createElement("button", e => {
+            createSvgIcon(e, "./svg/options/fullscreen.svg", "tela cheia");
+            e.id = "optionsFullscreen";
+            e.on("click", () => {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else {
+                    document.documentElement.requestFullscreen();
+                }
+            });
         }),
         createElement("hr"),
         
         createElement("button", e => {
-            e.innerHTML = "📄 notas da atualização";
+        createSvgIcon(e, "./svg/options/file.svg", "notas da atualização");
             e.on("click", async () => {
                 const changelog = document.query("#changelog");
                 changelog.modal.toggle();

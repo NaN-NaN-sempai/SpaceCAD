@@ -356,6 +356,12 @@ window.off = off;
             },
             set: () => {} 
         },
+        appendText: {
+            get: function () {
+                return (value) => this.appendChild(document.createTextNode(value));
+            },
+            set: () => {}
+        },
 
         dropdown: {
             get: () => function (...agrs) {
@@ -650,6 +656,15 @@ const createElement = (...args) => {
     callback.call(element, element);
     return element;
 }
+const createSvgIcon = (element, src, text) => {
+    element.append(createElement("img", "svgIcon", {
+        paddingRight: text? "10px" : null,
+    }, {
+        src,
+        alt: src.split("/").pop().split(".")[0]
+    }))
+    if(text) element.appendText(text);;
+}
 
 const setupDropdown = (...args) => {
     if(!args[0]) throw new Error("No element provided");
@@ -662,6 +677,8 @@ const setupDropdown = (...args) => {
         Array.isArray(args[1]) ? args[1] : [args[1]];
 
     dom.classList.toggle("hasDropdownMenu", true);
+    if(eventType == "contextmenu")
+        dom.classList.toggle("hasContextMenu", true);
     
     const menu = document.createElement("div");
     menu.classList.add("dropdownMenu", "hidden");

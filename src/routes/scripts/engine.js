@@ -618,6 +618,39 @@ scene.add(SpaceCAD.axesHelper);
 
 
 // USER INTERFACE AND INTERACTIONS
+// camera look from rotation
+document.query(".bottomItens").all(".cameraLook").on("click", (evt, e) => {
+    const direction = e.query("img").alt;
+
+    switch (direction) {
+        case "front":
+            camera.rotation.set(0, 0, 0);
+            break;
+
+        case "back":
+            camera.rotation.set(0, Math.PI, 0);
+            break;
+
+        case "left":
+            camera.rotation.set(0, Math.PI / 2, 0);
+            break;
+
+        case "right":
+            camera.rotation.set(0, (Math.PI / 2) * 3, 0);
+            break;
+
+        case "top":
+            camera.rotation.set(Math.PI / 2, 0, 0);
+            break;
+
+        case "bottom":
+            camera.rotation.set((Math.PI / 2) * 3, 0, 0);
+            break;
+
+    }
+})
+
+
 const cursor = document.querySelector('#tempCursor').style;
 const setCursor = url => {
     cursor.backgroundImage = `url(/cursor/${url})`;
