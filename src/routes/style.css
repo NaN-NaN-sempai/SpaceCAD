@@ -49,6 +49,10 @@ button, .buttonLike, input[type="button"], input[type="submit"] {
     &:hover {
         background: var(--secondary);
     }
+
+    &.selected {
+        background: green;
+    }
 }
 
 .iconButton {

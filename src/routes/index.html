@@ -34,156 +34,169 @@
 
 
     <div class="bottomItens">
-        <button class="cameraLook iconButton" title="olhar de cima">
+        <button class="cameraLook iconButton" language-title-bottombuttons-setlook-top>
             <img class="svgIcon" src="./svg/lookTop.svg" alt="top">
         </button>
-        <button class="cameraLook iconButton" title="olhar de baixo">
+        <button class="cameraLook iconButton" language-title-bottombuttons-setlook-bottom>
             <img class="svgIcon" src="./svg/lookBottom.svg" alt="bottom">
         </button>
-        <button class="cameraLook iconButton" title="olhar da direita">
+        <button class="cameraLook iconButton" language-title-bottombuttons-setlook-right>
             <img class="svgIcon" src="./svg/lookRight.svg" alt="right">
         </button>
-        <button class="cameraLook iconButton" title="olhar da esquerda">
+        <button class="cameraLook iconButton" language-title-bottombuttons-setlook-left>
             <img class="svgIcon" src="./svg/lookLeft.svg" alt="left">
         </button>
-        <button class="cameraLook iconButton" title="olhar de frente">
+        <button class="cameraLook iconButton" language-title-bottombuttons-setlook-front>
             <img class="svgIcon" src="./svg/lookFront.svg" alt="front">
         </button>
-        <button class="cameraLook iconButton" title="olhar de trás">
+        <button class="cameraLook iconButton" language-title-bottombuttons-setlook-back>
             <img class="svgIcon" src="./svg/lookBack.svg" alt="back">
         </button>
 
-        <button id="setDefaultCamera">
-            redefinir camera
-        </button>
+        <button id="setDefaultCamera" language-bottombuttons-defaultcamera-all></button>
 
-        <button class="iconButton" id="changePerspective" title="camera perspectiva">
+        <button class="iconButton" id="changePerspective" language-title-bottombuttons-setperspective-perspective>
             <img class="svgIcon" src="./svg/perpective.svg" alt="camera">
         </button>
 
         <div class="btnList ignore">
-            <button>posição</button>
-            <button>orientação</button>
-            <button>zoom</button>
-            <button>perspectiva</button>
+            <button language-bottombuttons-defaultcamera-position></button>
+            <button language-bottombuttons-defaultcamera-orientation></button>
+            <button language-bottombuttons-defaultcamera-zoom></button>
+            <button language-bottombuttons-defaultcamera-perspective></button>
         </div>
 
-        <button id="showEdges">mostrar cantos</button>
+        <button id="showEdges" language-bottombuttons-edges-show></button>
     
         <div id="logger" class="toggleable">
             <label class="buttonLike checkBoxButton hasUnread">
                 <img class="svgIcon minnor" style="margin-right: 5px;" src="./svg/options/file.svg" alt="camera">
-                registros
+                <span language-bottombuttons-logs-button></span>
                 <input type="checkbox">
                 <div class="unread hide"></div>
             </label>
             <div class="body">
-                <h1 class="title">Registros de Execução <img class="svgIcon" src="./svg/options/file.svg" alt="arquivo"></h1>
+                <h1 class="title"><span language-bottombuttons-logs-title></span> <img class="svgIcon" src="./svg/options/file.svg" alt="arquivo"></h1>
                 <div class="list"></div>
             </div>
         </div>
     </div>
 
-    <form modal id="newFileModal" class="question">
-        <div class="title">Novo SpaceCAD <img class="svgIcon" src="./svg/options/newFile.svg" alt="new file"></div>
-        <p>Nome do Arquivo</p>
-        <input type="text" name="name" placeholder="nome do arquivo">
+    <form modal id="translateModal" class="question">
+        <div class="title"><span language-modal-translate-title></span> <img class="svgIcon" src="./svg/options/newFile.svg" alt="new file"></div>
+        <div class="inserLangs">
+
+        </div>
         <hr>
-        <p>Diretorio</p>
-        <input type="text" name="path" placeholder="ex: C:\Users\user\Desktop">
+        <div class="buttons">
+            <input type="button" class="cancel" closemodal language-value-modal-newfile-cancel>
+        </div>
+    </form>
+
+    <form modal id="newFileModal" class="question">
+        <div class="title"><span language-modal-newfile-title></span> <img class="svgIcon" src="./svg/options/newFile.svg" alt="new file"></div>
+        <p language-modal-newfile-name></p>
+        <input type="text" name="name" language-placeholder-modal-newfile-nameplaceholder>
+        <hr>
+        <p language-modal-newfile-dir></p>
+        <input type="text" name="path" language-placeholder-modal-newfile-dirplaceholder>
         <input type="button" id="selectDir" value="selecionar diretorio">
         <hr>
         <div class="buttons">
-            <input type="button" class="cancel" value="cancelar" closemodal>
-            <input type="submit" class="confirm" value="criar">
+            <input type="button" class="cancel" closemodal language-value-modal-newfile-cancel>
+            <input type="submit" class="confirm" language-value-modal-newfile-confirm>
         </div>
     </form>
 
     <form modal id="renameModal" class="question">
-        <div class="title">Renomear Arquivo <img class="svgIcon" src="./svg/options/editFile.svg" alt="rename"></div>
-        <p>Renomeando <span class="name"></span></p>
-        <input type="text" name="name" placeholder="novo nome">
+        <div class="title"><span language-modal-rename-title></span> <img class="svgIcon" src="./svg/options/editFile.svg" alt="rename"></div>
+        <p><span language-modal-rename-renaming></span> <span class="name"></span></p>
+        <input type="text" name="name" language-placeholder-modal-rename-placeholder>
         <input type="hidden" name="path">
         <hr>
         <div class="buttons">
-            <input type="button" class="cancel" value="cancelar" closemodal>
-            <input type="submit" class="confirm" value="renomear">
+            <input type="button" class="cancel" closemodal language-value-modal-rename-cancel>
+            <input type="submit" class="confirm" language-value-modal-rename-confirm>
         </div>
     </form>
 
     <form modal id="importResources" class="question">
-        <div class="title">Importar Resursos <img class="svgIcon" src="./svg/options/import.svg" alt="import resources"></div>
+        <div class="title"><span language-modal-importresources-title></span> <img class="svgIcon" src="./svg/options/import.svg" alt="import resources"></div>
         <input type="text" name="path" placeholder="ex: C:\Users\user\Desktop\spacecad.resources.json">
         <input type="hidden" name="filedata">
         <input type="button" id="selectFile" value="selecionar arquivo">
         <hr>
-        <span>importando os seguintes recursos:</span>
+        <span language-modal-importresources-selecttypetext></span>
         <label class="buttonLike checkBoxButton checkBoxIndicator">
-            bibliotecas
+            <span language-modal-importresources-libs></span>
             <input type="checkbox" name="libs" checked>
             <div class="hide"></div>
         </label>
         <label class="buttonLike checkBoxButton checkBoxIndicator">
-            modulos
+            <span language-modal-importresources-modules></span>
             <input type="checkbox" name="modules" checked>
             <div class="hide"></div>
         </label>
         <hr>
         <label class="buttonLike checkBoxButton checkBoxIndicator">
-            sobreescrever todos os recursos
+            <span language-modal-importresources-overwrite></span>
             <input type="checkbox" name="overwrite">
             <div class="hide"></div>
         </label>
-        <span>se selecionado, seus recursos serão apagados e os novos adicionados.</span>
+        <span language-modal-importresources-overwritetext></span>
         <hr>
         <div class="buttons">
-            <input type="button" class="cancel" value="cancelar" closemodal>
-            <input type="submit" class="confirm" value="importar">
+            <input type="button" class="cancel" closemodal language-value-modal-importresources-cancel>
+            <input type="submit" class="confirm" language-value-modal-importresources-confirm>
         </div>
     </form>
 
     <form modal id="shareResources" class="question">
-        <div class="title">Exportar Resursos <img class="svgIcon" src="./svg/options/export.svg" alt="export resources"></div>
+        <div class="title"><span language-modal-shareresources-title></span> <img class="svgIcon" src="./svg/options/export.svg" alt="export resources"></div>
             <label class="buttonLike checkBoxButton checkBoxIndicator">
-                exportar bibliotecas
+                <span language-modal-shareresources-libs></span>
                 <input type="checkbox" name="libs">
                 <div class="hide"></div>
             </label>
         <hr>
             <label class="buttonLike checkBoxButton checkBoxIndicator">
-                exportar modulos
+                <span language-modal-shareresources-modules></span>
                 <input type="checkbox" name="modules">
                 <div class="hide"></div>
             </label>
         <hr>
         <div class="buttons">
-            <input type="button" class="cancel" value="cancelar" closemodal>
-            <input type="submit" class="confirm" value="exportar">
+            <input type="button" class="cancel" closemodal language-value-modal-shareresources-cancel>
+            <input type="submit" class="confirm" language-value-modal-shareresources-confirm>
         </div>
     </form>
 
     <!-- CHANGELOG -->
     <div modal id="changelog" class="question">
-        <div class="title">A Fazer</div>
+        <div class="title" language-modal-changelog-todo></div>
         SpaceCad -> hinter: linha com texto na posição final
         <br><br>
         SpaceCad -> hinter de objeto: linha do objeto até uma posição, mostra informações como nome, tamanho e informações custom
         <br><br>
         SpaceCad -> hinter de objeto: sempre mostra ou mostras quando passar o mouse sobre o objeto
         <br><br>
-
         SpaceCAD -> configurar loops dos arquivos executados
         <br><br>
-        UI -> sistema de tradução
-        <br><br>
-        logo -> ideias no whatsapp -> fazer foguete no Three do jeito que eu quero
+        SpaceCad -> preparar primeira release
         <br><br>
 
         <span style="background: var(--primary); font-weight: bold; ">(Não essenciais)</span>
+        logo -> ideias no whatsapp -> fazer foguete no Three do jeito que eu quero
+        <br><br>
         SpaceCAD plane com text -> adicionar html dentro do plane 
         <br><br>
 
-        <div class="title">Ultimas Atualizações</div>
+        <div class="title" language-modal-changelog-lastupdates></div>
+        <span style="background: var(--primary);">translation</span>
+        (22/08/2026 - 07:17) tradução -> en-US e pt-BR
+        <br><br>
+        (22/08/2026 - 07:17) UI -> sistema de tradução
+        <br><br>
 
         <span style="background: var(--primary);">perspective change fix</span>
         (22/08/2026 - 04:19) SpaceCAD UI -> botão que muda perspectiva
@@ -235,7 +248,7 @@
         (19/08/2026 - 16:30) electron -> barra de titulo
     </div>
 </body> 
-<script> // TITLE BAR
+<script> // TITLE BAR & OTHERS
     const minimize = document.querySelector("#minimize");
     const maximize = document.querySelector("#maximize");
     const close = document.querySelector("#close");
@@ -255,6 +268,20 @@
         version = `v${v.year}.${v.month}.${v.version}${v.type? " - "+v.type : ""}`;
         document.querySelector(".titlebar .title span").innerText = version;
     });
+    
+    const electronStore = new Proxy({}, {
+        get(_, key) {
+            return window.electronStoreAPI.get(key);
+        },
+
+        set(_, key, value) {
+            window.electronStoreAPI.set(key, value);
+            return true;
+        }
+    });
+
+    if(!electronStore.savedFiles)
+        electronStore.savedFiles = [];
 </script>
 <script type="importmap">
 {
@@ -269,11 +296,12 @@
 }
 </script>
 
+<script src="./scripts/lib/utils.js"></script>
+<script src="./scripts/lib/translations.js"></script>
 <script src="./scripts/lib/inputManager.js"></script>
 <script src="./scripts/lib/loopManager.js"></script>
 <script src="./scripts/lib/mouseLock.js"></script>
 <script src="./scripts/lib/logger.js"></script>
-<script src="./scripts/lib/utils.js"></script>
 
 <script>
     if(window.electronStoreAPI == undefined) {
@@ -392,7 +420,7 @@
             
             setupDropdown(loggerDom, "contextmenu", [
                 createElement("button", e => {
-                    e.innerText = "limpar registros";
+                    e.innerText = language.bottombuttons.logs.clear;
                     e.addEventListener("click", () => {
                         logger.clear();
                         unread.classList.toggle("hide", true);
@@ -420,19 +448,6 @@
         }
     });
 
-    const electronStore = new Proxy({}, {
-        get(_, key) {
-            return window.electronStoreAPI.get(key);
-        },
-
-        set(_, key, value) {
-            window.electronStoreAPI.set(key, value);
-            return true;
-        }
-    });
-
-    if(!electronStore.savedFiles)
-        electronStore.savedFiles = [];
 
     const selectDOM = (fileDom, file) => {
         if(!fileDom) return logger.warn("file not found: ", file.fullName);
@@ -441,7 +456,13 @@
         document.title = `SpaceCAD ${version} - ${fileDom.innerText}`;
 
         electronStore.selectedFile = file;
-        SpaceCAD.deleteAll();
+        try {
+            SpaceCAD.deleteAll();
+        } catch (error) {
+            setTimeout(() => {
+                selectDOM(fileDom, file);
+            }, 500)
+        }
 
         watchFile(file);
     }
@@ -452,7 +473,7 @@
             const fileDom = document.createElement("button");
             fileDom.classList.add("file");
             fileDom.innerText = file.name;
-            //fileDom.title = file.fullName+"\n"+file.path;
+
             fileDom.dataset.path = file.path;
 
             const x = document.createElement("button");
@@ -512,7 +533,7 @@
 
             setupDropdown(fileDom, "contextmenu", [
                 createElement("button", e => {
-                    createSvgIcon(e, "./svg/options/file.svg", "abrir no editor");
+                    createSvgIcon(e, "./svg/options/file.svg", language.filemenu.fileoperations.openInEditor);
                     e.closeMenu = true;
                     e.addEventListener("click", (evt) => {
                         evt.stopPropagation();
@@ -526,7 +547,7 @@
                     });
                 }),
                 createElement("button", e => {
-                    createSvgIcon(e, "./svg/options/openFile.svg", "abrir no explorador");
+                    createSvgIcon(e, "./svg/options/openFile.svg", language.filemenu.fileoperations.openInExplorer);
                     e.on("click", (evt) => {
                         evt.stopPropagation();
                         
@@ -541,7 +562,7 @@
                     e.closeMenu = true;
                 }),
                 createElement("button", e => {
-                    createSvgIcon(e, "./svg/options/editFile.svg", "renomear");
+                    createSvgIcon(e, "./svg/options/editFile.svg", language.filemenu.fileoperations.rename);
                     e.closeMenu = true;
                     e.addEventListener("click", (evt) => {
                         evt.stopPropagation();
@@ -658,13 +679,14 @@
 
     setupDropdown(fileInput, [
         createElement("button", e => { 
-            createSvgIcon(e, "./svg/options/newFile.svg", "novo arquivo");
+            createSvgIcon(e, "./svg/options/newFile.svg", language.filemenu.options.new);
             e.addEventListener("click", () => {
                 newFileModal.modal.toggle();
             });
+            e.closeMenu = true;
         }),
         createElement("button", e => {
-            createSvgIcon(e, "./svg/options/openFile.svg", "abrir arquivo");
+            createSvgIcon(e, "./svg/options/openFile.svg", language.filemenu.options.open);
             e.addEventListener("click", async () => {
                 let path = await electron.openFile();
 
@@ -673,14 +695,14 @@
         }),
         createElement("hr"),
         createElement("button", e => {
-            createSvgIcon(e, "./svg/options/import.svg", "importar recursos");
+            createSvgIcon(e, "./svg/options/import.svg", language.filemenu.options.import);
             e.addEventListener("click", () => {
                 importResources.modal.toggle();
             });
             e.closeMenu = true;
         }),
         createElement("button", e => {
-            createSvgIcon(e, "./svg/options/export.svg", "exportar recursos");
+            createSvgIcon(e, "./svg/options/export.svg", language.filemenu.options.export);
             e.addEventListener("click", () => {
                 shareResources.modal.toggle();
             });
@@ -690,19 +712,19 @@
 
 
         createElement("button", e => {
-            createSvgIcon(e, "./svg/options/desselect.svg", "descarregar arquivo");
+            createSvgIcon(e, "./svg/options/desselect.svg",language.filemenu.options.unload);
             e.on("click", () => {
                 electronStore.selectedFile = null;
                 location.reload();
             });
         }),
         createElement("button", e => {
-            createSvgIcon(e, "./svg/options/reload.svg", "recarregar página");
+            createSvgIcon(e, "./svg/options/reload.svg", language.filemenu.options.reload);
             e.on("click", () => location.reload());
         }),
 
         createElement("button", e => {
-            createSvgIcon(e, "./svg/options/fullscreen.svg", "tela cheia");
+            createSvgIcon(e, "./svg/options/fullscreen.svg", language.filemenu.options.fullscreen);
             e.id = "optionsFullscreen";
             e.on("click", () => {
                 if (document.fullscreenElement) {
@@ -713,10 +735,19 @@
             });
             e.closeMenu = true;
         }),
+        
+        createElement("button", e => {
+            createSvgIcon(e, "./svg/options/translate.svg", language.filemenu.options.setlanguage);
+            e.on("click", () => {
+                const changelog = document.query("#changelog");
+                translateModal.modal.toggle();
+            });
+            e.closeMenu = true;
+        }),
         createElement("hr"),
         
         createElement("button", e => {
-            createSvgIcon(e, "./svg/options/file.svg", "notas da atualização");
+            createSvgIcon(e, "./svg/options/file.svg", language.filemenu.options.notes);
             e.on("click", () => {
                 const changelog = document.query("#changelog");
                 changelog.modal.toggle();
@@ -724,7 +755,7 @@
             e.closeMenu = true;
         }),
         createElement("button", e => {
-            createSvgIcon(e, "./svg/options/github.svg", "SpaceCAD GitHub");
+            createSvgIcon(e, "./svg/options/github.svg", language.filemenu.options.github);
             e.on("click", () => {
                 electron.openUrl("https://github.com/NaN-NaN-sempai/SpaceCAD");
             });
@@ -756,10 +787,10 @@
         const data = form.get();
 
         if(!data.path)
-            return alert("selecione um arquivo");
+            return alert(language.modal.importResources.alert.noPath);
 
         if(!data.libs && !data.modules)
-            return alert("nenhum tipo de recurso selecionado");
+            return alert(language.modal.importResources.alert.noType);
 
         const resources = JSON.parse(data.filedata);
 
@@ -809,7 +840,7 @@
             aux.modules = SpaceCAD.modules;
 
         if(!data.libs && !data.modules)
-            return alert("selecione ao menos uma opção");
+            return alert(language.modal.shareResources.alert.noType);
 
             
         const str = JSON.stringify(aux, null, 4);
@@ -839,6 +870,23 @@
         shareResources.modal.close();
     });
 
+    // set language
+    const translateModal = document.querySelector("#translateModal");
+    translateModal.modal.onOpen(() => {
+        translateModal.query(".inserLangs").append(
+            ...Object.entries(languages).map(([key, value]) => createElement("button", e => {
+                e.innerText = value.name;
+                e.classList.toggle("selected", value.name == language.name);
+
+                e.on("click", (evt) => {
+                    evt.preventDefault();
+                    selectLanguage(key);
+                    alert(language.modal.translate.alert.pleaseReload);
+                    translateModal.modal.close();
+                });
+            }))
+        )
+    })
 
     // new file
     const newFileModal = document.querySelector("#newFileModal");
@@ -855,8 +903,8 @@
         const {name, path} = form.get();
 
         
-        if(!isValidFileName(name)) return alert("Nome inválido");
-        if(!path) return alert("Preencha o caminho");
+        if(!isValidFileName(name)) return alert(language.modal.newFile.alert.invalidName);
+        if(!path) return alert(language.modal.newFile.alert.noDir);
         
         let res = syncFetch("/createFile", {
             body: JSON.stringify({name, path})
@@ -894,8 +942,8 @@
         evt.preventDefault();
         const {name, path} = form.get();
 
-        if(name == renameModal.modal.data.name) return alert("Nome igual ao anterior")
-        if(!isValidFileName(name)) return alert("Nome inválido");
+        if(name == renameModal.modal.data.name) return alert(lenguage.modal.renameFile.alert.sameName);
+        if(!isValidFileName(name)) return alert(lenguage.modal.renameFile.alert.invalidName);
         
         syncFetch("/renameFile", {
             body: JSON.stringify({name, path})

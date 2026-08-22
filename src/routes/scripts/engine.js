@@ -415,8 +415,10 @@ const logger = new Logger(document.querySelector("#logger .body .list"), 5000);
 
     
 // UI
-document.querySelector("#showEdges").addEventListener("click", () => {
+document.query("#showEdges").on("click", (evt, e) => {
     SpaceCAD.toggleEdgeHilight();
+    
+    e.innerHTML = SpaceCAD.edgeHilighting? language.bottombuttons.edges.hide : language.bottombuttons.edges.show;
 });
 
 
@@ -569,7 +571,10 @@ const {
 
 const changePerspectiveButton = document.querySelector("#changePerspective");
 const setPerspectiveDom = () => {
-    changePerspectiveButton.title = "mudar para " + ( camera.perspective !== "perspective" ? "camera perspectiva" : "camera ortogonal");
+    changePerspectiveButton.title = 
+        camera.perspective == "perspective" ?
+        language.bottombuttons.setperspective.orthographic :
+        language.bottombuttons.setperspective.perspective;
     changePerspectiveButton.query("img").src = `./svg/${camera.perspective == "perspective" ? "perpective" : "orthographic"}.svg`;
 }
 const changePerspective = () => {
