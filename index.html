@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> SpaceCAD </title>
+ 
+    <link rel="stylesheet" href="./src/routes/style.css">
+    <link rel="stylesheet" href="./src/routes/titlebar.css">
+</head>
+<body>
+    <div class="titlebar">
+        <div class="title">
+            <div class="center">
+                
+                <img class="logoIcon bg" src="assets/logo/logoBg.svg" alt="SpaceCAD">
+                <img class="logoIcon animated" src="assets/logo/logo.gif" alt="SpaceCAD">
+                <img class="logoIcon overlay" src="assets/logo/logoOverlay.svg" alt="SpaceCAD">
+                
+            </div>
+
+            <div class="logotype">
+                <img class="svgIcon" src="assets/logo/logotype.svg" alt="SpaceCAD">
+                <span>v. 26.8.1 - pA</span>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 100px;">
+        
+        <h1 language-header></h1>
+
+        <a href="./src/routes/docs" language-doc></a>
+
+        <p>Essa será a pagina de apresentação do SpaceCAD e de documentação</p>
+    </div>
+</body>
+
+<script src="./src/routes/scripts/lib/utils.js"></script>
+<script src="./src/routes/scripts/lib/translations.js"></script>
+<script> // TRANSLATIONS
+writeLanguage("en-US", {
+    header: "Oficial SpaceCAD page",
+    doc: "Documentation"
+});
+writeLanguage("pt-BR", {
+    header: "Página oficial do SpaceCAD",
+    doc: "Documentação"
+});
+writeLanguage("fr-FR", {
+    header: "Page officielle de SpaceCAD",
+    doc: "Documentation"
+});
+
+startTranslation();
+
+document.body.append(
+    ...Object.entries(languages).map(([key]) => 
+        createElement("button", e => {
+            e.innerText = key;
+            e.on("click", () => selectLanguage(key));
+        }))
+);
+</script>
+
+<script>
+    fetch("./version.json").then(res => res.json()).then(v => {
+        document.querySelector(".titlebar .title span").innerText = `v${v.year}.${v.month}.${v.version}${v.type? " - "+v.type : ""}`;
+    })
+</script>
+</html> 
+        
