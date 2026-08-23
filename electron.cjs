@@ -35,8 +35,8 @@ const loadUrl = (port) => {
     win.loadURL(url);
 }
 
-
 app.whenReady().then(() => {
+    
     watchport();
     Menu.setApplicationMenu(null);
 

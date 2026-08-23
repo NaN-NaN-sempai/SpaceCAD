@@ -1,17 +1,174 @@
+import electron from 'electron';
+console.log("electron.js iniciou");
+const { app: electronApp, BrowserWindow, dialog, ipcMain, Menu, shell } = electron;
+
+import path from 'path';
+
+import Store from 'electron-store';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
+process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
+
+import fs from 'fs';
+
+
+
+
+
+const watchport = () => {
+    if(fs.existsSync("port.js"))
+        fs.watch("port.js", () => {
+            const port = Number(
+                fs.readFileSync("port.js", "utf8")
+                    .match(/\d+/)[0]
+            );
+
+            loadUrl(port);
+        });
+    else
+        setTimeout(watchport, 1000);
+}
+
+
+let win; 
+
+const loadUrl = (port) => {
+    const url = `http://localhost:${port}`;
+    win.loadURL(url);
+}
+
+
+
+let storage;
+electronApp.whenReady().then(async () => {
+    process.env.USER_DATA_PATH = electronApp.getPath("userData");
+
+    storage = (await import("./lib/storage.js")).default;
+
+    const store = new Store({
+        projectName: 'SpaceCAD'
+    });
+    Menu.setApplicationMenu(null);
+
+    win = new BrowserWindow({
+        title: 'SpaceCAD',
+        icon: path.join(__dirname, 'assets/icon.ico'),
+        frame: false,
+        titleBarStyle: 'hidden',
+        webPreferences: {
+            preload: path.join(__dirname, 'preload.js')
+        }
+    });
+    win.webContents.on("before-input-event", (event, input) => {
+        if (
+            (input.control &&
+            input.shift &&
+            input.key.toLowerCase() === "i") ||
+            input.key.toLowerCase() === "f12"
+        ) {
+            win.webContents.toggleDevTools();
+        }
+
+        if(input.key.toLowerCase() === "f11" && input.type === "keyDown")
+            win.setFullScreen(!win.isFullScreen());
+    });
+
+    ipcMain.on('store-get', (event, key) => {
+        event.returnValue = store.get(key);
+    });
+
+    ipcMain.on('store-set', (event, { key, value }) => {
+        store.set(key, value);
+        event.returnValue = value;
+    });
+    ipcMain.on('window:minimize', () => {
+        win.minimize();
+    });
+    win.on('enter-full-screen', () => {
+        win.webContents.send('fullscreen', true);
+    });
+
+    win.on('leave-full-screen', () => {
+        win.webContents.send('fullscreen', false);
+    });
+    ipcMain.handle("is-fullscreen", () => {
+        return win.isFullScreen();
+    });
+
+    ipcMain.on('window:maximize', () => {
+        if (win.isMaximized())
+            win.unmaximize();
+        else
+            win.maximize();
+    });
+    ipcMain.handle('open-url', (event, url) => {
+        shell.openExternal(url);
+    });
+
+    ipcMain.on('window:close', () => {
+        win.close();
+    });
+
+    ipcMain.on('set-title', (event, title) => {
+        BrowserWindow.fromWebContents(event.sender).setTitle(`SpaceCAD${title ? ` - ${title}` : ''}`);
+    });
+    ipcMain.handle('open-file', async (event, extensions = ["spacecad.js"], content = false) => {
+        const result = await dialog.showOpenDialog(win, {
+            properties: ['openFile'],
+            filters: [
+                { name: "SpaceCAD", extensions }
+            ]   
+        });
+
+        if (result.canceled)
+            return null;
+
+        if(content)
+            return {
+                path: result.filePaths[0],
+                content: fs.readFileSync(result.filePaths[0], "utf8")
+            }
+        return result.filePaths[0];
+    });
+
+    ipcMain.handle("select-directory", async () => {
+        const result = await dialog.showOpenDialog(win, {
+            properties: ["openDirectory"]
+        });
+
+        return result.canceled ? null : result.filePaths[0];
+    });
+
+    
+ 
+    httpServer.listen(0, () => {
+        const port = httpServer.address().port;
+        loadUrl(port);
+
+        console.log(`Server is running\nhttp://localhost:${port}`); 
+    });
+});
+
+
+
+electronApp.on("before-quit", () => {
+    httpServer.close();
+}); 
+
+
+
+
 import open from "open";
 import { execFile } from "child_process";
 
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import fs from "fs";
 
-
-import storage from "./lib/storage.js";
-import path from "path";
-import { fileURLToPath } from "url";
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 const httpServer = createServer(app);
@@ -28,13 +185,23 @@ io.on("connection", (socket) => {
 });
 
 
-app.use(express.static("src/routes"));
+const routesPath = path.join(__dirname, "src", "routes");
+
+app.use(express.static(routesPath));
 app.use(express.json());
-app.use("/node_modules", express.static("node_modules"));
-app.use("/lib", express.static("lib"));
-app.use("/assets", express.static("assets"));
+app.use(
+    "/node_modules",
+    express.static(path.join(__dirname, "node_modules"))
+);
+app.use(
+    "/lib",
+    express.static(path.join(__dirname, "lib"))
+);
+app.use("/assets", express.static(path.join(__dirname, "assets")));
 app.get("/", (req, res) => {
-  res.sendFile("index.html", { root: "./src/routes" });
+    res.sendFile("index.html", {
+        root: routesPath
+    });
 });
 
 
@@ -334,46 +501,4 @@ app.post("/serverScope", (req, res) => {
     console.log(ret);
 
     res.send(ret);
-});
- 
-
-const setupVersion = (obj ={} ) => {
-    const month = obj.month ?? new Date().getMonth() + 1;
-    const year = obj.year ?? new Date().getFullYear().toString().slice(-2);
-    const version = obj.version ?? 0;
-    const type = obj.type ?? "dev";
-
-    fs.writeFileSync("version.json", JSON.stringify({
-        month,
-        year,
-        version,
-        type
-    }));
-}
-if(!fs.existsSync("version.json"))
-    setupVersion();
-else {
-    const old = JSON.parse(fs.readFileSync("version.json", "utf8"));
-
-    
-    const nowType = "release";
-    const nowYear = new Date().getFullYear().toString().slice(-2);
-    const nowMonth = new Date().getMonth() + 1;
-    old.version = old.month != nowMonth || old.type != nowType? 0 : old.version + 1;
-    old.month = nowMonth;
-    old.year = nowYear;
-    old.type = nowType;
-
-    setupVersion(old);
-}
-    
-
-
-httpServer.listen(0, () => {
-    const port = httpServer.address().port;
-
-    const code = `${port}`;
-    fs.writeFileSync("port.js", code);
-
-    console.log(`Server is running\nhttp://localhost:${port}`); 
 });

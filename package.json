@@ -11,10 +11,11 @@
         "socket.io": "^4.8.3",
         "three": "^0.185.1"
     },
-    "main": "electron.cjs",
+    "main": "electron.js",
     "type": "module",
     "scripts": {
-        "dev": "electron electron.cjs",
+        "start": ".\\node_modules\\electron\\dist\\electron.exe .",
+        "dev": ".\\node_modules\\electron\\dist\\electron.exe electron.cjs",
         "build": "electron-builder"
     },
     "build": {
@@ -25,9 +26,10 @@
         },
         "files": [
             "**/*",
-        "node_modules/three/examples/jsm/**/*"
+            "node_modules/three/examples/jsm/**/*"
         ],
         "win": {
+            "icon": "assets/icon.ico",
             "target": "nsis"
         },
         "fileAssociations": [

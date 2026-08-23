@@ -267,12 +267,12 @@ const SpaceCAD = class SpaceCAD {
         
         const __constructorList = [];
         const __constructors = {};
-        const classes = {};
+        const __classes = {};
         SpaceCAD.useInstances.forEach(instance => {
             if(__constructorList.includes(instance.constructor)) return;
 
-            classes[instance.constructor.name] = (...args) => new instance.constructor(...args);
-            __constructors[instance.constructor.name] = instance.constructor;
+            __constructors[instance.constructor.name] = (...args) => new instance.constructor(...args);
+            __classes[instance.constructor.name] = instance.constructor;
             __constructorList.push(instance.constructor);
         });
 
@@ -280,8 +280,7 @@ const SpaceCAD = class SpaceCAD {
             default: returnValue
         };
         const obj = {
-            ...preObj,
-            ...classes
+            ...preObj
         };
 
         Object.defineProperties(obj, {
@@ -297,6 +296,10 @@ const SpaceCAD = class SpaceCAD {
                 value: __constructors,
                 enumerable: false
             },
+            __classes: {
+                value: __classes,
+                enumerable: false
+            }
         });
         
 
