@@ -60,7 +60,7 @@ const languages = {
                 }
             },
             newfile: {
-                title: "New OpenCAD",
+                title: "New SpaceCAD",
                 name: "File Name",
                 nameplaceholder: "file name",
                 dir: "Directory",
@@ -178,7 +178,7 @@ languages["pt-BR"] = recursiveProxy({
             }
         },
         newfile: {
-            title: "Novo OpenCAD",
+            title: "Novo SpaceCAD",
             name: "Nome do Arquivo",
             nameplaceholder: "nome do arquivo",
             dir: "Diretorio",
@@ -235,6 +235,136 @@ languages["pt-BR"] = recursiveProxy({
     },
 }, languages["en-US"]);
 
+languages["fr-FR"] = recursiveProxy({
+    name: "Français (France)",
+    translationnotfound: "~traduction non trouvée~",
+
+    bottombuttons: {
+        setlook: {
+            top: "voir d’en haut",
+            bottom: "voir d’en bas",
+            left: "voir de gauche",
+            right: "voir de droite",
+            front: "voir de face",
+            back: "voir de derrière"
+        },
+
+        defaultcamera: {
+            position: "position",
+            orientation: "orientation",
+            zoom: "zoom",
+            perspective: "perspective",
+            all: "réinitialiser la caméra"
+        },
+
+        setperspective: {
+            perspective: "passer à la caméra en perspective",
+            orthographic: "passer à la caméra orthographique"
+        },
+
+        edges: {
+            show: "accentuer les arêtes",
+            hide: "masquer les arêtes"
+        },
+
+        logs: {
+            button: "registres",
+            title: "Registres d’exécution",
+            clear: "vider les registres"
+        }
+    },
+
+    filemenu: {
+        options: {
+            new: "nouveau fichier",
+            open: "ouvrir le fichier",
+            import: "importer des ressources",
+            export: "exporter des ressources",
+            unload: "décharger le fichier",
+            reload: "recharger l’application",
+            fullscreen: "plein écran",
+            setlanguage: "choisir la langue",
+            notes: "notes de mise à jour",
+            github: "SpaceCAD GitHub"
+        },
+
+        fileoperations: {
+            openInEditor: "ouvrir dans l’éditeur",
+            openInExplorer: "ouvrir dans l’explorateur",
+            rename: "renommer"
+        }
+    },
+
+    modal: {
+        translate: {
+            title: "Choisissez une langue",
+            cancel: "annuler",
+            alert: {
+                pleaseReload: "Certaines modifications nécessitent le rechargement de l’application\nOptions -> Recharger l’application"
+            }
+        },
+
+        newfile: {
+            title: "Nouveau SpaceCAD",
+            name: "Nom du fichier",
+            nameplaceholder: "nom du fichier",
+            dir: "Dossier",
+            dirplaceholder: "ex. : C:\\Users\\user\\Desktop",
+            confirm: "créer",
+            cancel: "annuler",
+            alert: {
+                invalidName: "nom de fichier invalide",
+                noDir: "sélectionnez un dossier"
+            }
+        },
+
+        rename: {
+            title: "Renommer le fichier",
+            renaming: "Renommer",
+            confirm: "renommer",
+            placeholder: "nouveau nom",
+            cancel: "annuler",
+            alert: {
+                invalidName: "nom de fichier invalide",
+                sameName: "même nom que le précédent"
+            }
+        },
+
+        importresources: {
+            title: "Importer des ressources",
+            pathplaceholder: "ex. : C:\\Users\\user\\Desktop\\spacecad.resources.json",
+            select: "sélectionner un fichier",
+            selecttypetext: "importer les ressources suivantes :",
+            libs: "bibliothèques",
+            modules: "modules",
+            overwrite: "écraser toutes les ressources",
+            overwritetext: "si coché, ces ressources seront supprimées et les nouvelles seront ajoutées.",
+            confirm: "importer",
+            cancel: "annuler",
+            alert: {
+                noPath: "sélectionnez un fichier",
+                noType: "type de ressource non sélectionné"
+            }
+        },
+
+        shareresources: {
+            title: "Exporter des ressources",
+            libs: "exporter les bibliothèques",
+            modules: "exporter les modules",
+            confirm: "exporter",
+            cancel: "annuler",
+            alert: {
+                noType: "type de ressource non sélectionné"
+            }
+        },
+
+        changelog: {
+            todo: "À faire",
+            lastupdates: "Dernières mises à jour"
+        }
+    }
+}, languages["en-US"]);
+
 
 let language;
 
@@ -245,11 +375,11 @@ if(electronStore.selectedLanguage) {
 
     const translation =
         languages[userLanguage] ??
-        Object.entries(laguanges)
+        Object.entries(languages)
             .find(([key]) => key.split("-")[0] === userLanguage.split("-")[0])
             ?.[1];
 
-    language = translation || laguanges["en-US"];
+    language = translation || languages["en-US"];
 }
 
 
@@ -272,8 +402,8 @@ const langFromPath = path => {
 
     return value;
 }
-const doDocumentTranslation = () => {
-    document.all("*").forEach(e => {
+const doDocumentTranslation = (el) => {
+    const translateElement = (e) => {
         const types = [
             "title",
             "placeholder",
@@ -301,30 +431,18 @@ const doDocumentTranslation = () => {
                     e.innerHTML = value;
             }
         }
-    });
+    }
+
+    if(el instanceof HTMLElement)
+        translateElement(el);
+    else
+        document.all("*").forEach(translateElement);
 }
 doDocumentTranslation();
-/* document.all("[data-translation], [data-translation-*],").forEach(e => {
-    const setTranslation = type => {
-        const path = e.getAttribute("data-translation-" + type);
-        const value = langFromPath(path);
 
-        if(type == "value")
-            e.innerHTML = value;
-        else if(type == "placeholder")
-            e.placeholder = value;
-        else
-            e.innerText = value;
-    }
-    const pathTitle = e.getAttribute("data-translation-title");
-    
-    if(pathTitle) {
-        const value = langFromPath(pathTitle);
-        document.title = value;
-    }
+const setTranslate = (el, path, doreload = true) => {
+    el.setAttribute("language-" + path, null);
 
-    else if(type == "value")
-        e.innerHTML = value;
-    else if(type == "placeholder")
-        e.placeholder = value;
-}); */
+    if(doreload)
+        doDocumentTranslation(el);
+}

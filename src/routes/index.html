@@ -174,24 +174,36 @@
     <!-- CHANGELOG -->
     <div modal id="changelog" class="question">
         <div class="title" language-modal-changelog-todo></div>
-        SpaceCad -> hinter: linha com texto na posição final
-        <br><br>
-        SpaceCad -> hinter de objeto: linha do objeto até uma posição, mostra informações como nome, tamanho e informações custom
-        <br><br>
-        SpaceCad -> hinter de objeto: sempre mostra ou mostras quando passar o mouse sobre o objeto
-        <br><br>
         SpaceCAD -> configurar loops dos arquivos executados
         <br><br>
-        SpaceCad -> preparar primeira release
+        SpaceCAD -> definir SpaceCAD como aplicativo padrão para arquivos .spacecad.js
+        <br><br>
+        SpaceCAD -> hinter: linha com texto na posição final
+        <br><br>
+        SpaceCAD -> hinter de objeto: linha do objeto até uma posição, mostra informações como nome, tamanho e informações custom
+        <br><br>
+        SpaceCAD -> hinter de objeto: sempre mostrar ou mostras quando passar o mouse sobre o objeto
+        <br><br>
+        electron -> configurar abertura de arquivo com process.argv
+        <br><br>
+        electron -> setar icone da aplicação no package.json -> build
+        <br><br>
+        SpaceCAD -> preparar primeira release
         <br><br>
 
         <span style="background: var(--primary); font-weight: bold; ">(Não essenciais)</span>
-        logo -> ideias no whatsapp -> fazer foguete no Three do jeito que eu quero
-        <br><br>
         SpaceCAD plane com text -> adicionar html dentro do plane 
         <br><br>
 
         <div class="title" language-modal-changelog-lastupdates></div>
+        
+
+        <span style="background: var(--primary);">logo</span>
+        logo -> Foguete dentro de um cubo
+        <br><br>
+        (22/08/2026 - 07:42) tradução -> fr-FR
+        <br><br>
+
         <span style="background: var(--primary);">translation</span>
         (22/08/2026 - 07:17) tradução -> en-US e pt-BR
         <br><br>
@@ -420,7 +432,7 @@
             
             setupDropdown(loggerDom, "contextmenu", [
                 createElement("button", e => {
-                    e.innerText = language.bottombuttons.logs.clear;
+                    setTranslate(e, "bottombuttons-logs-clear");
                     e.addEventListener("click", () => {
                         logger.clear();
                         unread.classList.toggle("hide", true);
@@ -448,6 +460,8 @@
         }
     });
 
+    const fromEnvArgs = electron.envArgs.find(arg => arg.endsWith(".spacecad.js"));
+    if(fromEnvArgs) addPath(fromEnvArgs, true);
 
     const selectDOM = (fileDom, file) => {
         if(!fileDom) return logger.warn("file not found: ", file.fullName);
@@ -873,6 +887,7 @@
     // set language
     const translateModal = document.querySelector("#translateModal");
     translateModal.modal.onOpen(() => {
+        translateModal.query(".inserLangs").innerHTML = "";
         translateModal.query(".inserLangs").append(
             ...Object.entries(languages).map(([key, value]) => createElement("button", e => {
                 e.innerText = value.name;

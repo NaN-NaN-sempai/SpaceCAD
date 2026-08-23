@@ -29,7 +29,15 @@
         ],
         "win": {
             "target": "nsis"
-        }
+        },
+        "fileAssociations": [
+            {
+                "ext": "spacecad.js",
+                "name": "SpaceCAD File",
+                "description": "SpaceCAD project",
+                "icon": "icon.ico"
+            }
+        ]
     },
     "devDependencies": {
         "concurrently": "^10.0.4",

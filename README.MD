@@ -1,3 +1,4 @@
+![SpaceCAD Logo](assets/logo/logo.svg)
 # SpaceCAD 👷 README em constrção 👷
 
 **SpaceCAD** é um ambiente de modelagem e projeto 3D focado no design e desenvolvimento através de código, baseado no OpenSCAD.
@@ -5,6 +6,10 @@
 Rodando em **Node.js** com interface gráfica em **Electron** e renderização via **Three.js**.
 
 O SpaceCAD permite criar, carregar e parametrizar objetos 3D de forma simples através de código JavaScript otimizado.
+
+<div align="center">
+<img src="assets/logo/logo.gif" alt="SpaceCAD Rocket Animation" width="200px">
+</div>
 
 
 
@@ -125,6 +130,8 @@ const meuArmario = new ArmarioPlanejado(80, 200, 50);
 * **logger.js** — Console customisado dentro da página. `(browser/back-end <- não implementado)` 
 
 * **JSHON.js** — **JavaScript High Object Notation** - Traduz valores para string e visseversa, suporta setters e getters de objetos (alternativa mais robusta ao JSON stringify/parse) `(browser/back-end)` 
+
+* **translarions.js** - Biblioteca para implementar traduções diretamente no HTML `(browser/back-end)` 
 
 
 #

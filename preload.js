@@ -1,6 +1,9 @@
 const { contextBridge, ipcRenderer, webUtils  } = require('electron');
 
+
+
 contextBridge.exposeInMainWorld('electron', {
+    envArgs: process.argv,
     openFile: (extension, content) => ipcRenderer.invoke('open-file', extension, content),
     openDirectory: () => ipcRenderer.invoke("select-directory"),
     setTitle: (title) => ipcRenderer.send('set-title', title),
