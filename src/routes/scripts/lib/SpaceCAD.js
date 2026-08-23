@@ -243,6 +243,66 @@ const SpaceCAD = class SpaceCAD {
         return req;
     }
 
+    static useInstances = [];
+    static useEnable = false;
+    static use = (path) => {
+        SpaceCAD.useEnable = true;
+        SpaceCAD.useInstances = [];
+
+        if(typeof path !== "string")
+            throw new Error("Path must be a string.");
+
+        const req = syncFetch(`/use`, {
+            method: "POST",
+            body: JSON.stringify({path})
+        });
+
+        if(req.error)
+            return null;
+        
+        const code = req.text;        
+        
+        let returnValue = SpaceCAD.run(code, false);
+        SpaceCAD.useEnable = false;
+        
+        const __constructorList = [];
+        const __constructors = {};
+        const classes = {};
+        SpaceCAD.useInstances.forEach(instance => {
+            if(__constructorList.includes(instance.constructor)) return;
+
+            classes[instance.constructor.name] = (...args) => new instance.constructor(...args);
+            __constructors[instance.constructor.name] = instance.constructor;
+            __constructorList.push(instance.constructor);
+        });
+
+        const preObj = typeof returnValue === "object"? returnValue : {
+            default: returnValue
+        };
+        const obj = {
+            ...preObj,
+            ...classes
+        };
+
+        Object.defineProperties(obj, {
+            __instances: {
+                value: SpaceCAD.useInstances,
+                enumerable: false
+            },
+            __constructorList: {
+                value: __constructorList,
+                enumerable: false
+            },
+            __constructors: {
+                value: __constructors,
+                enumerable: false
+            },
+        });
+        
+
+        return obj;
+    }
+
 
     static windowProperties = {};
     static libKeys = [];
@@ -262,11 +322,23 @@ const SpaceCAD = class SpaceCAD {
         SpaceCAD.windowProperties = {};
         console.clear();
     }
-    static run = code => {
-        SpaceCAD.deleteAll();
-        SpaceCAD.restoreDefaultState();
+    static run = (code, restore = true) => {
+        const regex = /\bexpose\b/g;
+        if (regex.test(code)) {
+            code = `
+                let __ExposeObject = {};
+                ${code.replace(regex, "__ExposeObject")}
+                return __ExposeObject;
+            `;
+        }
+
+        if(restore) {
+            SpaceCAD.deleteAll();
+            SpaceCAD.restoreDefaultState();
+        }
         const fn = new Function(code);
-        Overloader.eval(fn, error => console.error(error));
+        
+        return Overloader.eval(fn, error => console.error(error));
     }
 
     static currentSpace = null;
@@ -382,8 +454,12 @@ const SpaceCAD = class SpaceCAD {
             if(SpaceCAD.currentSpace)
                 SpaceCAD.currentSpace.add(this);
             else {
-                SpaceCAD.roots.push(this);
-                scene.add(this);
+                if(SpaceCAD.useEnable)
+                    SpaceCAD.useInstances.push(this);
+                else {
+                    SpaceCAD.roots.push(this);
+                    scene.add(this);
+                }
             }
         }
 

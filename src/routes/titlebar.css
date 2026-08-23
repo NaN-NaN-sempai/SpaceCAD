@@ -28,7 +28,8 @@
 /* exchange for LOGO when ready */
 .titlebar .title {
     -webkit-app-region: drag;
-    margin-inline: 10px;
+    margin: 5px;
+
     font-size: 1.2rem;
     font-weight: bold;
     color: var(--tertiary);

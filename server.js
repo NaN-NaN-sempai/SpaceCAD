@@ -1,4 +1,5 @@
 import open from "open";
+import { execFile } from "child_process";
 
 import express from "express";
 import { createServer } from "http";
@@ -31,6 +32,7 @@ app.use(express.static("src/routes"));
 app.use(express.json());
 app.use("/node_modules", express.static("node_modules"));
 app.use("/lib", express.static("lib"));
+app.use("/assets", express.static("assets"));
 app.get("/", (req, res) => {
   res.sendFile("index.html", { root: "./src/routes" });
 });
@@ -57,6 +59,10 @@ const watchFilePath = (filePath) => {
         return ""; 
     }
 
+
+    watchFile = {
+        path: filePath
+    }
     fileWatcher = fs.watch(filePath, (event, filename) => {
         if (event !== "change")
             return;
@@ -107,16 +113,26 @@ app.get("/version", (req, res) => {
 });
 
 
+const candidates = [
+    path.join(process.env.LOCALAPPDATA, "Programs", "Microsoft VS Code", "Code.exe"),
+    path.join(process.env.PROGRAMFILES, "Microsoft VS Code", "Code.exe")
+];
+const vscode = candidates.find(fs.existsSync);
 
 app.post("/openPath", (req, res) => {
     const directory = req.body.directory ?? false;
     let reqPath = req.body.path;
 
-    if(directory)
+    if(directory){
         reqPath = path.dirname(reqPath);
+        open(reqPath);
+    }
 
     if(fs.existsSync(reqPath))
-        open(reqPath);
+        if(vscode)
+            execFile(vscode, [reqPath]);
+        else
+            console.error("VSCode not found");
     else
         file404(`File does not exist: "${reqPath}"`, reqPath);
         //io.emit("warn", `File does not exist: "${reqPath}"`);
@@ -257,6 +273,40 @@ app.get("/store/:type/:name", (req, res) => {
     }
 })
 
+const isDirSync = path => {
+    try {
+        return fs.statSync(path).isDirectory();
+    } catch {
+        return false;
+    }
+};
+app.post("/use", (req, res) => {
+    let filePath = req.body.path;
+
+    if(typeof filePath !== 'string')
+        return res.status(400).send("filePath must be a string");
+
+    if(isDirSync(filePath))
+        filePath += "/index.spacecad.js";
+
+    filePath = !filePath.endsWith(".spacecad.js")?
+        filePath + ".spacecad.js" :
+        filePath;
+
+    filePath = path.resolve(
+        path.dirname(watchFile.path || ""),
+        filePath
+    );
+
+        console.log(watchFile, filePath);
+
+    if(!fs.existsSync(filePath))
+        return res.status(404).send(`File not found: "${filePath}"`);
+
+    const text = fs.readFileSync(filePath, "utf8");
+    res.send(text);     
+});
+
 app.post("/getFile/:type", (req, res) => {
     const type = req.params.type;
     const filePath = req.body.path;
@@ -306,12 +356,13 @@ else {
     const old = JSON.parse(fs.readFileSync("version.json", "utf8"));
 
     
+    const nowType = "pA";
     const nowYear = new Date().getFullYear().toString().slice(-2);
     const nowMonth = new Date().getMonth() + 1;
-    old.version = old.month != nowMonth? 0 : old.version + 1;
+    old.version = old.month != nowMonth || old.type != nowType? 0 : old.version + 1;
     old.month = nowMonth;
     old.year = nowYear;
-    old.type = "pA";
+    old.type = nowType;
 
     setupVersion(old);
 }

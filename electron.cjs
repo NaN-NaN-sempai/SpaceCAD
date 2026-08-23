@@ -42,6 +42,7 @@ app.whenReady().then(() => {
 
     win = new BrowserWindow({
         title: 'SpaceCAD',
+        icon: path.join(__dirname, 'assets/icon.ico'),
         frame: false,
         titleBarStyle: 'hidden',
         webPreferences: {

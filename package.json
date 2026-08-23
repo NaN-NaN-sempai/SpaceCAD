@@ -35,7 +35,7 @@
                 "ext": "spacecad.js",
                 "name": "SpaceCAD File",
                 "description": "SpaceCAD project",
-                "icon": "icon.ico"
+                "icon": "assets/icon.ico"
             }
         ]
     },
