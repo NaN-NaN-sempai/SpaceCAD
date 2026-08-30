@@ -566,7 +566,8 @@ const {
     setRotPI,
     setScale,
     setScl,
-    mirror
+    mirror,
+    space
 } = SpaceCAD;
 
 const changePerspectiveButton = document.querySelector("#changePerspective");
@@ -1411,6 +1412,23 @@ let doMouseMove = true;
 
 let zoom = electronStore.cameraZoom ?? 2000;
 let moveSpeed = 10;
+
+
+scene.children.forEach((obj) => {
+    obj.add = ()=>{}
+});
+const ogSceneAdd = scene.add.bind(scene);
+
+const sceneObjects = [];
+scene.add = (obj) => {
+    ogSceneAdd(obj);
+    sceneObjects.push(obj);
+};
+const sceneObjectsEmpty = () => {
+    sceneObjects.forEach(object => object.erase());
+    sceneObjects.length = 0;
+};
+
 
 
 let lockSelectionmovement = false; // REMOVER

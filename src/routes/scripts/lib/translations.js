@@ -15,23 +15,26 @@ let language;
 
 
 const startTranslation = (electronStore) => {
+    let selected;
     if(electronStore?.selectedLanguage)
-        language = languages[electronStore.selectedLanguage];
+        selected = languages[electronStore.selectedLanguage];
 
     else if (localStorage.selectedLanguage)
-        language = languages[localStorage.selectedLanguage];
+        selected = languages[localStorage.selectedLanguage];
 
-    else {
-        const userLanguage = navigator.language;
+    
+    const userLanguage = navigator.language;
 
-        const translation =
+    const translation =
+        languages[selected] != undefined ?
+            languages[selected] :
+
             languages[userLanguage] ??
             Object.entries(languages)
                 .find(([key]) => key.split("-")[0] === userLanguage.split("-")[0])
                 ?.[1];
 
-        language = translation || languages["en-US"];
-    }
+    language = translation || languages["en-US"];
 
     doDocumentTranslation();
     

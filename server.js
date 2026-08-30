@@ -107,7 +107,7 @@ app.get("/removeWatcher", (req, res) => {
     res.send("file")
 });
 app.get("/version", (req, res) => {
-    const v = JSON.parse(fs.readFileSync("version.json", "utf8"));
+    const v = JSON.parse(fs.readFileSync(path.join(__dirname, "version.json"), "utf8"));
    
     res.json(v);
 });
@@ -356,7 +356,7 @@ else {
     const old = JSON.parse(fs.readFileSync("version.json", "utf8"));
 
     
-    const nowType = "release";
+    const nowType = "b";
     const nowYear = new Date().getFullYear().toString().slice(-2);
     const nowMonth = new Date().getMonth() + 1;
     old.version = old.month != nowMonth || old.type != nowType? 0 : old.version + 1;

@@ -338,6 +338,7 @@ const SpaceCAD = class SpaceCAD {
         if(restore) {
             SpaceCAD.deleteAll();
             SpaceCAD.restoreDefaultState();
+            sceneObjectsEmpty();
         }
         const fn = new Function(code);
         
@@ -386,6 +387,7 @@ const SpaceCAD = class SpaceCAD {
     
 
     static Root = CLASS => class extends CLASS {
+        static instances = [];
         constructor(...args) {
             // setting static
             CLASS.store = SpaceCAD.store;
@@ -496,18 +498,25 @@ const SpaceCAD = class SpaceCAD {
         
         store = SpaceCAD.store;
 
-        space (callback) {
-            if(typeof callback !== "function") return this;
+        space (...args) {
+            args.forEach((arg, i) => {
+                if(typeof arg == "function") {
+                    const previousSpace = SpaceCAD.currentSpace;
 
-            const previousSpace = SpaceCAD.currentSpace;
-
-            SpaceCAD.currentSpace = this;
-             
-            try {
-                callback.call(this);
-            } finally {
-                SpaceCAD.currentSpace = previousSpace;
-            }
+                    SpaceCAD.currentSpace = this;
+                    
+                    try {
+                        arg.call(this);
+                    } finally {
+                        SpaceCAD.currentSpace = previousSpace;
+                    }
+                } else if (arg instanceof THREE.Object3D) {
+                    this.add(arg);
+                } else {
+                    const stack = new Error().stack.split("\n").slice(5).join("\n");
+                    console.warn(`Unexpected type at space argument [${i}] will be ignored.\n`, stack);
+                }
+            })
 
             return this;
         }
@@ -1403,6 +1412,12 @@ const SpaceCAD = class SpaceCAD {
     static mirror = (...args) => {
         const obj = new SpaceCAD.Group();
         obj.scale.set(...args);
+        return obj;
+    }
+
+    static space = (...args) => {
+        const obj = new SpaceCAD.Group();
+        obj.space(...args);
         return obj;
     }
 }

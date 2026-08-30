@@ -798,7 +798,7 @@ const setupDropdown = (...args) => {
 const formData = (form) => {
     const data = {};
 
-    form.querySelectorAll("input[name]")
+    form.querySelectorAll("[name]")
     .forEach(input => {
         let value;
         
@@ -810,7 +810,7 @@ const formData = (form) => {
         } else
             value = input.value;            
 
-        if(form.querySelectorAll(`input[name="${input.name}"]`).length > 1) {
+        if(form.querySelectorAll(`[name="${input.name}"]`).length > 1) {
             if(data[input.name] == undefined) data[input.name] = [];
 
             data[input.name].push(value);            
