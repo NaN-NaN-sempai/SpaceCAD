@@ -9,7 +9,7 @@ class Logger {
         if (typeof value === "string")
             return {
                 type: "string",
-                value: `"${value}"`
+                value
             };
 
         if (typeof value == "number")
@@ -271,7 +271,7 @@ class Logger {
                     parent.append(createElement("span", e => {
                         e.classList.add("stringified", type);
                         e.title = type;
-                        e.innerText = value;
+                        e.innerText = value === ""? "~empty string~" : value;
                     }));
                 }
             }
