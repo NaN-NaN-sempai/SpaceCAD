@@ -3,31 +3,44 @@ class Logger {
         if (value === undefined || value === null)
             return {
                 type: value === null ? "null" : "undefined",
-                value: String(value)
+                value: String(value),
+                path: keyNow
             };
         
         if (typeof value === "string")
             return {
                 type: "string",
-                value
+                value,
+                path: keyNow
             };
 
         if (typeof value == "number")
             return {
                 type: "number",
-                value
+                value,
+                path: keyNow
             };
 
         if (typeof value == "boolean")
             return {
                 type: "boolean",
-                value
+                value,
+                path: keyNow
+            };
+
+        if(isClass(value)) /* from utils */
+            return {
+                type: "class",
+                value: value.toString(),
+                raw: value,
+                path: keyNow
             };
         
         if(typeof value == "function")
             return {
                 type: "function",
-                value: value.toString()
+                value: value.toString(),
+                path: keyNow
             };
 
 
@@ -36,7 +49,8 @@ class Logger {
                 return {
                     type: "reference",
                     value: `[Circular "${keyNow}"]`,
-                    raw: value
+                    raw: value,
+                    path: keyNow
                 }
             }
             seen.add(value);
@@ -44,18 +58,22 @@ class Logger {
             if(Array.isArray(value))
                 return {
                     type: "array",
-                    value: value.map((v, i) => Logger.stringify(v, seen, keyNow + "[" + i + "]"))
+                    value: value.map((v, i) => Logger.stringify(v, seen, keyNow + "[" + i + "]")),
+                    path: keyNow
                 };
 
             return {
                 type: "object",
-                value: Object.entries(value).map(([key, value]) => [key, Logger.stringify(value, seen, keyNow + "." + key)])
+                value: Object.entries(value).map(([key, value]) => [key, Logger.stringify(value, seen, keyNow + "." + key)]),
+                raw: value,
+                path: keyNow
             };
         }
 
         return {
             type: "unrecognized",
-            value: String(value)
+            value: String(value),
+            path: keyNow
         };
     };
     constructor(dom, max = 1000, beforePush = () => {}) {
@@ -71,8 +89,6 @@ class Logger {
             "max"
         ];
 
-        
-        
 
         const generateBody = (type, message, stack) => {
             const obj = typeof this.beforePush === "function" ?
@@ -91,20 +107,20 @@ class Logger {
 
             const messageDom = document.createElement("div");
             messageDom.classList.add("message");
-            const arrayMessage = 2;
+            messageDom.dataset.counter = 1;
 
-            const treeBuilder = ({type, value, raw}, parent, firstOpen = true) => {
+            const treeBuilder = ({type, value, raw, path}, parent, firstOpen = true) => {
                 if (["null", "undefined"].includes(type)) {
                     parent.append(createElement("span", e => {
                         e.classList.add("stringified", "undefined");
-                        e.title = type;
+                        e.title = `${type}\npath: ${path}`;
                         e.innerText = value;
                     }));
                 } else if (type == "array") {
                     parent.append(
                         createElement("div", e => {
                             e.classList.add("stringified", "tabify");
-                            e.title = type;
+                                e.title = `${type}\npath: ${path}`;
                             
                             e.classList.toggle("objMinified", !firstOpen);
 
@@ -138,7 +154,10 @@ class Logger {
                                             e.innerText = "~empty";
                                         }));
                                 } else {
-                                    e.append(createElement("span", e=>e.innerHTML="..."));
+                                    e.append(createElement("span", e=> {
+                                        e.innerHTML="...";
+                                        e.title = `length: ${value.length}\nclick to expand`;
+                                    }));
                                 }
                                 e.append(post);
                             }
@@ -160,13 +179,41 @@ class Logger {
                         createElement("div", e => {
                             e.classList.add("stringified", "tabify");
                             e.classList.toggle("objMinified", !firstOpen);
+                            
                             e.title = type;
+                            if(raw.constructor.name != "Object")
+                                e.title = `${type} instance of ${raw.constructor.name}`;
+                            
+                            e.title += `\npath: ${path}`;
 
                             const setBody = () => {
-                                const pre = createElement("span", e => {
-                                    e.classList.add("stringified", "objectChar");
-                                    e.innerHTML = "{"
-                                });
+                                const pre = [
+                                    createElement("span", e => {
+                                        e.classList.add("stringified", "objectChar");
+                                        e.innerHTML = "{"
+                                    })
+                                ];
+
+                                if(raw.constructor.name != "Object")
+                                    pre.unshift(
+                                        createElement("span", e => {
+                                            e.classList.add("stringified", "objectConstructor", "inspectable");
+                                            e.innerHTML = raw.constructor.name;
+
+                                            setupDropdown(e, "contextmenu", [                                                
+                                                createElement("button", e => {
+                                                    e.innerText = "inspect constructor";
+
+                                                    e.on("click", (evt) => {
+                                                        evt.stopPropagation();
+
+                                                        logger.log(raw.constructor);
+                                                    })
+                                                })
+                                            ]);
+                                        })
+                                    );
+
                                 const post = createElement("span", e => {
                                     e.classList.add("stringified", "objectChar");
                                     e.innerHTML = "}"
@@ -174,7 +221,7 @@ class Logger {
 
                                 e.innerHTML = "";
 
-                                e.append(pre);
+                                e.append(...pre);
                                 if(!e.classList.contains("objMinified")) {
                                     e.append(createElement("br"));
                                     value.forEach((v,i) => {
@@ -209,7 +256,10 @@ class Logger {
                                         }));
                                     e.append(createElement("br"));
                                 } else {
-                                    e.append(createElement("span", e=>e.innerHTML="..."));
+                                    e.append(createElement("span", e=> {
+                                        e.innerHTML="...";
+                                        e.title = "click to expand";
+                                    }));
                                 }
                                 e.append(post);
 
@@ -229,7 +279,8 @@ class Logger {
                     parent.append(createElement("span", e => {
                         e.classList.add("stringified", type);
                         e.innerText = value;
-                        e.title = "circular reference";
+                        e.title = "circular reference, click to unwrap\npath: " + path;
+
 
                         let open = false;
                         e.on("click", (evt) => {
@@ -244,34 +295,208 @@ class Logger {
                     }));
                     
                 } else if (type == "function") {
+                    const getArgs = str => {
+                        const match = str.match(
+                            /^\s*(?:function(?:\s+\w+)?\s*)?(?:\((.*?)\)|([\w$]+))/
+                        );
+
+                        if (!match) return [];
+
+                        const args = match[1] ?? match[2] ?? "";
+
+                        return args
+                            ? args.split(",").map(arg => arg.trim())
+                            : [];
+                    };
+                    const args = getArgs(value);
+
                     parent.append(createElement("span", e => {
-                        e.classList.add("stringified", "tabify", "function");
-                        e.innerText = "(function)";
-                        e.title = "function";
+                        e.classList.add("stringified", "function");
+                        e.innerText = `function`;
+                        e.title = "function\npath: " + path;
+                        e.style.fontSize = ".85em";
+                    }))
 
-                        let open = firstOpen;
-                        const setBody = () => {
-                            if(!open) {
-                                e.innerHTML = "(function)";
-                            } else {
-                                e.innerHTML = value;
-                            }
-                            open = !open;
-                        }
+                    const argsDom = [];
+                    args.forEach((arg, i) => {
+                        argsDom.push(createElement("span", e => {
+                            e.classList.add("stringified", "objMinified");
+                            e.innerText = `${arg.split("=")[0]}`;
+                            e.title = "function argument: " + arg;
+                            e.style.fontSize = ".85em";
+                        }));
+                        if(i !== args.length - 1)
+                            argsDom.push(createElement("span", e => {
+                                e.classList.add("stringified", "objectChar");
+                                e.innerText = ",";
+                            }));
+                    });
 
-                        setBody();
+                    parent.append(
+                        createElement("span", e => {
+                            e.classList.add("stringified", "objectChar");
+                            e.innerText = "(";
+                        }),
+                        
+                        ...argsDom,
+
+                        createElement("span", e => {
+                            e.classList.add("stringified", "objectChar");
+                            e.innerText = ")";
+                        })
+                    );
+
+                    
+                    const body = createElement("span", e => {
+                        e.classList.add("stringified", "objectChar", "objMinified");
+                        e.title = type;
 
                         e.on("click", (evt) => {
                             evt.stopPropagation();
-                            setBody();
+                            e.classList.toggle("objMinified");
+                            setBody(e);
+                        })
+                    })
+
+                    const setBody = (e) => {
+                        const pre = createElement("span", e => {
+                            e.classList.add("stringified", "function");
+                            e.innerHTML = "("
                         });
-                    }))
+
+                        const post = createElement("span", e => {
+                            e.classList.add("stringified", "function");
+                            e.innerHTML = ")"
+                        });
+
+                        e.innerHTML = "";
+
+                        e.append(pre);
+                        if(!e.classList.contains("objMinified")) {
+                            e.append(createElement("br"));
+                            e.append(createElement("span", e => {
+                                e.style.marginLeft = "20px"
+                                e.classList.add("stringified", "objectChar");
+                                e.innerText = value;
+                            }));
+                            
+                            e.append(createElement("br"));
+                        } else {
+                            e.append(createElement("span", e=> {
+                                e.innerHTML="...";
+                                e.title = "click to expand";
+                            }));
+                        }
+                        e.append(post);
+
+                    }
+
+                    setBody(body);
+
+                    parent.append(body);
                     
+                    
+                } else if (type == "class") {
+                    const match = value.match(
+                        /class\s+([\w$]+)(?:\s+extends\s+([\w$]+(?:\.[\w$]+)*))?/
+                    );
+
+                    const clsName = match?.[1];
+                    const extendsName = match?.[2];
+                    const clsBody = value.slice(match.index + match[0].length);
+
+                    parent.append(
+                        createElement("span", e => {
+                            e.classList.add("stringified", "objectConstructor");
+                            e.innerText = "class";
+                            e.title = type + "\npath: " + path
+                        }),
+                        createElement("span", e => {
+                            e.classList.add("stringified", type);
+                            e.innerText = clsName;
+                            e.title = type + "\npath: " + path
+                        }),
+                    );
+                    if(extendsName)
+                        parent.append(
+                            createElement("span", e => {
+                                e.classList.add("stringified", "objectConstructor");
+                                e.innerText = "extends";
+                                e.title = type + "\npath: " + path
+                            }),
+                            createElement("span", e => {
+                                e.classList.add("stringified", type, "inspectable");
+                                e.innerText = extendsName;
+                                e.title = type + "\npath: " + path
+
+                                setupDropdown(e, "contextmenu", [
+                                    createElement("button", e => {
+                                        e.innerText = "inspect";
+                                        e.addEventListener("click", () => {
+                                            logger.log(Object.getPrototypeOf(raw));
+                                        });
+                                    }),
+                                ]);
+                            }),
+                        );
+
+                    const body = createElement("span", e => {
+                        e.classList.add("stringified", "objectChar", "objMinified");
+                        e.title = type + " " + clsName + "\npath: " + path
+
+                        e.on("click", (evt) => {
+                            evt.stopPropagation();
+                            e.classList.toggle("objMinified");
+                            setBody(e);
+                        });
+                    })
+
+                    const setBody = (e) => {
+                        const pre = createElement("span", e => {
+                            e.classList.add("stringified", "objectChar");
+                            e.innerHTML = "{"
+                        });
+
+                        const post = createElement("span", e => {
+                            e.classList.add("stringified", "objectChar");
+                            e.innerHTML = "}"
+                        });
+
+                        e.innerHTML = "";
+
+                        if(!e.classList.contains("objMinified")) {
+                            e.append(createElement("br"));
+                            e.append(createElement("span", e => {
+                                e.style.marginLeft = "20px"
+                                e.classList.add("stringified", "objectChar");
+                                e.innerText = clsBody.trim();
+                            }));
+                            
+                            e.append(createElement("br"));
+                        } else {
+                            e.append(pre);
+                            e.append(createElement("span", e=> {
+                                e.innerHTML="...";
+                                e.title = "click to expand";
+                            }));
+                            e.append(post);
+                        }
+
+                    }
+
+                    setBody(body);
+
+                    parent.append(body);
+
                 } else {
                     parent.append(createElement("span", e => {
                         e.classList.add("stringified", type);
-                        e.title = type;
+                        e.title = type + "\npath: " + path
                         e.innerText = value === ""? "~empty string~" : value;
+                        if(value === "") {
+                            e.style.fontSize = ".85em";
+                            e.style.opacity = .7;
+                        }
                     }));
                 }
             }
@@ -280,6 +505,9 @@ class Logger {
             const stringified = message.map(e => Logger.stringify(e));
 
             stringified.forEach(v => treeBuilder(v, messageDom));
+
+            
+
                 
 
             stack = stack != undefined ? stack : new Error().stack;
@@ -301,6 +529,26 @@ class Logger {
             stackDom.innerText = stack;
 
             body.title = fileName + "\n" + stack;
+
+
+            
+            const lastDom = this.dom.lastChild;
+            const lastFileName = lastDom?.querySelector(".fileName");
+            const lastMessage = lastDom?.querySelector(".message");
+            const lastStack = lastDom?.querySelector(".stack");
+
+            if(
+                lastFileName?.innerHTML == fileNameDom.innerHTML &&
+                lastMessage?.innerHTML == messageDom.innerHTML &&
+                lastStack?.innerHTML == stackDom.innerHTML
+            ) {
+                lastMessage.dataset.counter = Number(lastMessage.dataset.counter) + 1;
+                lastMessage.classList.add("counter");
+
+                return;
+            }
+
+
 
             body.appendChild(fileNameDom);
             body.appendChild(messageDom);

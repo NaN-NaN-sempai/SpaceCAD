@@ -326,8 +326,11 @@ const SpaceCAD = class SpaceCAD {
         console.clear();
     }
     static run = (code, restore = true) => {
+        SpaceCAD.runLoop = () => {};
+
         const regex = /\bexpose\b/g;
-        if (regex.test(code)) {
+        const hasExpose = regex.test(code);
+        if (hasExpose) {
             code = `
                 let __ExposeObject = {};
                 ${code.replace(regex, "__ExposeObject")}
@@ -341,8 +344,13 @@ const SpaceCAD = class SpaceCAD {
             sceneObjectsEmpty();
         }
         const fn = new Function(code);
+
+        const run = Overloader.eval(fn, error => console.error(error));
         
-        return Overloader.eval(fn, error => console.error(error));
+        if(hasExpose && typeof run.loop === "function")
+            SpaceCAD.runLoop = run.loop;
+
+        return run;
     }
 
     static currentSpace = null;
@@ -352,6 +360,7 @@ const SpaceCAD = class SpaceCAD {
 
     static instancesUpdate = () => {
         SpaceCAD.instances.forEach(instance => instance.update?.());
+        SpaceCAD.runLoop?.();
     }
 
     // implement

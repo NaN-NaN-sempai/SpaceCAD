@@ -374,6 +374,19 @@ hr {
                     font-size: 1rem;
                 }
 
+                & .counter::before {
+                    content: attr(data-counter);
+                    margin-right: 5px;
+                    background: rgb(255, 255, 255, 0.2);
+                    padding: 1px 3px;
+                    border-radius: 100px;
+                    color: rgba(255, 255, 255, 0.809);
+                    font-size: .7rem;
+                    font-weight: bold;
+                    position: relative;
+                    bottom: 2px;
+                }
+
                 &.warn {
                     color: rgb(255, 238, 143);
                     background: rgba(255, 197, 97, 0.1);
@@ -400,7 +413,7 @@ hr {
                     display: inline;
 
                     &.string {
-                        color: rgb(255, 111, 0);
+                        color: rgb(253, 135, 0);
                     }
                     &.number {
                         color: rgb(41, 134, 221);
@@ -431,6 +444,20 @@ hr {
                     &.objectChar {
                         color: rgb(255, 255, 255);
                         font-style: normal;
+                    }
+                    &.class {
+                        color: rgb(109, 203, 65);
+                    }
+                    &.objectConstructor {
+                        font-style: normal;
+                        font-weight: normal;
+
+                        font-size: .85em;
+                        
+                        color: rgba(109, 203, 65, .7);
+                    }
+                    &.inspectable {
+                        padding-inline-start: 8px;
                     }
                     &.objMinified {
                         color: rgb(155, 176, 255);
