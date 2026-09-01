@@ -152,6 +152,8 @@ class Logger {
                                             e.classList.add("stringified", "objectKey");
                                             e.title = "array is empty";
                                             e.innerText = "~empty";
+                                            e.style.fontSize = ".85em";
+                                            e.style.opacity = .7;
                                         }));
                                 } else {
                                     e.append(createElement("span", e=> {
@@ -251,8 +253,10 @@ class Logger {
                                         e.append(createElement("span", e => {
                                             e.style.marginLeft = "20px"
                                             e.classList.add("stringified", "objectKey");
-                                            e.title = "object value is empty";
+                                            e.title = "object is empty";
                                             e.innerText = "~empty";
+                                            e.style.fontSize = ".85em";
+                                            e.style.opacity = .7;
                                         }));
                                     e.append(createElement("br"));
                                 } else {
