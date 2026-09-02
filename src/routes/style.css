@@ -80,6 +80,14 @@ button, .buttonLike, input[type="button"], input[type="submit"] {
             align-items: flex-start;
             margin-top: 5px;
 
+            & .projectName {
+                width: 138px;
+
+                @media (max-width: 600px) {
+                    width: clamp(65px, 23vw, 138px);
+                }
+            }
+
             & span {
                 font-weight: bold;
                 font-size: .7em;
@@ -231,6 +239,7 @@ hr {
         background: var(--primary);
         color: white;
         border-radius: 5px;
+        border: 1px solid var(--secondary);
 
         & .title {
             padding: 10px;
@@ -477,6 +486,70 @@ hr {
     }
 }
 
+#resourcesDisplay {
+    & .body {
+        
+        position: absolute;
+        bottom: 2.5rem;
+        right: 0;
+
+        & .list {
+            padding: 10px;
+
+            & .subtitle {
+                border-bottom: 1px solid var(--secondary);
+                padding: 5px;
+                font-weight: bold;
+            }
+
+            & .resourceList {
+                max-height: 300px;
+                overflow-y: auto;
+            }
+
+            & .resourceBody {
+                background: var(--tertiary);
+                padding: 10px;
+                border-radius: 5px;
+                margin-bottom: 5px;
+
+                & .resourceName {
+                    font-size: 1.1rem;
+                    font-weight: bold;
+                }
+
+                & .usage {
+                    display: block;
+                    max-height: 5rem;
+                    overflow-y: auto;
+
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+
+                    &, & * {
+                        font-size: .75rem;
+                    }
+                }
+
+                &:not(.preload), & .nousage {
+                    opacity: .7;
+                }
+
+                &.preload {
+                    .resourceName span {
+                        margin-left: 5px;
+                        font-size: .7rem;
+                        color: rgba(0, 238, 255, 0.645);
+                    }
+                }
+            }
+
+        }
+
+
+    }
+}
+
 .fileIndicator {
     position: relative;
     top: 0;
@@ -506,6 +579,14 @@ hr {
         overflow-x: scroll;
         gap: 5px;
         flex: 1;
+
+        @media (max-width: 600px) {
+            gap: 2px;
+        }
+        
+        @media (max-width: 450px) {
+            display: none;
+        }
 
         
         &::-webkit-scrollbar {

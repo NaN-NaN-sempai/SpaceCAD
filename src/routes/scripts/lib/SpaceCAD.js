@@ -202,8 +202,40 @@ const SpaceCAD = class SpaceCAD {
 
         return req.json;
     }
-    static setPreloads = () => {
+    static setPreloadsDom = () => {
+        const resourcesBody = document.query("#resourcesDisplay .body .list");
+
+        resourcesBody.query(".preSavedLibs").innerHTML = "";
+        resourcesBody.query(".preSavedModules").innerHTML = "";
+
         Object.entries(SpaceCAD.libs).forEach(([key, value]) => {
+            resourcesBody.query(".preSavedLibs").append(
+                createElement("div", d => {
+                    d.classList.add("resourceBody");
+
+                    d.append(
+                        createElement("p", e => {
+                            e.classList.add("resourceName");
+                            e.innerText = key;
+
+                            if(value.preload){
+                                d.classList.add("preload");
+                                e.append(
+                                    createElement("span", e => {
+                                        e.innerText = language.bottombuttons.resources.preload
+                                    })
+                                )
+                            }
+                        }),
+                        createElement("span", e => {
+                            e.classList.add("usage");
+                            e.innerHTML = value.usage ?? language.bottombuttons.resources.nousage;
+                            if(!value.usage) e.classList.add("nousage");
+                        })
+                    )
+                })
+            );
+
             if(!value.preload) return;
 
             try {
@@ -212,7 +244,36 @@ const SpaceCAD = class SpaceCAD {
                 console.error(error);
             }
         });
+
         Object.entries(SpaceCAD.modules).forEach(([key, value]) => {
+            resourcesBody.query(".preSavedModules").append(
+                createElement("div", d => {
+                    d.classList.add("resourceBody");
+
+                    d.append(
+                        createElement("p", e => {
+                            e.classList.add("resourceName");
+                            e.innerText = key;
+
+
+                            if(value.preload){
+                                d.classList.add("preload");
+                                e.append(
+                                    createElement("span", e => {
+                                        e.innerText = language.bottombuttons.resources.preload
+                                    })
+                                )
+                            }
+                        }),
+                        createElement("span", e => {
+                            e.classList.add("usage");
+                            e.innerHTML = value.usage ?? language.bottombuttons.resources.nousage;
+                            if(!value.usage) e.classList.add("nousage");
+                        })
+                    )
+                })
+            )
+
             if(!value.preload) return;
 
             try {
@@ -221,10 +282,39 @@ const SpaceCAD = class SpaceCAD {
     
                 window[key] = cls;
                 window["_"+key] = constructor;
+
+                
             } catch (error) {
                 console.error(error);
             }
         });
+        
+        
+        if(resourcesBody.query(".preSavedLibs").children.length == 0)
+            resourcesBody.query(".preSavedLibs").append(
+                createElement("div", e => {
+                    e.classList.add("resourceBody");
+
+                    e.append(
+                        createElement("span", e => {
+                            e.innerText = "no preSavedLibs";
+                        })
+                    )
+                })
+            )
+        
+        if(resourcesBody.query(".preSavedModules").children.length == 0)
+            resourcesBody.query(".preSavedModules").append(
+                createElement("div", e => {
+                    e.classList.add("resourceBody");
+
+                    e.append(
+                        createElement("span", e => {
+                            e.innerText = "no preSavedModules";
+                        })
+                    )
+                })
+            )
     }
 
     
@@ -350,6 +440,7 @@ const SpaceCAD = class SpaceCAD {
         if(hasExpose && typeof run.loop === "function")
             SpaceCAD.runLoop = run.loop;
 
+        SpaceCAD.setPreloadsDom();
         return run;
     }
 

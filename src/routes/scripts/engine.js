@@ -555,7 +555,7 @@ camera.rotation.order = "YXZ";
 
 scene.camera = camera;
 const SpaceCAD = generateSpaceCAD(scene, logger);
-SpaceCAD.setPreloads();
+// SpaceCAD.setPreloads();
 
 const {
     setPosition,
