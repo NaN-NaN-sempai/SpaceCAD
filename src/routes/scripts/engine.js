@@ -371,7 +371,7 @@ const vz = new THREE.Vector3(0, 0, 1);
 
 
 // arrow
-class Arrow extends THREE.Group {
+class Arrow3D extends THREE.Group {
     constructor(from, to, color, size = .15) {
         super();
         
@@ -418,7 +418,8 @@ const logger = new Logger(document.querySelector("#logger .body .list"), 5000);
 document.query("#showEdges").on("click", (evt, e) => {
     SpaceCAD.toggleEdgeHilight();
     
-    e.innerHTML = SpaceCAD.edgeHilighting? language.bottombuttons.edges.hide : language.bottombuttons.edges.show;
+    e.classList.toggle("edgeHiOn", !SpaceCAD.edgeHilighting);
+    e.title = SpaceCAD.edgeHilighting? language.bottombuttons.edges.hide : language.bottombuttons.edges.show;
 });
 
 
@@ -555,20 +556,10 @@ camera.rotation.order = "YXZ";
 
 scene.camera = camera;
 const SpaceCAD = generateSpaceCAD(scene, logger);
-// SpaceCAD.setPreloads();
 
-const {
-    setPosition,
-    setPos,
-    setRotation,
-    setRot,
-    setRotationPI,
-    setRotPI,
-    setScale,
-    setScl,
-    mirror,
-    space
-} = SpaceCAD;
+Object.keys(SpaceCAD).filter(e=>!["Object", "run", "instancesUpdate", "deleteAll", "restoreDefaultState"].includes(e)).forEach(key => {
+    window[key] = SpaceCAD[key];
+});
 
 const changePerspectiveButton = document.querySelector("#changePerspective");
 const setPerspectiveDom = () => {
@@ -792,7 +783,7 @@ class DirectionGizmo extends Gizmo.Root(THREE.Group) {
         }
 
         const GizmoArrow  = (direction, color) => {
-            const objects = new Arrow(new THREE.Vector3(), new THREE.Vector3(...direction), color);
+            const objects = new Arrow3D(new THREE.Vector3(), new THREE.Vector3(...direction), color);
             objects.objectList.forEach(obj => obj.isGizmoObject = true);
             
             const obj = objects.objectList[3];

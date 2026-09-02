@@ -26,8 +26,8 @@ const startTranslation = (electronStore) => {
     const userLanguage = navigator.language;
 
     const translation =
-        languages[selected] != undefined ?
-            languages[selected] :
+        selected != undefined ?
+            selected :
 
             languages[userLanguage] ??
             Object.entries(languages)

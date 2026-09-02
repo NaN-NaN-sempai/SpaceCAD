@@ -204,6 +204,24 @@ hr {
     display: none;
 }
 
+
+.toggleable .body .title, .question .title {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+}
+
+#showEdges {
+    &.edgeHiOn .off {
+        display: none;
+    }
+    &:not(.edgeHiOn) .on {
+        display: none;
+    }
+}
+
 .bottomItens {
     position: absolute;
     bottom: 0;
@@ -217,6 +235,13 @@ hr {
     flex-wrap: wrap;
     gap: 5px;
     max-width: 80vw;
+
+    & .splitter {
+        width: 3px;
+        height: 20px;
+        background: var(--secondary);
+        border-radius: 5px;
+    }
 }
 .checkBoxButton {
     & input[type="checkbox"] {
@@ -516,6 +541,8 @@ hr {
                 & .resourceName {
                     font-size: 1.1rem;
                     font-weight: bold;
+                    border-bottom: 1px solid var(--secondary);
+                    margin-bottom: 5px;
                 }
 
                 & .usage {
@@ -535,8 +562,33 @@ hr {
                     opacity: .7;
                 }
 
+                & .type {
+                    margin-left: 5px;
+                    font-size: .7rem;
+                    
+                    &.string {
+                        color: rgb(253, 135, 0);
+                    }
+                    &.number, &.object {
+                        color: rgb(41, 134, 221);
+                    }
+                    &.boolean {
+                        color: rgb(182, 15, 203);
+                    }
+                    &.function {
+                        color: rgb(215, 108, 108);
+                    }
+                    &.class {
+                        color: rgb(109, 203, 65);
+                    }
+                }
                 &.preload {
-                    .resourceName span {
+                    position: relative;
+
+                    .resourceName span:not(.type) {
+                        position: absolute;
+                        right: 5px;
+                        top: 2px;
                         margin-left: 5px;
                         font-size: .7rem;
                         color: rgba(0, 238, 255, 0.645);

@@ -6,7 +6,7 @@ const SpaceCAD = class SpaceCAD {
     static store = function (preload = false) {
         let cls = isClass(this)? this : this.constructor;
 
-        if([SpaceCAD, SpaceCAD.Root, SpaceCAD.Mesh, SpaceCAD.Group, SpaceCAD.RootObject, SpaceCAD.Object].includes(cls))
+        if(Object.entries(SpaceCAD).includes(cls))
             return console.warn(`Cannot store ${cls.name}. It is a reserved class.`);
 
         // saving object
@@ -226,6 +226,16 @@ const SpaceCAD = class SpaceCAD {
                                     })
                                 )
                             }
+                            
+                            try {
+                                const type = typeof value.lib.jshonParse;
+                                e.append(
+                                    createElement("span", e => {
+                                        e.classList.add("type", type);
+                                        e.innerText = language.bottombuttons.resources.types[type] ?? type;
+                                    })
+                                )
+                            } catch (error) {}
                         }),
                         createElement("span", e => {
                             e.classList.add("usage");
@@ -264,6 +274,21 @@ const SpaceCAD = class SpaceCAD {
                                     })
                                 )
                             }
+                            
+                            
+                            try {
+                                const cls = new Function("return " + value.classBody)();
+                                
+                                e.append(
+                                    createElement("span", e => {
+                                        e.classList.add("type", "class");
+                                        const clsName = Object.getPrototypeOf(cls)?.name;
+                                        e.innerText = language.bottombuttons.resources.types[clsName] ?? clsName;
+                                    })
+                                )
+
+                                
+                            } catch (error) {}
                         }),
                         createElement("span", e => {
                             e.classList.add("usage");
@@ -684,7 +709,6 @@ const SpaceCAD = class SpaceCAD {
         }
         
     }
-    static mesh = (...args) => new SpaceCAD.Mesh(...args);
     static Group = class extends SpaceCAD.Root(THREE.Group) {
         static instances = [];
         constructor() {
@@ -693,7 +717,6 @@ const SpaceCAD = class SpaceCAD {
             SpaceCAD.Group.instances.push(this);
         }
     }
-    static group = (...args) => new SpaceCAD.Group(...args);
 
 
     static RootObject = CLASS => class extends CLASS {
@@ -723,6 +746,8 @@ const SpaceCAD = class SpaceCAD {
 
     static Object = class extends SpaceCAD.RootObject(SpaceCAD.Mesh) {};
     static GroupObject = class extends SpaceCAD.RootObject(SpaceCAD.Group) {};
+    static Construct = class extends SpaceCAD.RootObject(SpaceCAD.Mesh) {};
+    static ConstructGroup = class extends SpaceCAD.RootObject(SpaceCAD.Group) {};
 
 
     static SvgToObject = class extends SpaceCAD.GroupObject {
@@ -1087,6 +1112,8 @@ const SpaceCAD = class SpaceCAD {
                 padding: 5,
                 resolution: 1,
 
+                textOffset: v0,
+
                 awaysLooking: true,
 
                 postfix: "mm",
@@ -1098,6 +1125,8 @@ const SpaceCAD = class SpaceCAD {
 
             this.from = this.__from = from;
             this.to = this.__to = to;
+
+            this.textOffset = prop.textOffset;
             
             const setOnchange = () => {
                 this.distance = (this.to - this.from).length();
@@ -1108,7 +1137,10 @@ const SpaceCAD = class SpaceCAD {
                     this.space(() => {
                         this.text = new SpaceCAD.Text({
                             resolution: prop.resolution,
-                        })
+                        });
+
+                        this.text.pos += this.textOffset;
+
                     });
                 }
                 
@@ -1148,8 +1180,6 @@ const SpaceCAD = class SpaceCAD {
                     }
                 }
             })
-
-            console.log(this.distance)
         }
     }
 

@@ -65,7 +65,11 @@
             <img class="svgIcon" src="./svg/lookBack.svg" alt="back">
         </button>
 
-        <button id="setDefaultCamera" language-bottombuttons-defaultcamera-all></button>
+        <div class="splitter"></div>
+
+        <button id="setDefaultCamera" class="iconButton" language-title-bottombuttons-defaultcamera-all>
+            <img class="svgIcon" src="./svg/restore camera.svg" alt="back">
+        </button>
 
         <button class="iconButton" id="changePerspective" language-title-bottombuttons-setperspective-perspective>
             <img class="svgIcon" src="./svg/perpective.svg" alt="camera">
@@ -78,9 +82,12 @@
             <button language-bottombuttons-defaultcamera-perspective></button>
         </div>
 
-        <button id="showEdges" language-bottombuttons-edges-show></button>
+        <button id="showEdges" class="iconButton edgeHiOn" language-title-bottombuttons-edges-show>
+            <img class="svgIcon on" src="./svg/edgeHiOn.svg" alt="edges">
+            <img class="svgIcon off" src="./svg/edgeHiOff.svg" alt="edges">
+        </button>
     
-
+        <div class="splitter"></div>
         
         <div id="resourcesDisplay" class="toggleable">
             <label class="buttonLike checkBoxButton">
@@ -209,21 +216,36 @@
         <div class="title" language-modal-changelog-todo></div>
         SpaceCAD -> concertar: acentuação de arestas quebra ao reiniciar codigo
         <br><br>
+        SpaceCAD -> documentação do SpaceCAD
+        <br><br>
+
+        <span style="background: var(--primary); font-weight: bold; ">(Não essenciais)</span>
         SpaceCAD -> hinter: linha com texto na posição final
         <br><br>
         SpaceCAD -> hinter de objeto: linha do objeto até uma posição, mostra informações como nome, tamanho e informações custom
         <br><br>
         SpaceCAD -> hinter de objeto: sempre mostrar ou mostras quando passar o mouse sobre o objeto
         <br><br>
-        SpaceCAD -> documentação do SpaceCAD
-        <br><br>
-
-        <span style="background: var(--primary); font-weight: bold; ">(Não essenciais)</span>
         SpaceCAD plane com text -> adicionar html dentro do plane 
         <br><br>
 
         <div class="title" language-modal-changelog-lastupdates></div>
 
+        <span style="background: var(--primary);">SpaceCAD keys global, resources types</span>
+        (02/09/2026 - 20:27) SpaceCAD API -> Construct & ConstructGroup / SpaceCAD.Object & SpaceCAD.ObjectGroup são legacy agora
+        <br><br>
+        (02/09/2026 - 20:34) translations.js -> concerto de pequeno bug que não mantia a linguagem selecionada ao abrir o SpaceCAD
+        <br><br>
+        (02/09/2026 - 20:26) SpaceCAD UI -> Inspecionador de Recursos mostra tipo de recurso
+        <br><br>
+        (02/09/2026 - 20:00) SpaceCAD API / engine.js -> com algumas exceções, keys de SpaceCAD agora são globais 
+        <br><br>
+        (02/09/2026 - 19:54) SpaceCAD API -> Ruler textOffset para mudar a posição do texto
+        <br><br>
+        (02/09/2026 - 15:29) SpaceCAD UI -> titulos estilizados
+        <br><br>
+        (02/09/2026 - 15:26) SpaceCAD UI -> icones adicionados para restaurar camera e acentuar arestas
+        <br><br>
 
         <span style="background: var(--primary);">resource inspector</span>
         (02/09/2026 - 14:17) SpaceCAD UI -> Inspecionador de Recursos -> mostrar como usar o recurso
@@ -435,6 +457,24 @@ writeLanguage("en-US", { // default
             modules: "modules:",
             preload: "preloaded",
             nousage: "no provided usage",
+            types: {
+                object: "object",
+                string: "string",
+                number: "number",
+                boolean: "boolean",
+                function: "function",
+
+                Mesh: "SpaceCAD Mesh",
+                Group: "SpaceCAD Group",
+                Object: "SpaceCAD Object",
+                ObjectGroup: "SpaceCAD Object Group",
+                
+                SvgToObject: "Svg to Object",
+                SvgToObjectFromFile: "Svg to Object from File",
+
+                Construct: "Construct",
+                ConstructGroup: "Construct Group",
+            }
         },
         logs: {
             button: "logs",
@@ -561,6 +601,24 @@ writeLanguage("pt-BR", {
             modules: "módulos:",
             preload: "precarregado",
             nousage: "uso não fornecido",
+            types: {
+                object: "objeto",
+                string: "texto",
+                number: "número",
+                boolean: "booleano",
+                function: "função",
+
+                Mesh: "Malha SpaceCAD",
+                Group: "Grupo SpaceCAD",
+                Object: "Objeto SpaceCAD",
+                ObjectGroup: "Grupo de Objetos SpaceCAD",
+                
+                SvgToObject: "Svg para Objeto",
+                SvgToObjectFromFile: "Svg para Objeto de Arquivo",
+
+                Construct: "Construto",
+                ConstructGroup: "Grupo de Construtos",
+            },
         },
         logs: {
             button: "registros",
@@ -692,6 +750,24 @@ writeLanguage("fr-FR", {
             modules: "modules:",
             preload: "préchargé",
             nousage: "utilisation non prévue",
+            types: {
+                object: "objet",
+                string: "chaîne",
+                number: "nombre",
+                boolean: "booléen",
+                function: "fonction",
+
+                Mesh: "Mesh SpaceCAD",
+                Group: "Groupe SpaceCAD",
+                Object: "Objet SpaceCAD",
+                ObjectGroup: "Groupe d’Objets SpaceCAD",
+                
+                SvgToObject: "Svg vers Objet",
+                SvgToObjectFromFile: "Svg vers Objet d’un fichier",
+
+                Construct: "Construit",
+                ConstructGroup: "Groupe de Construits",
+            },
         },
         logs: {
             button: "registres",
@@ -709,7 +785,7 @@ writeLanguage("fr-FR", {
             unload: "décharger le fichier",
             reload: "recharger l’application",
             fullscreen: "plein écran",
-            setlanguage: "choisir la langue",
+            setlanguage: "set language ~ choisir la langue",
             notes: "notes de mise à jour",
             github: "SpaceCAD GitHub"
         },
