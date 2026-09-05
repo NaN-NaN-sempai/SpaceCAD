@@ -445,22 +445,19 @@ class MouseManager {
         });
 
         DOMOrigin.addEventListener("wheel", (event) => {
+            if(event.ctrlKey) { // pinch
+                this.pinch.delta = event.deltaY * 50;
+
+                setDirection(0,0, event.deltaY, "MousePinch");
+                
+                return;
+            }
+
             this.wheel.delta.y = event.deltaY;
             this.wheel.delta.x = event.deltaX;
 
             setDirection(event.deltaX, event.deltaY, 0, "MouseWheel");    
 
-        }, { passive: false });
-
-        //pinch
-        DOMOrigin.addEventListener("wheel", (event) => {
-            if(!event.ctrlKey) return;
-
-            // PREVENT DEFAULT IN SETDIRECTION 
-    
-            this.pinch.delta = event.deltaY;
-
-            setDirection(0,0, event.deltaY, "MousePinch");
         }, { passive: false });
     }
 

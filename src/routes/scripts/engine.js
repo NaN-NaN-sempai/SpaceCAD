@@ -1491,7 +1491,8 @@ const mouseLeft = new InputAction.ButtonBool("MouseLeft");
 
 const mouseRight = new InputAction.ButtonBool("MouseRight", { preventDefault: true });
 
-const wheelZoom = inputManager.mouse.wheel.delta;
+const mouseWheel = inputManager.mouse.wheel.delta;
+const pinch = inputManager.mouse.pinch;
 
 const perspective = new InputAction.Button("p");
 
@@ -1808,14 +1809,16 @@ const overloader = new Overloader((frame, loop) => {
 
     camera.pos += 
         camera.dir.forward * -(camera.perspective == "perspective" ? movement.get().ver : 0) * moveSpeed +
-        camera.dir.right * movement.get().hoz * moveSpeed +
+        camera.dir.right * (movement.get().hoz + mouseWheel.x/2) * moveSpeed +
         camera.dir.up * (camera.perspective == "perspective" ? movement.get().dep : -movement.get().ver) * moveSpeed;
 
 
-    let calcZoom = zoom + wheelZoom.y * 1;
+    let calcZoom = zoom + (pinch.delta + mouseWheel.y) * 1;
     zoom = calcZoom < 0.001 ? 0.001 : calcZoom;
 
     camera.setZoom(zoom);
+
+    //console.log(pinch);
 
     
 
