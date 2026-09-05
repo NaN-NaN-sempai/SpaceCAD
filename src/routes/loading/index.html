@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpaceCAD</title>
+
+    <style>
+        :root {
+            --primary: rgb(35, 40, 44);
+            --secondary: rgb(75, 86, 95);
+            --tertiary: rgb(24, 26, 28);
+        }
+
+    </style>
+
+    <style>
+        
+
+        button, .buttonLike, input[type="button"], input[type="submit"] {
+            cursor: pointer;
+            border: none;
+            padding: 10px 15px;
+
+            user-select: none;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            line-height: 1;
+            
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary) ;
+            color: white;
+            transition: all 0.1s ;
+            border-radius: 5px;
+            &:hover {
+                background: var(--secondary);
+            }
+
+            &.selected {
+                background: green;
+            }
+        }
+        .titlebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+
+            width: 100%;
+            max-width: 100%;
+
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+
+            z-index: 999999;
+
+            -webkit-app-region: drag;
+            
+            & .title {
+                display: flex;
+                align-items: center; 
+                color: white;
+                gap: 10px;
+
+                & .logotype {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-start;
+                    margin-top: 5px;
+
+                    & .projectName {
+                        width: 138px;
+
+                        @media (max-width: 600px) {
+                            width: clamp(65px, 23vw, 138px);
+                        }
+                    }
+
+                    & span {
+                        font-weight: bold;
+                        font-size: .7em;
+                    }
+
+                }
+            }
+
+            & .center {
+                position: relative;
+                --size: 2.5rem;
+                width: var(--size);
+                height: var(--size);
+
+                & .logoIcon {
+                    width: var(--size);
+                    position: absolute;
+
+                    &.overlay {
+                        top: calc(var(--size) / 3.5);
+                    }
+                    &.animated {
+                        left: 2.5px;
+                        top: 0px;
+                    }
+                }
+            }
+        }
+        .titlebar .fileIndicator{
+            -webkit-app-region: drag;
+        }.titlebar .fileIndicator .fileList {
+
+            -webkit-app-region: no-drag;
+        }
+        .titlebar button {
+            -webkit-app-region: no-drag;
+        }
+
+        /* exchange for LOGO when ready */
+        .titlebar .title {
+            -webkit-app-region: drag;
+            margin: 5px;
+
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--tertiary);
+            & span {
+                font-size: .7rem;
+            }
+        }
+
+        .window-buttons {
+            position: relative;
+            margin-left: auto;
+            top: -3px;
+            right: 0;
+            display: flex;
+            height: 100%;
+
+            -webkit-app-region: no-drag;
+        }
+
+        .window-buttons button {
+            font-weight: bold;
+            width: 100%;
+            height: 40px;
+            border: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0;
+            background: transparent;
+            color: var(--tertiary);
+            cursor: pointer;
+        }
+
+        .window-buttons #move {
+            font-weight: normal;
+            -webkit-app-region: drag;
+        }
+
+        .window-buttons button:hover {
+            color: white;
+            background: var(--primary);
+        }
+
+        body.fullscreen {
+            & #minimize, & #maximize, & #move {
+                display: none;
+            }
+        }
+
+        #close {
+            background: var(--primary);
+            color: var(--secondary)
+        }
+        #close:hover {
+            background: #e81123;
+        }
+    </style>
+    <style>
+        * {
+            font-size: .915rem;
+            box-sizing: border-box;
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            outline: none;
+        }
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: var(--tertiary);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .center {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+
+            & .logotype {
+                width: 60vw;
+            }
+
+            & .logomark {
+                position: relative;
+                height: 50vh;
+
+                & * {
+                    position: absolute;
+                    max-height: 100%;
+
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                }
+
+                & .animated {
+                    top: 46%;
+                    left: 14px;
+                }
+
+                & .overlay {
+                    max-height: 70%;
+                    top: 61%;
+                }
+            }
+        }
+
+        .owner {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="titlebar">
+        <div class="title">
+        </div>
+        <div class="fileIndicator">
+        </div>
+        <div class="window-buttons">
+            <button id="close">×</button>
+        </div>
+
+    </div>
+
+    <button style="position: absolute; left: 0; top: 50vh; z-index: 1000; display: none" onclick="location.reload()">Recarregar</button>
+    
+    <div class="center">
+                
+        <div class="logomark">
+            <img class="bg" src="../../../assets/logo/logoBg.svg" alt="SpaceCAD">
+            <img class="animated" src="../../../assets/logo/logo.gif">
+            <img class="overlay" src="../../../assets/logo/logoOverlay.svg" alt="SpaceCAD">
+        </div>
+
+        <img class="logotype" src="../../../assets/logo/logotype.svg">   
+        
+        <span class="owner">luishenrique.space</span>
+    </div>
+    
+</body>
+<script>
+    document.querySelector(".owner").addEventListener("click", () => electron.openUrl('https://github.com/NaN-NaN-sempai'));
+    document.querySelector("#close").addEventListener("click", titlbar.close);
+</script>
+</html>

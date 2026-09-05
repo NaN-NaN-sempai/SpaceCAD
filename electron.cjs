@@ -49,6 +49,8 @@ app.whenReady().then(() => {
             preload: path.join(__dirname, 'preload.js')
         }
     });
+    win.loadFile(path.join(__dirname, "./src/routes/loading/index.html"));
+
     win.webContents.on("before-input-event", (event, input) => {
         if (
             (input.control &&
