@@ -131,7 +131,40 @@ const meuArmario = new ArmarioPlanejado(80, 200, 50);
 
 * **JSHON.js** — **JavaScript High Object Notation** - Traduz valores para string e visseversa, suporta setters e getters de objetos (alternativa mais robusta ao JSON stringify/parse) `(browser/back-end)` 
 
-* **translarions.js** - Biblioteca para implementar traduções diretamente no HTML `(browser/back-end)` 
+* **translarions.js** — Biblioteca para implementar traduções diretamente no HTML `(browser/back-end)`
+  - crie linguagens baseadas em Objetos Javascript:
+  ```javascript
+  writeLanguage("pt-BR", {property: {inside: "valor traduzido"}})
+  ```
+  - troque a linguagem usando `selectLanguage("pt-BR")`, a linguagem padrão é definida ao criar a primeira linguagem.
+  - use o objeto `language` para utilizar os valores das traduções, ex:
+  ```javascript
+  lanaguage.property.inside; // => "valor traduzido"
+  ```
+  **[Para Browser]:**
+  - use seu objeto direto no HTML:
+  ```HTML
+  <span language-property-inside></span> <!-- "valor traduzido" sera inserido no innerHTML ⚠️ sobrescreve tudo que estiver dentro -->
+  <span language-title-property-inside></span> <!-- "valor traduzido" sera inserido no titulo -->
+
+  <input language-value-property-inside> <!-- "valor traduzido" sera inserido no valor -->
+  <input language-placeholder-property-inside> <!-- "valor traduzido" sera inserido no placeholder -->
+  ```
+  - você pode inserir o valor diretamente pelo javascript usando o objeto `language`:
+  ```javascript
+  const meuElemento = document.createElement("span");
+  meuElemento.innerHTML = language.property.inside;
+  ```
+  mas assim a tradução não mudará ao trocar de linguagem. ao envez disso use a propriedade customizada `setlang` de `{HTMLElement}` para a tradução ser dinamica, a propriedade deve terminar com `$` para o valor ser inserido:
+  ```javascript
+  const meuElemento = document.createElement("span");
+  meuElemento.setlang.property.inside$; // "valor traduzido" sera inserido no innerHTML ⚠️ sobrescreve tudo que estiver dentro
+  meuElemento.setlang.title.property.inside$; // "valor traduzido" sera inserido no  titulo
+
+  const meuInput = document.createElement("input");
+  meuInput.setLang.value.property.inside$; // "valor traduzido" sera inserido no valor
+  meuInput.setLang.placeholder.property.inside$; // "valor traduzido" sera inserido no placeholder
+  ```
 
 
 #
@@ -177,6 +210,7 @@ const meuArmario = new ArmarioPlanejado(80, 200, 50);
   - `rect` — Simplificação de `getBoundingClientRect()`.
   - `childIndex` — Retorna o indice do elemento no seu elemento pai.
   - `appendText` — Insere um elemento de texto.
+  - `css` — Retorna um proxy com o `getComputedStyle` do elemento, ao setar uma propriedade o valor é definido no style, o mesmo que `element.style.propriedade`, ex: `document.body.css.background = "red";`. Ao setar o valor direto como objeto, as propriedade são passadas para o style tambem, ex: `document.body.css = {background: "red", color: "white", fontWeight: "2rem"}`
   - `{FORM}.objectForm` — Maneira de acessar o ObjectForm no form.
   - `{FORM}.asObject` — Maneira de acessar os valores do form como objeto usando o ObjectForm.
   - `{element[modal]}.modal` — Maneira de acessar o Modal no elemento.
@@ -186,4 +220,5 @@ const meuArmario = new ArmarioPlanejado(80, 200, 50);
   - `query` — Retorna a primeira instancia na lista.
   - `queryMap` — Retorna as primeiras instancias de todos os itens da lista.
   - `all` — Retorna todas instancias de todos os itens da lista.
+  - `css` — O mesmo que `{HTMLElement}.css` só que percorrendo a lista. Ao passar uma propriedade, cria um `array.map`.
 

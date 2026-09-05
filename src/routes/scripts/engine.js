@@ -409,14 +409,114 @@ class Arrow3D extends THREE.Group {
     }
 }
 
-
 const logger = new Logger(document.querySelector("#logger .body .list"), 5000);
 
+electronStore.edgeHilighting = electronStore.edgeHilighting == undefined?
+{
+    color: "#f27a02",
+    width: 1,
+    opacity: 1
+}:
+electronStore.edgeHilighting;
+const doEdgesIfToggled = () => {
+    const origin = document.query("#showEdges");
+    const color = origin.query('[type="color"]').value;
+    const width = parseInt(origin.query('.width').value);
+    const opacity = parseFloat(origin.query('.opacity').value);
 
+    origin.query(".colorOutput").innerHTML = color;
+    origin.query(".widthOutput").innerHTML = width;
+    origin.query(".opacityOutput").innerHTML = opacity;
+
+    electronStore.edgeHilighting = {color, width, opacity};
+
+    if(!SpaceCAD.edgeHilighting) return;
+
+
+    SpaceCAD.toggleEdgeHilight(false);
+    SpaceCAD.toggleEdgeHilight(true, color, width, opacity);
+}
     
 // UI
+setupDropdown(document.query("#showEdges"), "contextmenu", [
+    createElement("label", e => {
+        e.setlang.bottombuttons.edges.options.color$;
+        e.on("click", (evt, e) => {evt.stopPropagation()})
+        e.append(
+            createElement("span", e=>{
+                e.classList.add("colorOutput");
+                e.innerHTML = electronStore.edgeHilighting?.color || "#f27a02";
+                e.css.marginLeft = "10px";
+            }),
+            createElement("br"),
+            createElement("input", e => {
+                e.type = "color";
+                e.css = {
+                    width: "149px",
+                    height: "20px",
+                    padding: "0px"
+                };
+                e.value = electronStore.edgeHilighting?.color || "#f27a02";
+
+                e.on("input", doEdgesIfToggled);
+            })
+        )
+    }),
+    createElement("hr"),
+    createElement("label", e => {
+        e.setlang.bottombuttons.edges.options.width$;
+        e.on("click", (evt, e) => {evt.stopPropagation()})
+        e.append(
+            createElement("span", e=>{
+                e.classList.add("widthOutput");
+                e.innerHTML = electronStore.edgeHilighting?.width || 1;
+                e.css.marginLeft = "10px";
+            }),
+            createElement("br"),
+            createElement("input", e => {
+                e.type = "range";
+                e.min = 1;
+                e.max = 10;
+                e.value = 1;
+                e.step = 1;
+                e.value = electronStore.edgeHilighting?.width || 1;
+                e.style.width ="100%";
+                e.classList.add("width");
+                e.on("input", doEdgesIfToggled);
+            })
+        )
+    }),
+    createElement("hr"),
+    createElement("label", e => {
+        e.setlang.bottombuttons.edges.options.opacity$;
+        e.on("click", (evt, e) => {evt.stopPropagation()})
+        e.append(
+            createElement("span", e=>{
+                e.classList.add("opacityOutput");
+                e.innerHTML = electronStore.edgeHilighting?.opacity || 1;
+                e.css.marginLeft = "10px";
+            }),
+            createElement("br"),
+            createElement("input", e => {
+                e.type = "range";
+                e.min = 0;
+                e.max = 1;
+                e.value = 1;
+                e.step = .01;
+                e.value = electronStore.edgeHilighting?.opacity || 1;
+                e.style.width ="100%";
+                e.classList.add("opacity");
+                e.on("input", doEdgesIfToggled);
+            })
+        )
+    })
+]);
+
 document.query("#showEdges").on("click", (evt, e) => {
-    SpaceCAD.toggleEdgeHilight();
+    const color = e.query('[type="color"]').value;
+    const width = parseInt(e.query('.width').value);
+    const opacity = parseFloat(e.query('.opacity').value);
+    SpaceCAD.toggleEdgeHilight(undefined, color, width, opacity);
     
     e.classList.toggle("edgeHiOn", !SpaceCAD.edgeHilighting);
     e.title = SpaceCAD.edgeHilighting? language.bottombuttons.edges.hide : language.bottombuttons.edges.show;

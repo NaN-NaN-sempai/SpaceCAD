@@ -252,7 +252,7 @@ hr {
 .toggleable {
     position: relative;
 
-    &:has(input[type="checkbox"]:checked) {
+    &:has(.holdOpen:checked) {
         & .body {
             display: block;
         }
@@ -388,6 +388,32 @@ hr {
         position: absolute;
         bottom: 2.5rem;
         right: 0;
+
+        & .title {
+            position: relative;
+
+            & .doScrollHolder {
+                position: absolute;
+                top: 0;
+                right: 0;
+                margin: 3px;
+
+                &:has(:checked) {
+                    & .on {
+                        display: inline;
+                    }
+                    & .off {
+                        display: none;
+                    }
+                }
+                & .off {
+                    display: inline;
+                }
+                & .on {
+                    display: none;
+                }
+            }
+        }
 
         & .list {
             & .item:first-child {

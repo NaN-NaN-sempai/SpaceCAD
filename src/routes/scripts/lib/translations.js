@@ -105,3 +105,24 @@ const setTranslate = (el, path, doreload = true) => {
     if(doreload)
         doDocumentTranslation(el);
 }
+
+const propToString = (value, divisor = ".", el) => new Proxy({}, {
+    get: (target, property) => {
+        if(property.endsWith("$")) {
+            el.setAttribute(`${value}${divisor}${property.slice(0, -1)}`, null);
+            doDocumentTranslation(el);
+            return value;
+        }
+            
+        return propToString(`${value}${divisor}${String(property)}`, divisor, el);
+    }
+});
+
+if(typeof window != "undefined")
+Object.defineProperties(HTMLElement.prototype, {
+    setlang: {
+        get() {
+            return propToString("language", "-", this);
+        }
+    },
+})

@@ -62,6 +62,22 @@ class Logger {
                     path: keyNow
                 };
 
+            if (value instanceof Error)
+                return {
+                    type: "error",
+                    value: value.message,
+                    raw: value,
+                    path: keyNow
+                };
+
+            if (value instanceof HTMLElement) 
+                return {
+                    type: "html",
+                    value: value.outerHTML,
+                    raw: value,
+                    path: keyNow
+                };
+
             return {
                 type: "object",
                 value: Object.entries(value).map(([key, value]) => [key, Logger.stringify(value, seen, keyNow + "." + key)]),
@@ -77,6 +93,7 @@ class Logger {
         };
     };
     constructor(dom, max = 1000, beforePush = () => {}) {
+        const og = console;
         this.dom = dom;
         this.logList = [];
         this.max = max;
@@ -99,7 +116,7 @@ class Logger {
             if(this.logList.length > this.max)
                 this.logList.pop();
 
-            if(!this.dom instanceof HTMLElement) return;
+            if(!(this.dom instanceof HTMLElement)) return;
 
             const body = document.createElement("div");
             body.classList.add("item");
@@ -110,6 +127,65 @@ class Logger {
             messageDom.dataset.counter = 1;
 
             const treeBuilder = ({type, value, raw, path}, parent, firstOpen = true) => {
+                const setHoverHighlight = (e) => {
+                    const getSpaceParent = e => {
+                        if(e.parentElement == messageDom) return null;
+                        if(e.parentElement.isSpaceCAD) return e.parentElement;
+                        return getSpaceParent(e.parentElement);
+                    }
+                    e.on("mouseenter", (evt,e) => {
+                        if(!raw.isSpaceCAD) return;
+
+                        const parent = getSpaceParent(e);
+                        if (parent) {
+                            parent.dispatchEvent(
+                                new MouseEvent("mouseleave", {
+                                    bubbles: false,
+                                    relatedTarget: e
+                                })
+                            );
+                        }
+                        
+                        raw.addHighLight("__hover_highlight", "rgb(109, 203, 65)", 3, 10, "ignore check");
+                    });
+                    e.on("mouseleave", (evt,e) => {
+                        if(!raw.isSpaceCAD) return;
+
+                        const parent = getSpaceParent(e);
+                        if (parent) {
+                            parent.dispatchEvent(
+                                new MouseEvent("mouseenter", {
+                                    bubbles: false,
+                                    relatedTarget: e
+                                })
+                            );
+                        }
+                        
+                        raw.removeHighLight("__hover_highlight");
+                    });
+                }
+                const setCopyValue = (e) => {
+                    setupDropdown(e, "contextmenu", [
+                        createElement("button", e => {
+                            e.setlang.bottombuttons.logs.options.copy$;
+                            e.addEventListener("click", (evt) => {
+                                evt.stopPropagation();
+                                evt.preventDefault();
+                                navigator.clipboard.writeText(JSON.stringify(value));
+                            });
+                            e.closeMenu = true;
+                        }),
+                        createElement("button", e => {
+                            e.innerText = "copy path";
+                            e.addEventListener("click", (evt) => {
+                                evt.stopPropagation();
+                                evt.preventDefault();
+                                navigator.clipboard.writeText(path);
+                            });
+                            e.closeMenu = true;
+                        })
+                    ], true)
+                }
                 if (["null", "undefined"].includes(type)) {
                     parent.append(createElement("span", e => {
                         e.classList.add("stringified", "undefined");
@@ -181,10 +257,10 @@ class Logger {
                         createElement("div", e => {
                             e.classList.add("stringified", "tabify");
                             e.classList.toggle("objMinified", !firstOpen);
-                            
+
                             e.title = type;
                             if(raw.constructor.name != "Object")
-                                e.title = `${type} instance of ${raw.constructor.name}`;
+                                e.title = `${type} instance of ${raw.constructor == THREE[raw.constructor.name]? "THREE." : ""}${raw.constructor.name}`;
                             
                             e.title += `\npath: ${path}`;
 
@@ -275,7 +351,11 @@ class Logger {
                                 evt.stopPropagation();
                                 e.classList.toggle("objMinified");
                                 setBody();
-                            })
+                            });
+
+                            e.isSpaceCAD = raw.isSpaceCAD;
+                            setHoverHighlight(e);
+                            setCopyValue(e);
                         })
                     );
 
@@ -284,7 +364,6 @@ class Logger {
                         e.classList.add("stringified", type);
                         e.innerText = value;
                         e.title = "circular reference, click to unwrap\npath: " + path;
-
 
                         let open = false;
                         e.on("click", (evt) => {
@@ -296,6 +375,9 @@ class Logger {
                             }
                             open = !open;
                         });
+
+                        e.isSpaceCAD = raw.isSpaceCAD;
+                        setHoverHighlight(e);
                     }));
                     
                 } else if (type == "function") {
@@ -492,6 +574,19 @@ class Logger {
 
                     parent.append(body);
 
+                } else if (type == "html") {
+                    parent.append(
+                        createElement("span", e => {
+                            e.classList.add("stringified", "class");
+                            e.title = type + "\npath: " + path
+                            e.innerHTML = raw.constructor.name;
+                        }),
+                        createElement("span", e => {
+                            e.classList.add("stringified", type);
+                            e.title = type + "\npath: " + path
+                            e.innerText = value.length > 250? value.slice(0, 250) + "..." : value;
+                        })
+                    );
                 } else {
                     parent.append(createElement("span", e => {
                         e.classList.add("stringified", type);
@@ -501,6 +596,7 @@ class Logger {
                             e.style.fontSize = ".85em";
                             e.style.opacity = .7;
                         }
+                        setCopyValue(e, value);
                     }));
                 }
             }
@@ -535,6 +631,11 @@ class Logger {
             body.title = fileName + "\n" + stack;
 
 
+            const scrollBottom = () => {
+                if(document.query("#logger .doScroll").checked)
+                    this.dom.scrollTop = this.dom.scrollHeight;
+            }
+
             
             const lastDom = this.dom.lastChild;
             const lastFileName = lastDom?.querySelector(".fileName");
@@ -548,19 +649,19 @@ class Logger {
             ) {
                 lastMessage.dataset.counter = Number(lastMessage.dataset.counter) + 1;
                 lastMessage.classList.add("counter");
-
+                scrollBottom();
                 return;
             }
 
 
 
-            body.appendChild(fileNameDom);
-            body.appendChild(messageDom);
-            body.appendChild(stackDom);
-            this.dom.appendChild(body);
+            body.append(fileNameDom, messageDom, stackDom);
+            this.dom.append(body);
 
             if(this.dom.children.length > this.max)
                 this.dom.children[this.dom.children.length - 1].remove();
+
+            scrollBottom();            
         }
         
         return new Proxy(this, {
@@ -578,14 +679,13 @@ class Logger {
                     };
 
                 if(key == "og")
-                    return console;
+                    return og;
 
-                const stack = new Error().stack;
                 return function(...args) {
                     const stack = new Error().stack;
 
                     generateBody(key, args, stack);
-                    return Reflect.apply(console[key], console, args);
+                    return Reflect.apply(og[key], og, args);
                 };
             },
             set(target, key, value) {
@@ -594,28 +694,28 @@ class Logger {
                         return target.dom = value;
                     else if(key == "dom") {
                         generateBody("error", `"${key}" property must be an HTMLElement.`);
-                        return console.error(`"${key}" property must be an HTMLElement.`);
+                        return og.error(`"${key}" property must be an HTMLElement.`);
                     }
 
                     if(key == "max" && typeof value === "number")
                         return target.max = value;
                     else if(key == "max") {
                         generateBody("error", `"${key}" property must be a number.`);
-                        return console.error(`"${key}" property must be a number.`);
+                        return og.error(`"${key}" property must be a number.`);
                     }
 
                     if(key == "beforePush" && typeof value === "function")
                         return target.beforePush = value;
                     else if(key == "beforePush") {
                         generateBody("error", `"${key}" property must be a function.`);
-                        return console.error(`"${key}" property must be a function.`);
+                        return og.error(`"${key}" property must be a function.`);
                     }
 
                     if(key == "logList" && Array.isArray(value))
                         return target.logList = value;
                     else if(key == "logList") {
                         generateBody("error", `"${key}" property must be an Array.`);
-                        return console.error(`"${key}" property must be an Array.`);
+                        return og.error(`"${key}" property must be an Array.`);
                     }
                         
                 }          

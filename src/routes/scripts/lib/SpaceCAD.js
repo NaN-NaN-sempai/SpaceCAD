@@ -428,6 +428,7 @@ const SpaceCAD = class SpaceCAD {
         while(SpaceCAD.instances.length > 0) {
             SpaceCAD.instances.forEach(instance => instance.delete());
         }
+        SpaceCAD.Mesh.instances = [];
     }
     static restoreDefaultState = () => {
         SpaceCAD.libKeys.forEach(key => {
@@ -457,6 +458,7 @@ const SpaceCAD = class SpaceCAD {
             SpaceCAD.deleteAll();
             SpaceCAD.restoreDefaultState();
             sceneObjectsEmpty();
+            SpaceCAD.Classes.forEach(cls => cls.instances = []);
         }
         const fn = new Function(code);
 
@@ -466,6 +468,11 @@ const SpaceCAD = class SpaceCAD {
             SpaceCAD.runLoop = run.loop;
 
         SpaceCAD.setPreloadsDom();
+
+        if(SpaceCAD.edgeHilighting) {
+            SpaceCAD.toggleEdgeHilight(false);
+            SpaceCAD.toggleEdgeHilight(true, SpaceCAD.edgeHilightingColor, SpaceCAD.edgeHilightingWidth, SpaceCAD.edgeHilightingOpacity);
+        }
         return run;
     }
 
@@ -510,29 +517,28 @@ const SpaceCAD = class SpaceCAD {
         return arr;
     }
     
-
+    static Classes = [];
+    static getClass = name => SpaceCAD.Classes.find(c => c.name == name);
     static Root = CLASS => class extends CLASS {
-        static instances = [];
-        constructor(...args) {
-            // setting static
+        static {
             CLASS.store = SpaceCAD.store;
-
+        };
+        constructor(...args) {
             super(...args);
+            if(!Object.hasOwn(this.constructor, "instances")) {
+                this.constructor.instances = [];
+            }
+            const findClass = SpaceCAD.Classes.findIndex(c => c.name == this.constructor.name);
+            if(findClass !== -1)
+                SpaceCAD.Classes[findClass] = this.constructor;
+            else 
+                SpaceCAD.Classes.push(this.constructor);
 
-            this.isSpaceCAD = true;
             this.name = this._name = CLASS.name;
 
-            const calculateBoxSize = (object) => {
-                const box = new THREE.Box3().setFromObject(object);
 
-                const size = new THREE.Vector3();
-                box.getSize(size);
 
-                return size;
-            };
-
-            this.__ogBoxSize = calculateBoxSize(this);
-            this.opacity = this.__opacity = 1;
+            this.calculateBoxSize();
 
             Object.defineProperties(this, {
                 name: {
@@ -552,29 +558,55 @@ const SpaceCAD = class SpaceCAD {
                 },
                 computedBoxSize: {
                     get: () => {
-                        return calculateBoxSize(this);
+                        return this.calculateBoxSize();
                     },
                     set: () => {}
                 },
 
                 opacity: {
-                    get: () => this.__opacity,
+                    get: () => this.__opacity ?? 1,
+                    set: (value) => this.setOpacity(value)
+                },
+
+                awaysOnTop: {
+                    get: () => this.__awaysOnTop ?? false,
                     set: (value) => {
-                        this.__opacity = value;
+                        if(typeof value !== "boolean")
+                            return this.__awaysOnTop;
 
-                        if(this.material) {
-                            this.material.opacity = value;
+                        this.__awaysOnTop = value;
 
-                            if(value == 1)
-                                this.material.transparent = false;
-                            else 
-                                this.material.transparent = true;
+                        if(this.spaceType == SpaceCAD.Mesh) {
+                            this.material.depthWrite = !value;
+                            this.material.depthTest = !value;
+                        } else {
+                            this.children.forEach(child => child.awaysOnTop = value);
                         }
-
-                        this.children.forEach(child => {
-                            child.opacity = value;
-                        });
+                        
                     }
+                },
+
+                isSpaceCAD: {
+                    value: true,
+                    immutable: true,
+                    enumerable: true
+                },
+                isSpacePrimitive: {
+                    value: this.constructor == SpaceCAD.Mesh || this.constructor == SpaceCAD.Group,
+                    immutable: true,
+                    enumerable: true
+                },
+                spaceType: {
+                    value: 
+                        this instanceof SpaceCAD.Mesh ? SpaceCAD.Mesh :
+                        this instanceof SpaceCAD.Group ? SpaceCAD.Group : 
+                        class nonSpacePrimitive {},
+                    immutable: true,
+                    enumerable: true
+                },
+                spaceChildren: {
+                    get: () => this.children.filter(child => child.isSpaceCAD),
+                    enumerable: true,
                 }
                 
             });
@@ -592,6 +624,17 @@ const SpaceCAD = class SpaceCAD {
                 }
             }
         }
+
+        calculateBoxSize() {
+            const box = new THREE.Box3().setFromObject(this);
+
+            const size = new THREE.Vector3();
+            box.getSize(size);
+
+            this.__ogBoxSize = size;
+            
+            return size;
+        };
 
         delete() {
             [...this.children].forEach(child => {
@@ -622,6 +665,103 @@ const SpaceCAD = class SpaceCAD {
         }
         
         store = SpaceCAD.store;
+
+
+        
+
+        toggleEdgeHilighting (togle, color = "#f27a02", width = 1, opacity = 1) {
+            if(togle) {
+                this.addHighLight( "__UI_Button", color, width, opacity);
+
+            } else {
+                this.removeHighLight("__UI_Button");
+            }
+        }
+
+        addHighLight(...args) {
+            const ignoreCheck = args.at(-1) == "ignore check";
+            if(this.ignoreEdgeHilighting) return;
+            if(this.spaceType == SpaceCAD.Group)
+                return this.spaceChildren.forEach(child => child.addHighLight(...args));
+
+            const [name="__edges", color = SpaceCAD.edgeHilightingColor||"#f27a02", width = SpaceCAD.edgeHilightingWidth??1, opacity = SpaceCAD.edgeHilightingOpacity??1] = args;
+
+            const edges = new THREE.EdgesGeometry(this.geometry);
+            let line;
+
+            if(width == 1) {
+                line = new THREE.LineSegments(
+                    edges,
+                    new THREE.LineBasicMaterial({ color })
+                );
+    
+            } else {
+                const geometry = new THREE.LineGeometry();
+
+                geometry.setPositions(
+                    Array.from(edges.attributes.position.array)
+                );
+
+                const material = new THREE.LineMaterial({
+                    color,
+                    linewidth: width,
+                    worldUnits: false,
+                    opacity,
+                    transparent: opacity < 1
+                });
+
+                material.resolution.set(
+                    window.innerWidth,
+                    window.innerHeight
+                );
+
+                line = new THREE.Line2(geometry, material);
+
+                edges.dispose();
+            }
+            
+            line.name = name;
+
+            if(this.visible)
+                this.add(line);
+            
+            else if(ignoreCheck) {
+                this.__ignoreVisibilityEdges = this.__ignoreVisibilityEdges ?? [];
+                this.__ignoreVisibilityEdges.push(line);
+
+                this.updateWorldMatrix(true, false);
+
+                const worldPosition = new THREE.Vector3();
+                const worldQuaternion = new THREE.Quaternion();
+                const worldScale = new THREE.Vector3();
+
+                this.matrixWorld.decompose(
+                    worldPosition,
+                    worldQuaternion,
+                    worldScale
+                );
+
+                scene.add(line);
+
+                line.position.copy(worldPosition);
+                line.quaternion.copy(worldQuaternion);
+                line.scale.copy(worldScale);
+            }
+        }
+        removeHighLight(name) {
+            if(this.ignoreEdgeHilighting) return;
+            if(this.spaceType == SpaceCAD.Group) 
+                return this.spaceChildren.forEach(child => child.removeHighLight(name));
+
+            [...this.children, ...(Array.isArray(this.__ignoreVisibilityEdges)? this.__ignoreVisibilityEdges : [])]
+            .filter(child => child.name == name)
+            .forEach(edge => {
+                edge.removeFromParent?.();
+                edge.geometry?.dispose();
+                edge.material?.dispose();
+            });
+        }
+
 
         space (...args) {
             args.forEach((arg, i) => {
@@ -674,47 +814,46 @@ const SpaceCAD = class SpaceCAD {
             );
             return this;
         }
+
+        setOpacity (value, doChildren = true) {
+            this.__opacity = value;
+
+            if(this.material) {
+                this.material.opacity = value;
+
+                if(value == 1)
+                    this.material.transparent = false;
+                else 
+                    this.material.transparent = true;
+            }
+
+            if(doChildren)
+                this.children.forEach(child => {
+                    child.opacity = value;
+                });
+
+            return this;
+        }
     }
     static Mesh = class extends SpaceCAD.Root(THREE.Mesh) {
-        static instances = [];
         constructor(geometry, material) {
             super(geometry, material);
 
             this.ignoreEdgeHilighting = false;
             this.edgeHilighting = SpaceCAD.edgeHilighting;
-            this.toggleEdgeHilighting(this.edgeHilighting);
 
             SpaceCAD.Mesh.instances.push(this);
-        }
 
-        toggleEdgeHilighting (togle) {
-            if(this.ignoreEdgeHilighting) return;
-
-            if(togle) {
-                const edges = new THREE.EdgesGeometry(this.geometry);
-
-                const line = new THREE.LineSegments(
-                    edges,
-                    new THREE.LineBasicMaterial({ color: "#ffffff" })
-                );
-
-                line.name = `__edges`;
-
-                this.add(line);
-
-            } else {
-                const edges = this.children.find(child => child.name == "__edges");
-                edges?.removeFromParent?.();
-            }
+            if(this.constructor != SpaceCAD.Mesh) 
+                this.constructor.instances.push(this);
         }
         
     }
     static Group = class extends SpaceCAD.Root(THREE.Group) {
-        static instances = [];
         constructor() {
             super();
 
-            SpaceCAD.Group.instances.push(this);
+            this.constructor.instances.push(this);
         }
     }
 
@@ -740,7 +879,6 @@ const SpaceCAD = class SpaceCAD {
             if(scale && (Array.isArray(scale) || scale instanceof THREE.Vector3) )
                 if(Array.isArray(scale)) this.scale.set(...scale);
                 else this.scale.copy(scale);
-
         }
     }
 
@@ -750,7 +888,7 @@ const SpaceCAD = class SpaceCAD {
     static ConstructGroup = class extends SpaceCAD.RootObject(SpaceCAD.Group) {};
 
 
-    static SvgToObject = class extends SpaceCAD.GroupObject {
+    static SvgToObject = class extends SpaceCAD.ConstructGroup {
         constructor(prop = {}) {
             prop = recursiveProxy(prop, {
                 svg: "",
@@ -1028,7 +1166,7 @@ const SpaceCAD = class SpaceCAD {
             generateHeads();            
         }
     }
-    static Arrow = class extends SpaceCAD.GroupObject {
+    static Arrow = class extends SpaceCAD.ConstructGroup {
         constructor(...args) {
             const propIsObject = args.at(-1) instanceof Object && !(args.at(-1) instanceof THREE.Vector3);
             let prop = propIsObject? args.pop(): {};
@@ -1064,7 +1202,7 @@ const SpaceCAD = class SpaceCAD {
             })
         }
     }
-    static Line = class extends SpaceCAD.GroupObject {
+    static Line = class extends SpaceCAD.ConstructGroup {
         constructor(...args) {
             const propIsObject = args.at(-1) instanceof Object && !(args.at(-1) instanceof THREE.Vector3);
             let prop = propIsObject? args.pop(): {};
@@ -1322,7 +1460,7 @@ const SpaceCAD = class SpaceCAD {
     }
     static axesHelper = new SpaceCAD.AxesHelper();
 
-    static Text = class extends SpaceCAD.Object {
+    static Text = class extends SpaceCAD.Construct {
         constructor(prop = {}) {
             const defaultProp = {
                 text: "text",
@@ -1333,14 +1471,13 @@ const SpaceCAD = class SpaceCAD {
                 background: cssVar.primary,
                 borderRadius: 2,
                 border: [3, cssVar.tertiary],
-                padding: 5,
+                padding: 5
             }
             prop = recursiveProxy(prop, {
                 ...defaultProp,
                 awaysLooking: false,
                 resolution: 10,
             });
-
             const setText = (origin = prop) => {
                 const text = origin.text;
                 const fontSize = origin.fontSize;
@@ -1420,6 +1557,7 @@ const SpaceCAD = class SpaceCAD {
                 const material = new THREE.MeshBasicMaterial({
                     map: texture,
                     transparent: true,
+                    depthTest: !origin.awaysOnTop
                 });
 
                 const backMaterial = material.clone();
@@ -1443,17 +1581,17 @@ const SpaceCAD = class SpaceCAD {
             const {material, geometry} = ogText;
             super(prop, geometry, material);
 
+            this.ignoreEdgeHilighting = true;
             this.space(() => {
                 this.back = new SpaceCAD.Mesh(geometry, ogText.backMaterial);
+                this.back.ignoreEdgeHilighting = true;
             })
             this.back.rotation.y = Math.PI;
             this.back.position.z = -.001;
 
             const setTextReactiveProperty = (key) => {
-                this[key] = this[`_${key}`] = prop[key];
-
                 Object.defineProperty(this, key, {
-                    get: () => this[`_${key}`],
+                    get: () => this[`_${key}`] ?? prop[key],
                     set: value => {
                         this[`_${key}`] = value;
                         
@@ -1500,13 +1638,24 @@ const SpaceCAD = class SpaceCAD {
 
 
     static edgeHilighting = false;
-    static toggleEdgeHilight = (toggle) => {
+    static edgeHilightingColor = null;
+    static edgeHilightingWidth = null;
+    static edgeHilightingOpacity = null;
+    static toggleEdgeHilight = (toggle, color, width, opacity) => {
         SpaceCAD.edgeHilighting = toggle === undefined
             ? !SpaceCAD.edgeHilighting
             : !!toggle;
 
-        SpaceCAD.Mesh.instances.forEach(mesh => {
-            mesh.toggleEdgeHilighting(SpaceCAD.edgeHilighting);
+        if(SpaceCAD.edgeHilighting) {
+            SpaceCAD.edgeHilightingColor = color;
+            SpaceCAD.edgeHilightingWidth = width;
+            SpaceCAD.edgeHilightingOpacity = opacity;
+        }
+
+        SpaceCAD.roots
+        .filter(e => e.visible)
+        .forEach(root => {
+            root.toggleEdgeHilighting(SpaceCAD.edgeHilighting, color, width, opacity);
         });
     }
 

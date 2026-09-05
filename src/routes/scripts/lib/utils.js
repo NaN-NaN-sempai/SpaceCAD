@@ -363,6 +363,31 @@ window.off = off;
             set: () => {}
         },
 
+        css: {
+            get() {
+                const element = this;
+                const computed = getComputedStyle(element);
+
+                return new Proxy(computed, {
+                    get(target, prop) {
+                        return target[prop];
+                    },
+
+                    set(_, prop, value) {
+                        element.style[prop] = value;
+                        return true;
+                    }
+                });
+            },
+            set(value) {
+                if (typeof value != "object") return;
+
+                Object.entries(value).forEach(([prop, value]) => {
+                    this.style[prop] = value;
+                });
+            }
+        },
+
         dropdown: {
             get: () => function (...agrs) {
                 setupDropdown(this, ...agrs);
@@ -395,8 +420,7 @@ window.off = off;
                 return (...args) => ObjectForm.on(this, ...args)
             },
             set: () => {}
-        }
-        
+        },
     });
 });
 
@@ -490,6 +514,30 @@ window.off = off;
                 return (...args) => Array.from(this).map(element => element.queryAll(...args));
             },
             set: () => {}
+        },
+        css: {
+            get() {
+                const elements = Array.from(this);
+                const computed = elements.map(element => getComputedStyle(element));
+
+                return new Proxy(computed, {
+                    get(target, prop) {
+                        return elements.map(e => e.css[prop]);
+                    },
+
+                    set(_, prop, value) {
+                        elements.forEach(e => e.css[prop] = value);
+                    }
+                });
+                
+            },
+            set(value) {
+                if (typeof value != "object") return;
+
+                Array.from(this).forEach(element => {
+                    element.css = value;
+                });
+            }
         }
     })
 });
@@ -722,21 +770,21 @@ const createSvgIcon = (element, src, text) => {
 const setupDropdown = (...args) => {
     if(!args[0]) throw new Error("No element provided");
 
-    let dom = args[0] instanceof HTMLElement ? args[0] : document.querySelector(args[0]);
+    let dom = args[0] instanceof HTMLElement ? args.shift() : document.querySelector(args.shift());
 
-    const eventType = typeof args[1] === "string" ? args[1] : "click";
-    const list = typeof args[1] === "string"? 
-        Array.isArray(args[2]) ? args[2] : [args[2]] :
-        Array.isArray(args[1]) ? args[1] : [args[1]];
+    const eventType = typeof args[0] === "string" ? args.shift() : "click";
 
-    dom.classList.toggle("hasDropdownMenu", true);
-    if(eventType == "contextmenu")
+    const list = Array.isArray(args[0]) ? args.shift() : [args.shift()];
+
+    const ignoreContextClass = typeof args[0] === "boolean" ? args.shift() : null;
+
+    // const appendInstead = typeof args[0] === "boolean" ? args.shift() : null;
+
+
+    if(eventType == "contextmenu" && !ignoreContextClass)
         dom.classList.toggle("hasContextMenu", true);
-    
-    const menu = document.createElement("div");
-    menu.classList.add("dropdownMenu", "hidden");
 
-    dom.appendChild(menu);
+
 
     const openDropdown = () => {
         menu.classList.toggle("hidden", false);
@@ -770,15 +818,33 @@ const setupDropdown = (...args) => {
         if (!dom.contains(evt.target) && !menu.contains(evt.target))
             closeDropdown();
     }
+    
+    let menu;
+    
+    if(dom.query(`[data-type="${eventType}"]`)/*  && appendInstead */) {
+        menu = dom.query(`[data-eventType="${eventType}"]`);
 
-    dom.addEventListener(eventType, (evt) => {
-        if(eventType === "contextmenu") evt.preventDefault();
-        openDropdown();
-    });
-    window.addEventListener("mousemove", closeIfOutside);
+    } else {
+        dom.classList.toggle("hasDropdownMenu", true);
 
-    if(eventType === "contextmenu")
-        window.addEventListener("click", closeIfOutside);
+        menu = document.createElement("div");
+        menu.classList.add("dropdownMenu", "hidden");
+        menu.dataset.eventType = eventType;
+
+        dom.appendChild(menu);
+
+        dom.addEventListener(eventType, (evt) => {
+            if(eventType === "contextmenu") {
+                evt.preventDefault();
+                evt.stopPropagation();
+            }
+            openDropdown();
+        });
+        window.addEventListener("mousemove", closeIfOutside);
+
+        if(eventType === "contextmenu")
+            window.addEventListener("click", closeIfOutside);
+    }
 
     
 

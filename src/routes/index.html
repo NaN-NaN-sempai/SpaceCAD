@@ -93,7 +93,7 @@
             <label class="buttonLike checkBoxButton">
                 <img class="svgIcon minnor" style="margin-right: 5px;" src="./svg/options/resources.svg" alt="camera">
                 <span language-bottombuttons-resources-button> </span>
-                <input type="checkbox">
+                <input class="holdOpen" type="checkbox">
             </label>
 
             <div class="body">
@@ -112,11 +112,19 @@
             <label class="buttonLike checkBoxButton hasUnread">
                 <img class="svgIcon minnor" style="margin-right: 5px;" src="./svg/options/file.svg" alt="camera">
                 <span language-bottombuttons-logs-button></span>
-                <input type="checkbox">
+                <input class="holdOpen" type="checkbox">
                 <div class="unread hide"></div>
             </label>
             <div class="body">
-                <h1 class="title"><span language-bottombuttons-logs-title></span> <img class="svgIcon" src="./svg/options/file.svg" alt="arquivo"></h1>
+                <h1 class="title">
+                    <span language-bottombuttons-logs-title></span>
+                    <img class="svgIcon" src="./svg/options/file.svg" alt="arquivo">
+                    <label class="buttonLike checkBoxButton doScrollHolder" language-title-bottombuttons-logs-togglescroll>
+                        <span class="on">☑</span>
+                        <span class="off">☐</span>
+                        <input class="doScroll" type="checkbox" checked>
+                    </label>
+                </h1>
                 <div class="list"></div>
             </div>
         </div>
@@ -214,9 +222,13 @@
     <!-- CHANGELOG -->
     <div modal id="changelog" class="question">
         <div class="title" language-modal-changelog-todo></div>
-        SpaceCAD -> concertar: acentuação de arestas quebra ao reiniciar codigo
+        SpaceCAD App -> Janela com inputs de ajuda, tipo controladores do MPJS
+        <br><br>
+        SpaceCAD App -> Pagina de iniciando app
         <br><br>
         SpaceCAD -> documentação do SpaceCAD
+        <br><br>
+        SpaceCAD -> Criar extensão de intelisense para arquivos .spacecad.js
         <br><br>
 
         <span style="background: var(--primary); font-weight: bold; ">(Não essenciais)</span>
@@ -230,6 +242,30 @@
         <br><br>
 
         <div class="title" language-modal-changelog-lastupdates></div>
+
+        <span style="background: var(--primary);">SpaceCAD getClass, edge hi fix, edge hi options, logger hover edge hi</span>
+        (05/09/2026 - 03:57) SpaceCAD API -> acentuação de arestas para objetos invisiveis
+        <br><br>
+        (05/09/2026 - 03:42) SpaceCAD UI -> passar o mouse por cima de um objeto SpaceCAD no registros de execuçã irá acentuar as arestas desse objeto
+        <br><br>
+        (05/09/2026 - 02:59) translations.js -> html.setlang
+        <br><br>
+        (05/09/2026 - 01:24) SpaceCAD -> bugfix: bug que fazia codigo rodar 2 vezes ao selecionar arquivo
+        <br><br>
+        (05/09/2026 - 00:08) SpaceCAD -> cofigurações de acentuação no menu de contexto do botão
+        <br><br>
+        (04/09/2026 - 23:50) SpaceCAD -> concertar: acentuação de arestas quebra ao reiniciar codigo
+        <br><br>
+        (04/09/2026 - 22:34) SpaceCAD -> acentuação de arestas com largura
+        <br><br>
+        (04/09/2026 - 21:29) SpaceCAD API -> Pegar classes por nome com SpaceCAD.getClass("nome");
+        <br><br>
+        (04/09/2026 - 21:26) SpaceCAD API -> Classes inspecionaveis com SpaceCAD.Classes, só apos instancia ser criada
+        <br><br>
+        (04/09/2026 - 20:18) App -> bugfix: carregar recursos mesmo que arquivo não seja selecionado
+        <br><br>
+        (04/09/2026 - 18:49) Logger.js -> bugfix: loga objeto tipo erro corretamente
+        <br><br>
 
         <span style="background: var(--primary);">SpaceCAD keys global, resources types</span>
         (02/09/2026 - 20:27) SpaceCAD API -> Construct & ConstructGroup / SpaceCAD.Object & SpaceCAD.ObjectGroup são legacy agora
@@ -448,7 +484,12 @@ writeLanguage("en-US", { // default
         },
         edges: {
             show: "show edges",
-            hide: "hide edges"
+            hide: "hide edges",
+            options: {
+                color: "color",
+                width: "width",
+                opacity: "opacity"
+            }
         },
         resources: {
             button: "resources",
@@ -479,7 +520,11 @@ writeLanguage("en-US", { // default
         logs: {
             button: "logs",
             title: "Runtime records",
-            clear: "clear records"
+            clear: "clear records",
+            togglescroll: "toggle automatic scroll when a new record is added",
+            options: {
+                copy: "copy value to clipboard",
+            },
         }
     },
     filemenu: {
@@ -592,7 +637,12 @@ writeLanguage("pt-BR", {
         },
         edges: {
             show: "acentuar arestas",
-            hide: "esconder arestas"
+            hide: "esconder arestas",
+            options: {
+                color: "cor",
+                width: "largura",
+                opacity: "opacidade"
+            }
         },
         resources: {
             button: "recursos",
@@ -623,7 +673,11 @@ writeLanguage("pt-BR", {
         logs: {
             button: "registros",
             title: "Registros de Execução",
-            clear: "limpar registros"
+            clear: "limpar registros",
+            togglescroll: "alternar rolagem automática quando um novo registro é adicionado",
+            options: {
+                copy: "copiar valor",
+            },
         }
     },
     filemenu: {
@@ -724,7 +778,6 @@ writeLanguage("fr-FR", {
             front: "voir de face",
             back: "voir de derrière"
         },
-
         defaultcamera: {
             position: "position",
             orientation: "orientation",
@@ -732,17 +785,19 @@ writeLanguage("fr-FR", {
             perspective: "perspective",
             all: "réinitialiser la caméra"
         },
-
         setperspective: {
             perspective: "passer à la caméra en perspective",
             orthographic: "passer à la caméra orthographique"
         },
-
         edges: {
             show: "accentuer les arêtes",
-            hide: "masquer les arêtes"
+            hide: "masquer les arêtes",
+            options: {
+                color: "couleur",
+                width: "largeur",
+                opacity: "opacité"
+            }
         },
-
         resources: {
             button: "ressources",
             title: "Ressources",
@@ -772,7 +827,11 @@ writeLanguage("fr-FR", {
         logs: {
             button: "registres",
             title: "Registres d’exécution",
-            clear: "vider les registres"
+            clear: "vider les registres",
+            togglescroll: "alterner le défilement automatique lorsqu’un nouvel enregistrement est ajouté",
+            options: {
+                copy: "copier la valeur",
+            },
         }
     },
 
@@ -914,7 +973,7 @@ startTranslation(electronStore);
 </script>
 
 <script src="/node_modules/acorn/dist/acorn.js"></script>
-<script type="module"> // globalize astring 
+<script type="module"> // globalize imports 
     import JSHON from "lib/JSHON.js";
     window.JSHON = JSHON;
 
@@ -970,8 +1029,6 @@ startTranslation(electronStore);
                 unread.innerText = unreadAmount;
                 unread.classList.toggle("hide", unreadAmount == 0);
                 unread.dataset.lastType = obj.type;
-
-                domList.scrollTop = domList.scrollHeight + 1000;
 
                 return obj;
             }
@@ -1529,8 +1586,11 @@ startTranslation(electronStore);
     
     if(electronStore.selectedFile) {
         setTimeout(() => {
-            watchFile(electronStore.selectedFile);
             selectDOM([...fileList.children].find(el => el.dataset.path === electronStore.selectedFile.path), electronStore.selectedFile);
+        }, 250)
+    } else {
+        setTimeout(() => {
+            SpaceCAD.setPreloadsDom();
         }, 250)
     }
 
