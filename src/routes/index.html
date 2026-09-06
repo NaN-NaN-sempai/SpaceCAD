@@ -241,6 +241,16 @@
 
         <div class="title" language-modal-changelog-lastupdates></div>
         
+        <span style="background: var(--primary);">SpaceCAD web</span>
+        (05/09/2026 - 23:23) rota loading -> novo estilo para metext e botão de fechar app
+        <br><br>
+        (05/09/2026 - 23:21) rota loading -> se em web redireciona para o App SpaceCAD
+        <br><br>
+        (05/09/2026 - 23:17) doc -> esqueleto da documentação
+        <br><br>
+        (05/09/2026 - 22:12) App -> App SpaceCAD agora funciona em web com versão modificada
+        <br><br>
+
         <span style="background: var(--primary);">loading screen</span>
         (05/09/2026 - 06:27) SpaceCAD App -> Pagina de iniciando app
         <br><br>
@@ -416,19 +426,25 @@
     </div>
 </body> 
 <script> // TITLE BAR & OTHERS
+    const isElectron = window.electronStoreAPI != undefined;
+
     const minimize = document.querySelector("#minimize");
     const maximize = document.querySelector("#maximize");
     const close = document.querySelector("#close");
 
-    minimize.addEventListener("click", titlbar.minimize);
-    maximize.addEventListener("click", titlbar.maximize);
-    close.addEventListener("click", titlbar.close);
+    if(isElectron){
+        minimize.addEventListener("click", titlbar.minimize);
+        maximize.addEventListener("click", titlbar.maximize);
+        close.addEventListener("click", titlbar.close);
+        electron.isFullscreen().then(b => document.body.classList.toggle('fullscreen', b));
+        window.electron.onFullscreen(fullscreen => {
+            document.querySelector("#options #optionsFullscreen img").src = `./svg/options/${fullscreen? "fullscreenOut" : "fullscreen"}.svg`;
+            document.body.classList.toggle('fullscreen', fullscreen);
+        });
+    } else {
+        document.querySelector(".window-buttons").style.display = "none";
+    }
 
-    electron.isFullscreen().then(b => document.body.classList.toggle('fullscreen', b));
-    window.electron.onFullscreen(fullscreen => {
-        document.querySelector("#options #optionsFullscreen img").src = `./svg/options/${fullscreen? "fullscreenOut" : "fullscreen"}.svg`;
-        document.body.classList.toggle('fullscreen', fullscreen);
-    });
 
     let version = "";
     fetch("/version").then(res => res.json()).then(v => {
@@ -436,16 +452,18 @@
         document.querySelector(".titlebar .title span").innerText = version;
     });
     
-    const electronStore = new Proxy({}, {
-        get(_, key) {
-            return window.electronStoreAPI.get(key);
-        },
+    let electronStore = isElectron? 
+        new Proxy({}, {
+            get(_, key) {
+                return window.electronStoreAPI.get(key);
+            },
 
-        set(_, key, value) {
-            window.electronStoreAPI.set(key, value);
-            return true;
-        }
-    });
+            set(_, key, value) {
+                window.electronStoreAPI.set(key, value);
+                return true;
+            }
+        })
+        : {};
 
     if(!electronStore.savedFiles)
         electronStore.savedFiles = [];
@@ -934,7 +952,7 @@ writeLanguage("fr-FR", {
     }
 });
 
-startTranslation(electronStore);
+startTranslation(isElectron? electronStore : undefined);
 </script>
 <script src="./scripts/lib/inputManager.js"></script>
 <script src="./scripts/lib/loopManager.js"></script>
@@ -942,7 +960,8 @@ startTranslation(electronStore);
 <script src="./scripts/lib/logger.js"></script>
 
 <script>
-    if(window.electronStoreAPI == undefined) {
+    // old not browser page
+    if(window.electronStoreAPI == undefined  && false) {
         const title = document.querySelector(".titlebar").cloneNode(1);
         title.querySelector(".fileIndicator").remove();
         title.querySelector(".window-buttons").remove();
@@ -1051,6 +1070,7 @@ startTranslation(electronStore);
                 unread.classList.toggle("hide", true);
             });
 
+            if(!isElectron) document.querySelector("#resourcesDisplay").style.display = "none";
             const resourcesInput = document.querySelector("#resourcesDisplay .checkBoxButton input");
             resourcesInput.checked = electronStore.resourcesListState || false;
             resourcesInput.addEventListener("input", function(evt){
@@ -1115,7 +1135,7 @@ startTranslation(electronStore);
         }
     });
 
-    const fromEnvArgs = electron.envArgs.find(arg => arg.endsWith(".spacecad.js"));
+    const fromEnvArgs = isElectron? electron.envArgs.find(arg => arg.endsWith(".spacecad.js")): false;
     if(fromEnvArgs) addPath(fromEnvArgs, true);
 
     const selectDOM = (fileDom, file) => {
@@ -1347,13 +1367,16 @@ startTranslation(electronStore);
     const fileInput = fileIndicator.querySelector("#options");
 
     setupDropdown(fileInput, [
+        isElectron?
         createElement("button", e => { 
             createSvgIcon(e, "./svg/options/newFile.svg", language.filemenu.options.new);
             e.addEventListener("click", () => {
                 newFileModal.modal.toggle();
             });
             e.closeMenu = true;
-        }),
+        }): null,
+
+        isElectron?
         createElement("button", e => {
             createSvgIcon(e, "./svg/options/openFile.svg", language.filemenu.options.open);
             e.addEventListener("click", async () => {
@@ -1361,7 +1384,24 @@ startTranslation(electronStore);
 
                 if(path) addPath(path);
             });
+        }):
+        createElement("button", e => {
+            createSvgIcon(e, "./svg/options/openFile.svg", language.filemenu.options.open);
+            e.addEventListener("click", async () => {
+               createElement("input", e => {
+                   e.type = "file";
+                   e.accept = ".spacecad.js";
+                   e.on("change", async (evt) => {
+                        const file = evt.target.files[0];
+
+                        if(file) SpaceCAD.run(await file.text());
+                   });
+                   e.click();
+               }) 
+            });
         }),
+
+        ...(isElectron? [
         createElement("hr"),
         createElement("button", e => {
             createSvgIcon(e, "./svg/options/import.svg", language.filemenu.options.import);
@@ -1377,16 +1417,17 @@ startTranslation(electronStore);
             });
             e.closeMenu = true;
         }),
+        ]: []),
         createElement("hr"),
 
-
+        isElectron?
         createElement("button", e => {
             createSvgIcon(e, "./svg/options/desselect.svg",language.filemenu.options.unload);
             e.on("click", () => {
                 electronStore.selectedFile = null;
                 location.reload();
             });
-        }),
+        }): null,
         createElement("button", e => {
             createSvgIcon(e, "./svg/options/reload.svg", language.filemenu.options.reload);
             e.on("click", () => location.reload());
@@ -1591,7 +1632,7 @@ startTranslation(electronStore);
 
 
 
-    
+    if(isElectron)
     if(electronStore.selectedFile) {
         setTimeout(() => {
             selectDOM([...fileList.children].find(el => el.dataset.path === electronStore.selectedFile.path), electronStore.selectedFile);
@@ -1646,7 +1687,7 @@ startTranslation(electronStore);
 
 <script src="/socket.io/socket.io.js"></script>
 <script> // SOCKET.IO
-    const socket = io();
+    const socket = io != undefined && isElectron ? io(): {on:()=>{}, emit:()=>{}};
     
     let firstConnection = true;
     let doServerRestart = true;

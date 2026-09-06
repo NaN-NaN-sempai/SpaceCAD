@@ -175,7 +175,7 @@
         }
 
         #close {
-            background: var(--primary);
+            background: var(--tertiary);
             color: var(--secondary)
         }
         #close:hover {
@@ -207,7 +207,7 @@
             justify-content: center;
             align-items: center;
 
-            color: white;
+            color: var(--secondary);
             font-weight: bold;
             text-transform: uppercase;
 
@@ -226,6 +226,9 @@
                     top: 50%;
                     left: 50%;
                     transform: translate(-50%, -50%);
+
+                    user-select: none;
+                    pointer-events: none;
                 }
 
                 & .animated {
@@ -274,6 +277,7 @@
     
 </body>
 <script>
+    if(window.electronStoreAPI == undefined) location.href = "../";
     document.querySelector(".owner").addEventListener("click", () => electron.openUrl('https://github.com/NaN-NaN-sempai'));
     document.querySelector("#close").addEventListener("click", titlbar.close);
 </script>

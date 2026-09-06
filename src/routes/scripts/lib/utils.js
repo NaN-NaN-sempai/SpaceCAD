@@ -774,7 +774,9 @@ const setupDropdown = (...args) => {
 
     const eventType = typeof args[0] === "string" ? args.shift() : "click";
 
-    const list = Array.isArray(args[0]) ? args.shift() : [args.shift()];
+    const list = (Array.isArray(args[0]) ? args.shift() : [args.shift()]).filter(e => e != undefined);
+
+    if(dom.id == "options") console.log(list)
 
     const ignoreContextClass = typeof args[0] === "boolean" ? args.shift() : null;
 

@@ -661,6 +661,8 @@ Object.keys(SpaceCAD).filter(e=>!["Object", "run", "instancesUpdate", "deleteAll
     window[key] = SpaceCAD[key];
 });
 
+window.iframeRun = SpaceCAD.run;
+
 const changePerspectiveButton = document.querySelector("#changePerspective");
 const setPerspectiveDom = () => {
     changePerspectiveButton.title = 

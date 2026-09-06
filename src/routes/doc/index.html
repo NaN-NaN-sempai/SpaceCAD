@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <pre>header -> logo com sandwich | pesquisa ?</pre>
+    <pre>sidebar/sandwich -> sidebar somente se tamanho permitir | conteudo da documentação</pre>
+    <pre>conteudo -> separado por seções</pre>
+    <pre>seções:
+    - introdução / sobre
+    - como instalar -> github releases ou npm
+    - carregando/criando arquivo
+    - exemplo basico
+    - basicos
+        - explicação breve javascript
+        - explicação breve OverloadOperator.js
+        - explicação breve THREE.js e como integra com OverloadOperator.js
+        - criando cubo com SpaceCAD.Mesh
+        - interfaçe de ajuda (botões inferiores)
+            - botões orientação
+            - botão restaurar camera (e ctx menu)
+            - botões com indicador de menu de contexto
+            - botão perspectiva
+            - botão realçar arestas (e opções ctx menu)
+            - aba recursos (breve explicação, link para doc recursos) [sem iframe]
+            - aba registros de execução
+                - exemplos
+                - exemplos OverloadOperator.js
+                - mostrar arestas ao passar mouse nos objeto dentro da janela
+        - hirearquia de objetos
+            - `this.add` (THREE) / `this.space` (SpaceCAD)
+            - `this.children` (THREE) / `this.spaceChildren` (SpaceCAD)
+        - interface do app (botões superiores e arquivos)
+            - sandwich
+                - novo arquivo [sem iframe]
+                - abrir arquivo
+                - brevemente por importar recurso (link para doc recursos) [sem iframe]
+                - brevemente por exportar recurso (link para doc recursos) [sem iframe]
+                - brevemente por descarregar arquivo (link para doc arquivos) [sem iframe]
+                - recarregar app
+                - tela cheia
+                - idioma
+                - notas da atualização
+                - SpaceCAD GitHub
+            - arquivos [sem iframe]
+                - menu de contexto de arquivos
+                    - abrir no editor
+                    - abrir no explorador
+                    - renomear
+                - mover arquivos
+                - remover arquivo
+            - botões de janela [sem iframe]
+                - mover
+                - minimizar
+                - maximizar
+                - fechar
+    - documentação das classes SpaceCAD
+        - THREE -> classes basicas do THREE
+        - Root() -> classe base
+            - como é usada em Mesh / Group: class Mesh extend Root(THREE.Mesh)
+            - propriedades e metodos das instancias e valores estaticos da classe
+        - metodos estatico SpaceCAD equivalentes a Root
+        - Mesh 
+            - propriedades e metodos das instancias e valores estaticos da classe
+        - Group
+            - propriedades e metodos das instancias e valores estaticos da classe
+        - RootObject() -> classe base para objetos com argumento propriedades
+            - explicação argumento propriedades
+            - como é usada em Construct / ConstructGroup: class Construct extend RootObject(SpaceCAD.Mesh)
+            - propriedades e metodos das instancias e valores estaticos da classe
+        - Construct
+            - propriedades e metodos das instancias e valores estaticos da classe
+        - ConstructGroup
+            - propriedades e metodos das instancias e valores estaticos da classe
+        - SvgToObject
+        - SvgToObjectFromFile [sem iframe ja que precisa de electron]
+        - LineBase
+        - ArrowBase
+        - Arrow
+        - Line
+        - Ruler
+        - AxesHelper
+        - Text
+    - documentação recursos/exposição SpaceCAD [sem iframe já que recursos só funcioname no electron]
+        - exposição (expose)
+            - passando expose
+            - reutilizando expose (use)
+        - recursos
+            - bibliotecas
+            - modulos
+            - criando recursos
+            - reutilizando recursos
+            - texto de utilização (resource.usage)
+            - recurso precarregado (preload)
+            - propriedade autoexecutar (onpreload)
+            - UI de importar recursos
+                - selecionar tipo
+                - adicionar ou sobrescrever
+            - UI de exportar recursos
+    - avançado
+        - loop do arquivo (expose.loop)
+        - documentação total de SpaceCAD.js
+        - documentação de bibliotecas
+            - lib/utils.js
+                - explicar todos os metodos / classes
+                - valores predefinidos (Object.defineProperties)
+            - lib/inputManager.js
+                - explicar todos os metodos / classes
+                - utilização
+            - lib/loopManager.js
+                - explicar todos os metodos / classes
+                - utilização
+            - lib/mouseLock.js
+                - explicar todos os metodos / classes
+                - utilização
+            - lib/overloadOperator.js
+                - explicar todos os metodos / classes
+                - utilização
+            - lib/logger.js
+                - explicar todos os metodos / classes
+            - lib/translations.js
+                - explicar todos os metodos / classes
+                - utilização
+                - valores predefinidos (Object.defineProperties)
+                - exemplo criando linguagem com recurso SpaceCAD precarregado
+        - documentação total de engine.js [pode deixar de forma basica, versão total sera feita com o tempo]
+        - metodos no HTML
+        - rotas
+            - app (diferenças entre eletron ou web)
+            - loading (somente no electorn)
+            - doc
+        - arquitetura do SpaceCAD
+            - server / electron
+            - client (app / web)
+            - arvore de arquivos
+            - packages
+    - sobre projeto (mais informações)
+        - time de desenvolvimento (só eu)
+        - explicação sobre SpaceCAD
+        - explicação logo
+        - agradecimentos
+    </pre> 
+</body>
+</html>
