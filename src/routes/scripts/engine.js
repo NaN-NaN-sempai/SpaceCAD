@@ -655,7 +655,7 @@ const cameraSetDefault = () => {
 camera.rotation.order = "YXZ";
 
 scene.camera = camera;
-const SpaceCAD = generateSpaceCAD(scene, logger);
+const SpaceCAD = window.SpaceCAD = generateSpaceCAD(scene, logger);
 
 Object.keys(SpaceCAD).filter(e=>!["Object", "run", "instancesUpdate", "deleteAll", "restoreDefaultState"].includes(e)).forEach(key => {
     window[key] = SpaceCAD[key];

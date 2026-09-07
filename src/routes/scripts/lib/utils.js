@@ -370,6 +370,18 @@ window.off = off;
 
                 return new Proxy(computed, {
                     get(target, prop) {
+                        if(prop == "var") 
+                            return new Proxy(computed, {
+                                get(_, prop) {
+                                    prop = prop.startsWith("--") ? prop : `--${prop}`;
+                                    return getComputedStyle(element).getPropertyValue(prop);
+                                },
+                                set(_, prop, value) {
+                                    prop = prop.startsWith("--") ? prop : `--${prop}`;
+                                    element.style.setProperty(prop, value);
+                                    return true;
+                                }
+                            })
                         return target[prop];
                     },
 
@@ -650,7 +662,7 @@ function syncFetch(url, config = {}) {
                 try {
                     ret = JSON.parse(xhr.responseText);
                 } catch (e) {
-                    logger.warn(`Error parsing JSON - ${e}`);
+                    logger.warn(`Error parsing JSON - ${e}, url: "${url}", response: "${xhr.responseText}"`);
                     ret = null;
                 }
                 return ret;
@@ -709,6 +721,15 @@ function isValidFileName(name) {
 
     return true;
 }
+
+function textFromHTML(html) {
+    html = html.replace(/<br>/g, "\n");
+
+    const doc = new DOMParser().parseFromString(html, "text/html");
+
+    return doc.body.textContent;
+}
+
 
 /**
  * @function createElement
@@ -775,8 +796,6 @@ const setupDropdown = (...args) => {
     const eventType = typeof args[0] === "string" ? args.shift() : "click";
 
     const list = (Array.isArray(args[0]) ? args.shift() : [args.shift()]).filter(e => e != undefined);
-
-    if(dom.id == "options") console.log(list)
 
     const ignoreContextClass = typeof args[0] === "boolean" ? args.shift() : null;
 
@@ -1010,7 +1029,7 @@ class Modal {
         Modal.instances.push(this);    
     }
 
-    onOpen(callback = () => {}) {
+    onOpen(callback = (modal) => {}) {
         this.onOpenCallback = callback;
     }
     onClose(callback = () => {}) {

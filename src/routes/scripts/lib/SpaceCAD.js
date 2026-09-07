@@ -29,7 +29,8 @@ const SpaceCAD = class SpaceCAD {
                 dependencies,
                 classBody,
                 usage,
-                preload
+                preload,
+                onLoad: JSHON.stringify(cls.onLoad || (() => {}))
             })
         })
         
@@ -47,7 +48,8 @@ const SpaceCAD = class SpaceCAD {
             name,
             lib: JSHON.stringify(lib),
             usage: lib.usage,
-            preload
+            preload,
+            onLoad: JSHON.stringify(lib.onLoad || (() => {})),
         };
         const body = JSON.stringify(bodyObj);
 
@@ -60,8 +62,12 @@ const SpaceCAD = class SpaceCAD {
         })
 
     }
-    static module = new Proxy(
-        function(name) {
+    static storeAddons = function (...addonList) {
+        syncFetch("/store/addon", {
+            body: JSON.stringify(addonList)
+        });
+    }
+    static module = new Proxy(function(name) {
             const req = syncFetch(`/store/class/${name}`);
 
             if (req.error) return;
@@ -76,11 +82,16 @@ const SpaceCAD = class SpaceCAD {
             )();
             const operator = (...args) => new constructor(...args);
 
-            return {
+            const ret = {
                 dependencies: dependencies.map(name => SpaceCAD.access(name)),
                 constructor,
                 operator
             };
+            try {
+                if(typeof constructor.onLoad === "function") constructor.onLoad(constructor, ret);
+            } catch(e) {console.error(e)}
+
+            return ret;
             
         },
         {
@@ -95,8 +106,7 @@ const SpaceCAD = class SpaceCAD {
 
         return req.json;
     }
-    static lib = new Proxy(
-        function(name, asGlobal = false) {
+    static lib = new Proxy(function(name, asGlobal = false) {
             const req = syncFetch(`/store/lib/${name}`);
 
             if (req.error) return;
@@ -172,8 +182,11 @@ const SpaceCAD = class SpaceCAD {
                 return lib;
             }
 
-            return lib;
+            try {
+                if(typeof lib.onLoad === "function") lib.onLoad(lib);
+            } catch(e) {console.error(e)}
 
+            return lib;
         },
         {
             get(target, name) {
@@ -193,7 +206,9 @@ const SpaceCAD = class SpaceCAD {
                 return target(name);
             },
             set(target, name, value) {
-                SpaceCAD.storeLib(name, value);
+                let preload = false;
+                try { preload = value.preload; } catch(e) {}
+                SpaceCAD.storeLib(name, value, preload);
             }
         }
     );
@@ -202,11 +217,33 @@ const SpaceCAD = class SpaceCAD {
 
         return req.json;
     }
+    
+    static addon = new Proxy(function(name) {
+            const req = syncFetch(`/store/addon/${name}`);
+
+            if (req.error) return;
+            
+            return req.json;
+        },
+        {
+            get(target, name) {
+                return target(name);
+            },
+        }
+    );
+    static get addons() {
+        const req = syncFetch("/store/addons/_");
+
+        return req.json;
+    }
     static setPreloadsDom = () => {
         const resourcesBody = document.query("#resourcesDisplay .body .list");
 
         resourcesBody.query(".preSavedLibs").innerHTML = "";
         resourcesBody.query(".preSavedModules").innerHTML = "";
+        resourcesBody.query(".addons").innerHTML = "";
+
+        
 
         Object.entries(SpaceCAD.libs).forEach(([key, value]) => {
             resourcesBody.query(".preSavedLibs").append(
@@ -214,7 +251,7 @@ const SpaceCAD = class SpaceCAD {
                     d.classList.add("resourceBody");
 
                     d.append(
-                        createElement("p", e => {
+                        createElement("div", e => {
                             e.classList.add("resourceName");
                             e.innerText = key;
 
@@ -228,12 +265,29 @@ const SpaceCAD = class SpaceCAD {
                             }
                             
                             try {
-                                const type = typeof value.lib.jshonParse;
+                                const origin = value.lib.jshonParse;
+                                const type = typeof origin;
+                                
+                                e.title = value.addonOrigin? `${language.bottombuttons.resources.addon} ${value.addonOrigin.name}\n${language.bottombuttons.resources.owner} ${value.addonOrigin.owner}\nversion: ${value.addonOrigin.version}` : "";
+                                
                                 e.append(
                                     createElement("span", e => {
                                         e.classList.add("type", type);
                                         e.innerText = language.bottombuttons.resources.types[type] ?? type;
-                                    })
+                                    }),
+
+                                    createElement("br"),
+
+                                    ...(value.addonOrigin? [
+                                        createElement("span", e => {
+                                            e.classList.add("info", "key");
+                                            e.setlang.bottombuttons.resources.addon$;
+                                        }),
+                                        createElement("span", e => {
+                                            e.classList.add("info");
+                                            e.innerText = value.addonOrigin.name
+                                        }),
+                                    ]: [])
                                 )
                             } catch (error) {}
                         }),
@@ -250,6 +304,10 @@ const SpaceCAD = class SpaceCAD {
 
             try {
                 window[key] = value.lib.jshonParse;
+                if(!value.onLoad) return;
+
+                const onLoad = value.onLoad.jshonParse;
+                if(typeof onLoad === "function") onLoad();
             } catch (error) {
                 console.error(error);
             }
@@ -273,22 +331,38 @@ const SpaceCAD = class SpaceCAD {
                                         e.innerText = language.bottombuttons.resources.preload
                                     })
                                 )
-                            }
-                            
+                            }                            
                             
                             try {
                                 const cls = new Function("return " + value.classBody)();
                                 
+                                e.title = value.addonOrigin? `${language.bottombuttons.resources.addon} ${value.addonOrigin.name}\n${language.bottombuttons.resources.owner} ${value.addonOrigin.owner}\nversion: ${value.addonOrigin.version}` : "";
                                 e.append(
                                     createElement("span", e => {
                                         e.classList.add("type", "class");
                                         const clsName = Object.getPrototypeOf(cls)?.name;
                                         e.innerText = language.bottombuttons.resources.types[clsName] ?? clsName;
-                                    })
+                                    }),
+                                    
+
+                                    createElement("br"),
+
+                                    ...(value.addonOrigin? [
+                                        createElement("span", e => {
+                                            e.classList.add("info", "key");
+                                            e.setlang.bottombuttons.resources.addon$;
+                                        }),
+                                        createElement("span", e => {
+                                            e.classList.add("info");
+                                            e.innerText = value.addonOrigin.name
+                                        }),
+                                    ]: [])
                                 )
 
                                 
                             } catch (error) {}
+
+                            
                         }),
                         createElement("span", e => {
                             e.classList.add("usage");
@@ -308,10 +382,163 @@ const SpaceCAD = class SpaceCAD {
                 window[key] = cls;
                 window["_"+key] = constructor;
 
-                
+                if(typeof cls.onLoad === "function") cls.onLoad();          
             } catch (error) {
                 console.error(error);
             }
+        });
+
+        SpaceCAD.addons.forEach(addon => {
+            resourcesBody.query(".addons").append(
+                createElement("div", d => {
+                    d.classList.add("resourceBody", "preload");
+
+                    d.append(
+                        createElement("p", e => {
+                            e.classList.add("resourceName");
+                            e.innerText = addon.name;
+                            e.css.paddingLeft = "10px";
+
+                            setupDropdown(e, "contextmenu", createElement("button", e => {
+                                e.setlang.bottombuttons.resources.removeaddonbtn$;
+                                e.css = {
+                                    color: "white",
+                                    background: "red",
+                                    cursor: "pointer"
+                                };
+
+                                e.on("click", () => {
+                                    syncFetch("/store/addons/"+addon.name);
+                                    SpaceCAD.setPreloadsDom();
+                                    logger.log("addon removed", addon.name);
+                                })
+                            }))
+
+                            e.append(
+                                createElement("span", e => {
+                                    e.classList.add("preload", "ellipsisOnMax");
+                                    e.css.var.maxWidth = "70px";
+                                    e.innerText = e.title = addon.version;
+                                }),
+                                createElement("br"),
+                                createElement("p", e => {
+                                    e.classList.add("info", "key");
+                                    e.innerText = e.title = addon.owner;
+                                })
+                            )
+                        }),        
+                        createElement("div", e => {
+                            e.classList.add("resourceBody", "preload");
+                            const containerscss = {
+                                display: "flex",
+                                flexWrap: "wrap",
+                                alignItems: "center",
+                                flexDirection: "row",
+                                gap: "5px",
+                            }
+
+                            const setItem = (el, res, type) => {
+                                el.classList.add("buttonLike");
+                                el.innerText = res.key;
+                                try {
+                                    const v =
+                                    type == "lib"? 
+                                    res.value.lib.jshonParse:
+                                    res.value;
+
+                                    if(typeof v == "object" && v.usage)
+                                    setupDropdown(el, createElement("div", e => {
+                                        e.innerHTML = v.usage;
+                                    }));
+
+                                    let interval = null;
+                                    el.on(["mouseenter", "mouseleave"], ({type}, el) => {                                        
+                                        if(type == "mouseenter")
+                                            interval = setTimeout(() => {
+                                                el.dropdownOpen();
+                                            }, 500);
+                                        else
+                                            clearTimeout(interval);
+                                    })
+
+                                } catch (error) {
+                                    console.error(error);
+                                }
+                            }
+                            
+                            e.append(
+                                createElement("span", e => {
+                                    e.classList.add("resourceName");
+                                    e.setlang.bottombuttons.resources.libs$;
+                                    e.css.fontSize = "1em";
+                                    e.css.marginBottom = "10px";
+                                }),
+                                createElement("br"),
+                                createElement("br"),
+                                createElement("div", e => {
+                                    e.css = containerscss;
+                                    
+                                    const libs = addon.libs?
+                                    Object.entries(addon.libs).map(([key, value]) => ({
+                                        key,
+                                        value
+                                    })): [];
+
+                                    if(libs.length == 0)
+                                        libs.push(null);
+
+                                    e.append(
+                                        ...libs.map(lib => {
+                                            if(!lib)
+                                                return createElement("span", e => {
+                                                    e.css.opacity = 0.5;
+                                                    e.setlang.bottombuttons.resources.nolibs$;
+                                                })
+                                            return createElement("span", e => {
+                                                setItem(e, lib, "lib");
+                                            })
+                                        })
+                                    )
+                                }),
+                                createElement("br"),
+                                createElement("span", e => {
+                                    e.classList.add("resourceName");
+                                    e.setlang.bottombuttons.resources.modules$;
+                                    e.css.fontSize = "1em";
+                                }),
+                                createElement("br"),
+                                createElement("br"),
+                                createElement("div", e => {
+                                    e.css = containerscss;
+                                    
+                                    const libs = addon.modules?
+                                    Object.entries(addon.modules).map(([key, value]) => ({
+                                        key,
+                                        value
+                                    })): [];
+
+                                    if(libs.length == 0)
+                                        libs.push(null);
+
+                                    e.append(
+                                        ...libs.map(lib => {
+                                            if(!lib)
+                                                return createElement("span", e => {
+                                                    e.css.opacity = 0.5;
+                                                    e.setlang.bottombuttons.resources.nomodules$;
+                                                })
+                                            return createElement("span", e => {
+                                                setItem(e, lib, "module");
+                                            })
+                                        })
+                                    )
+                                }),
+                                
+                            );
+                        })
+                    )
+                })
+            )
         });
         
         
@@ -322,7 +549,7 @@ const SpaceCAD = class SpaceCAD {
 
                     e.append(
                         createElement("span", e => {
-                            e.innerText = "no preSavedLibs";
+                            e.innerText = language.bottombuttons.resources.nolibs;
                         })
                     )
                 })
@@ -335,7 +562,20 @@ const SpaceCAD = class SpaceCAD {
 
                     e.append(
                         createElement("span", e => {
-                            e.innerText = "no preSavedModules";
+                            e.innerText = language.bottombuttons.resources.nomodules;
+                        })
+                    )
+                })
+            )
+        
+        if(resourcesBody.query(".addons").children.length == 0)
+            resourcesBody.query(".addons").append(
+                createElement("div", e => {
+                    e.classList.add("resourceBody");
+
+                    e.append(
+                        createElement("span", e => {
+                            e.innerText = language.bottombuttons.resources.noaddons;
                         })
                     )
                 })
@@ -1670,24 +1910,28 @@ const SpaceCAD = class SpaceCAD {
         return obj;
     }
     static setPos = SpaceCAD.setPosition;
+
     static setRotation = (...args) => {
         const obj = new SpaceCAD.Group();
         obj.setRotation(...args);
         return obj;
     }
     static setRot = SpaceCAD.setRotation;
+
     static setRotationPI = (...args) => {
         const obj = new SpaceCAD.Group();
         obj.setRotation(...args);
         return obj;
     }
     static setRotPI = SpaceCAD.setRotationPI;
+
     static setScale = (...args) => {
         const obj = new SpaceCAD.Group();
         obj.setSale(...args);
         return obj;
     }
     static setScl = SpaceCAD.setScale;
+
     static mirror = (...args) => {
         const obj = new SpaceCAD.Group();
         obj.scale.set(...args);

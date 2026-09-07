@@ -104,6 +104,9 @@
 
                     <p class="subtitle" language-bottombuttons-resources-modules></p>
                     <div class="preSavedModules resourceList"></div>
+
+                    <p class="subtitle" language-bottombuttons-resources-addons></p>
+                    <div class="addons resourceList"></div>
                 </div>
             </div>
         </div>
@@ -186,13 +189,32 @@
             <div class="hide"></div>
         </label>
         <hr>
-        <label class="buttonLike checkBoxButton checkBoxIndicator">
-            <span language-modal-importresources-overwrite></span>
-            <input type="checkbox" name="overwrite">
-            <div class="hide"></div>
-        </label>
-        <span language-modal-importresources-overwritetext></span>
-        <hr>
+        <div class="hideIfAddon">
+            <input class="isAddon" type="checkbox">
+            <label class="buttonLike checkBoxButton checkBoxIndicator">
+                <span language-modal-importresources-overwrite></span>
+                <input type="checkbox" name="overwrite">
+                <div class="hide"></div>
+            </label>
+            <span language-modal-importresources-overwritetext></span>
+            <hr>
+        </div>
+        <div class="hideIfNotAddon">
+            <input class="isAddon" type="checkbox">
+
+            <span language-modal-importresources-addontext></span>
+            <br>
+            <p language-modal-shareresources-addonname></p>
+            <input class="addonName" type="text" readonly language-placeholder-modal-shareresources-addonname>
+            <br>
+            <p language-modal-shareresources-addonversion></p>
+            <input class="addonVersion" type="text" readonly language-placeholder-modal-shareresources-addonversion>
+            <br>
+            <p language-modal-shareresources-addonowner></p>
+            <input class="addonOwner" type="text" readonly language-placeholder-modal-shareresources-addonowner>
+            <br>
+            <hr>
+        </div>
         <div class="buttons">
             <input type="button" class="cancel" closemodal language-value-modal-importresources-cancel>
             <input type="submit" class="confirm" language-value-modal-importresources-confirm>
@@ -206,12 +228,35 @@
                 <input type="checkbox" name="libs">
                 <div class="hide"></div>
             </label>
-        <hr>
             <label class="buttonLike checkBoxButton checkBoxIndicator">
                 <span language-modal-shareresources-modules></span>
                 <input type="checkbox" name="modules">
                 <div class="hide"></div>
             </label>
+            <button id="asAddon" language-modal-shareresources-addons></button>
+        <hr>
+            <label class="buttonLike checkBoxButton checkBoxIndicator">
+                <span language-modal-shareresources-asaddon></span>
+                <input type="checkbox" name="asAddon">
+                <div class="hide"></div>
+            </label>
+            <div class="showIfIsAddon">
+                <br>
+                <label>
+                    <p language-modal-shareresources-addonname></p>
+                    <input type="text" name="addonName" language-placeholder-modal-shareresources-addonname >
+                </label>
+                <br><br>
+                <label>
+                    <p language-modal-shareresources-addonversion></p>
+                    <input type="text" name="addonVersion" language-placeholder-modal-shareresources-addonversion >
+                </label>
+                <br><br>
+                <label>
+                    <p language-modal-shareresources-addonowner></p>
+                    <input type="text" name="addonOwner" language-placeholder-modal-shareresources-addonowner >
+                </label>
+            </div>
         <hr>
         <div class="buttons">
             <input type="button" class="cancel" closemodal language-value-modal-shareresources-cancel>
@@ -222,14 +267,18 @@
     <!-- CHANGELOG -->
     <div modal id="changelog" class="question">
         <div class="title" language-modal-changelog-todo></div>
+        SpaceCAD Web -> refazer versão web do app em outra guia que rode sem server
+        <br><br>
         SpaceCAD App -> Janela com inputs de ajuda, tipo controladores do MPJS
         <br><br>
         SpaceCAD -> documentação do SpaceCAD
         <br><br>
-        SpaceCAD -> Criar extensão de intelisense para arquivos .spacecad.js
+        SpaceCAD -> criar extensão de intelisense para arquivos .spacecad.js
         <br><br>
 
         <span style="background: var(--primary); font-weight: bold; ">(Não essenciais)</span>
+        logica -> SpaceCAD API não deveria mecher no HTML, passar logica de dom para engine.js
+        <br><br>
         SpaceCAD -> hinter: linha com texto na posição final
         <br><br>
         SpaceCAD -> hinter de objeto: linha do objeto até uma posição, mostra informações como nome, tamanho e informações custom
@@ -240,6 +289,14 @@
         <br><br>
 
         <div class="title" language-modal-changelog-lastupdates></div>
+
+        <span style="background: var(--primary);">addons</span>
+        (07/09/2026 - 18:49) SpaceCAD -> modules onLoad
+        <br><br> 
+        (07/09/2026 - 18:38) SpaceCAD -> libs onLoad
+        <br><br>        
+        (07/09/2026 - 15:14) SpaceCAD -> Reformular recursos: funcionam como addons, podem ser ativados/desativados e podem ser excluidos um por um ao envez de reescrever todos
+        <br><br>
         
         <span style="background: var(--primary);">SpaceCAD web</span>
         (05/09/2026 - 23:23) rota loading -> novo estilo para metext e botão de fechar app
@@ -522,8 +579,16 @@ writeLanguage("en-US", { // default
             title: "Resources",
             libs: "libraries:",
             modules: "modules:",
+            addons: "addons:",
             preload: "preloaded",
             nousage: "no provided usage",
+            nolibs: "no provided libraries",
+            nomodules: "no provided modules",
+            noaddons: "no provided addons",
+            addon: "addon:",
+            owner: "owner:",
+            removeaddonbtn: "remove addon",
+            removeaddon: "Are you sure you want to remove this addon?",
             types: {
                 object: "object",
                 string: "string",
@@ -612,8 +677,10 @@ writeLanguage("en-US", { // default
             selecttypetext: "importing the following resources:",
             libs: "libraries",
             modules: "modules",
+            addons: "addons",
             overwrite: "overwrite all resources",
             overwritetext: "if selected, your resources will be deleted and the new ones added.",
+            addontext: "overwrite is disable while importing addons.",
             confirm: "import",
             cancel: "cancel",
             alert: {
@@ -625,10 +692,18 @@ writeLanguage("en-US", { // default
             title: "Export Resources",
             libs: "export libraries",
             modules: "export modules",
+            addons: "export addons",
+            asaddon: "export as addon",
+            addonname: "addon name",
+            addonversion: "addon version",
+            addonowner: "addon owner",
             confirm: "export",
             cancel: "cancel",
             alert: {
-                noType: "no resource type selected"
+                noType: "no resource type or addons selected",
+                invalidaddonname: "invalid addon name",
+                noaddonname: "no addon name",
+                noaddonowner: "no addon owner"
             }
         },
         changelog: {
@@ -674,9 +749,17 @@ writeLanguage("pt-BR", {
             button: "recursos",
             title: "Recursos",
             libs: "bibliotecas:",
-            modules: "módulos:",
+            modules: "módulos:",            
+            addons: "extensões:",
             preload: "precarregado",
-            nousage: "uso não fornecido",
+            nousage: "nenhum uso fornecido",
+            nolibs: "nehuma biblioteca",
+            nomodules: "nehum módulo",
+            noaddons: "nehuma extensão",
+            addon: "extensão:",
+            owner: "autor:",
+            removeaddonbtn: "remover extensão",
+            removeaddon: "Tem certeza que deseja remover essa extensão?",
             types: {
                 object: "objeto",
                 string: "texto",
@@ -765,8 +848,10 @@ writeLanguage("pt-BR", {
             selecttypetext: "importando os seguintes recursos:",
             libs: "bibliotecas",
             modules: "modulos",
+            addons: "extensões",
             overwrite: "sobrescrever todos os recursos",
             overwritetext: "se selecionado, seus recursos serao deletados e os novos adicionados.",
+            addontext: "sobrescrever é desativado ao importar addons.",
             confirm: "importar",
             cancel: "cancelar",
             alert: {
@@ -778,10 +863,18 @@ writeLanguage("pt-BR", {
             title: "Exportar Recursos",
             libs: "exportar bibliotecas",
             modules: "exportar modulos",
+            addons: "exportar extensões",
+            asaddon: "exportar como extensão",
+            addonname: "nome da extensão",
+            addonversion: "versão da extensão",
+            addonowner: "autor da extensão",
             confirm: "exportar",
             cancel: "cancelar",
             alert: {
-                noType: "tipo de recurso não selecionado"
+                noType: "tipo de recurso não selecionado",
+                invalideaddonname: "nome de extensão invalido",
+                noaddonname: "nome da extensão é obrigatorio",
+                noaddonowner: "autor da extensão é obrigatorio",
             }
         },
         changelog: {
@@ -794,7 +887,6 @@ writeLanguage("fr-FR", {
     name: "Français (France)",
     translationnotfound: "~traduction non trouvée~",
     invalidenvironment: "SpaceCAD App n’est pas supporté dans cet environnement",
-
     bottombuttons: {
         setlook: {
             top: "voir d’en haut",
@@ -828,9 +920,17 @@ writeLanguage("fr-FR", {
             button: "ressources",
             title: "Ressources",
             libs: "bibliothèques:",
-            modules: "modules:",
+            modules: "modules:",         
+            addons: "extensions:",
             preload: "préchargé",
             nousage: "utilisation non prévue",
+            nolibs: "aucune bibliothèque chargée",
+            nomodules: "aucun module chargé",
+            noaddons: "aucune extension chargée",
+            addon: "extension:",
+            owner: "propriétaire:",
+            removeaddonbtn: "supprimer extension",
+            removeaddon: "Voulez-vous vraiment supprimer cette extension?",
             types: {
                 object: "objet",
                 string: "chaîne",
@@ -924,8 +1024,10 @@ writeLanguage("fr-FR", {
             selecttypetext: "importer les ressources suivantes :",
             libs: "bibliothèques",
             modules: "modules",
+            addons: "extensions",
             overwrite: "écraser toutes les ressources",
             overwritetext: "si coché, ces ressources seront supprimées et les nouvelles seront ajoutées.",
+            addontext: "Le remplacement est désactivé lors de l’importation des addons.",
             confirm: "importer",
             cancel: "annuler",
             alert: {
@@ -938,10 +1040,18 @@ writeLanguage("fr-FR", {
             title: "Exporter des ressources",
             libs: "exporter les bibliothèques",
             modules: "exporter les modules",
+            addons: "exporter les extensions",
+            asaddon: "exporter comme extension",
+            addonname: "nom de l’extension",
+            addonversion: "version de l’extension",
+            addonowner: "propriétaire de l’extension",
             confirm: "exporter",
             cancel: "annuler",
             alert: {
-                noType: "type de ressource non sélectionné"
+                noType: "type de ressource non sélectionné",
+                invalideaddonname: "nom d’extension invalide",
+                noaddonname: "nom de l’extension est obligatoire",
+                noaddonowner: "propriétaire de l’extension est obligatoire",
             }
         },
 
@@ -1145,14 +1255,18 @@ startTranslation(isElectron? electronStore : undefined);
         document.title = `SpaceCAD ${version} - ${fileDom.innerText}`;
 
         electronStore.selectedFile = file;
-        try {
-            SpaceCAD.deleteAll();
-        } catch (error) {
-            setTimeout(() => {
-                selectDOM(fileDom, file);
-            }, 500)
-        }
 
+        if(window.SpaceCAD)
+            SpaceCAD.deleteAll();
+        else {
+            const deleteAll = setInterval(() => {
+                if (window.SpaceCAD) {
+                    clearInterval(deleteAll);
+                    SpaceCAD.deleteAll();
+                }
+            });
+        }
+        
         watchFile(file);
     }
     const fileDom = () => {
@@ -1487,70 +1601,266 @@ startTranslation(isElectron? electronStore : undefined);
     // import resources
     const importResources = document.querySelector("#importResources");
     importResources.query("#selectFile").on("click", () => {
-        electron.openFile(["spacecad.resources.json"], true).then(data => {
+        electron.openFile(["spacecad.resources.json", "spacecad.addon.json"], true).then(data => {
             importResources.query('[name="path"]').value = data.path;
             importResources.query('[name="filedata"]').value = data.content;
+            
+            const content = JSON.parse(data.content);
+
+            if(content.isAddon) {
+                if(importResources.asObject.overwrite)
+                    importResources.query('[name="overwrite"]').checked = false;
+
+                importResources.query('.hideIfAddon .isAddon').checked = true;
+                importResources.query('.hideIfNotAddon .isAddon').checked = true;
+
+                importResources.query('.hideIfNotAddon .addonName').value = content.name;
+                importResources.query('.hideIfNotAddon .addonVersion').value = content.version;
+                importResources.query('.hideIfNotAddon .addonOwner').value = content.owner;
+
+                const libDom = importResources.query('[name="libs"]').parentElement;
+                const moduleDom = importResources.query('[name="modules"]').parentElement;
+
+                if(libDom.query(".dropdownMenu")) {
+                    libDom.query(".dropdownMenu").remove();
+                    libDom.classList.remove("hasContextMenu");
+                }
+                if(moduleDom.query(".dropdownMenu")) {
+                    moduleDom.query(".dropdownMenu").remove();
+                    moduleDom.classList.remove("hasContextMenu");
+                }
+
+                setupDropdown(libDom, "contextmenu", Object.entries(content.libs).map(([name, value]) => createElement("span", e => {
+                    e.classList.add("buttonLike");
+                    e.innerHTML = name;
+                    e.css.cursor = "not-allowed";
+
+                    e.on("click", (evt) => {
+                        evt.stopPropagation();
+                        evt.preventDefault();
+                    });
+
+                    if(value.usage) {
+                        setupDropdown(e, createElement("div", e => {
+                            e.innerHTML = value.usage;
+                        }));
+                        
+                        e.on(["mouseenter", "mouseleave"], (evt, el) => {
+                            const type = evt.type;
+                            
+                            if(type == "mouseenter")
+                                Interval.timeout("hoverImportResourcesLibs", () => {
+                                    el.dropdownOpen();
+                                }, 500)
+                            else
+                                Interval.clear("hoverImportResourcesLibs");
+                        })
+                    }
+                })));
+
+                setupDropdown(moduleDom, "contextmenu", Object.entries(content.modules).map(([name, value]) => createElement("span", e => {
+                    e.classList.add("buttonLike");
+                    e.innerHTML = name;
+                    e.css.cursor = "not-allowed";
+
+                    e.on("click", (evt) => {
+                        evt.stopPropagation();
+                        evt.preventDefault();
+                    });
+
+                    if(value.usage) {
+                        setupDropdown(e, createElement("div", e => {
+                            e.innerHTML = value.usage;
+                        }));
+                        
+                        e.on(["mouseenter", "mouseleave"], (evt, el) => {
+                            const type = evt.type;
+                            
+                            if(type == "mouseenter")
+                                Interval.timeout("hoverImportResourcesModules", () => {
+                                    el.dropdownOpen();
+                                }, 500)
+                            else
+                                Interval.clear("hoverImportResourcesModules");
+                        })
+                    }
+                })));
+            }
         });
     });
+    importResources.modal.onOpen(() => {
+        importResources.reset();
+    })
     importResources.onForm((evt, form) => {
         evt.preventDefault();
         const data = form.get();
 
         if(!data.path)
-            return alert(language.modal.importResources.alert.noPath);
+            return alert(language.modal.importresources.alert.noPath);
 
         if(!data.libs && !data.modules)
-            return alert(language.modal.importResources.alert.noType);
+            return alert(language.modal.importresources.alert.noType);
 
-        const resources = JSON.parse(data.filedata);
+        const resource = JSON.parse(data.filedata);
 
-        if(data.overwrite) {
+
+        if(resource.isAddon) {
+            if(!data.libs) resource.libs = {};
+            if(!data.modules) resource.modules = {};
+
+            SpaceCAD.storeAddons(resource);
+
+        } else {
+            if(data.overwrite) {
+                if(data.libs)
+                Object.entries(SpaceCAD.libs).forEach(([key, value]) => {
+                    logger.warn(`Removing lib ${key}`);
+                    SpaceCAD.libs[key] = {};
+                });
+    
+                if(data.modules)
+                Object.entries(SpaceCAD.modules).forEach(([key, value]) => {
+                    logger.warn(`Removing module ${key}`);
+                    SpaceCAD.modules[key] = {};
+                });
+            }
+    
             if(data.libs)
-            Object.entries(SpaceCAD.libs).forEach(([key, value]) => {
-                logger.warn(`Removing lib ${key}`);
-                SpaceCAD.libs[key] = {};
-            });
-
+                Object.entries(resources.libs).forEach(([key, value]) => {
+                    if(SpaceCAD.libs[key])
+                        logger.warn(`Overwriting lib ${key}`);
+                    SpaceCAD.libs[key] = value;
+                });
+    
             if(data.modules)
-            Object.entries(SpaceCAD.modules).forEach(([key, value]) => {
-                logger.warn(`Removing module ${key}`);
-                SpaceCAD.modules[key] = {};
-            });
+                Object.entries(resources.modules).forEach(([key, value]) => {
+                    if(SpaceCAD.modules[key])
+                        logger.warn(`Overwriting module ${key}`);
+                    SpaceCAD.modules[key] = value;
+                });
+                
+        }
+        
+        const libDom = importResources.query('[name="libs"]').parentElement;
+        const moduleDom = importResources.query('[name="modules"]').parentElement;
+
+        if(libDom.query(".dropdownMenu")) {
+            libDom.query(".dropdownMenu").remove();
+            libDom.classList.remove("hasContextMenu");
+        }
+        if(moduleDom.query(".dropdownMenu")) {
+            moduleDom.query(".dropdownMenu").remove();
+            moduleDom.classList.remove("hasContextMenu");
         }
 
-        if(data.libs)
-            Object.entries(resources.libs).forEach(([key, value]) => {
-                if(SpaceCAD.libs[key])
-                    logger.warn(`Overwriting lib ${key}`);
-                SpaceCAD.libs[key] = value;
-            });
-
-        if(data.modules)
-            Object.entries(resources.modules).forEach(([key, value]) => {
-                if(SpaceCAD.modules[key])
-                    logger.warn(`Overwriting module ${key}`);
-                SpaceCAD.modules[key] = value;
-            });
-            
+        importResources.reset();
         importResources.modal.toggle();
+        SpaceCAD.setPreloadsDom();
     });
 
     // share resources
     const shareResources = document.querySelector("#shareResources");
+    if(isElectron) {
+        const addonOwner = document.query(`#shareResources [name="addonOwner"]`);
+
+        addonOwner.value = electronStore.addonOwner || "";
+        
+        addonOwner.on("input", (e, el) => {
+            electronStore.addonOwner = el.value;
+        });
+
+        shareResources.query("#asAddon").on("click", evt => evt.preventDefault())
+        shareResources.modal.onOpen((modal) => {
+            const el = modal.element;
+            el.query(`[name="addonVersion"]`).value = new Date().toISOString();
+
+            const dropdown = el.query("#asAddon .dropdownMenu");
+            if(dropdown) dropdown.remove();
+
+            const dropArray = SpaceCAD.addons.map(addon => createElement("label", e=> {
+                e.innerHTML = addon.name + " - " + addon.owner;
+                e.title = addon.name + "\nversion: " + addon.version + "\nowner: " + addon.owner;
+
+                e.classList.add("buttonLike", "checkBoxButton", "checkBoxIndicator");
+
+                e.on("click", evt => {
+                    evt.stopPropagation();
+                    evt.preventDefault();
+
+                    const ipt = e.query('[type="checkbox"]');
+                    ipt.checked = !ipt.checked;
+                });
+
+                e.append(createElement("input", e => {
+                    e.type = "checkbox";
+                    e.name = "addons";
+                    e.value = JSON.stringify({
+                        name: addon.name,
+                        owner: addon.owner
+                    });
+                }));
+            }));
+
+            if(dropArray.length == 0)
+                dropArray.push(createElement("span", e=> {
+                    e.setlang.bottombuttons.resources.noaddons$;
+                }));
+            setupDropdown(shareResources.query("#asAddon"), dropArray);
+        })
+    }
     shareResources.onForm((evt, form) => {
         evt.preventDefault();
         const data = form.get();
 
-        const aux = {};
+        console.log(data)
 
+        const aux = {
+            isAddon: false,
+        };
+
+        if(data.asAddon) {
+            aux.isAddon = true;
+            if(!data.addonName) return alert(language.modal.shareresources.alert.noaddonname);
+            if(!isValidFileName(data.addonName)) return alert(language.modal.shareresources.alert.invalidaddonname);
+            aux.name = data.addonName;
+            aux.version = data.addonVersion;
+            aux.owner = data.addonOwner;
+        }
+
+        aux.libs = {};
         if(data.libs)
             aux.libs = SpaceCAD.libs;
 
+        aux.modules = {};
         if(data.modules)
             aux.modules = SpaceCAD.modules;
 
-        if(!data.libs && !data.modules)
-            return alert(language.modal.shareResources.alert.noType);
+        if(data.addons) {
+            let addons = JSON.parse(data.addons);
+            addons = Array.isArray(addons) ? addons : [addons];
+
+            const spcaddons = SpaceCAD.addons;
+
+            addons.forEach(addon => {
+                const find = spcaddons.find(a => a.name == addon.name && a.owner == addon.owner);
+                if(find) {
+                    aux.libs = { ...aux.libs, ...find.libs };
+                    aux.modules = { ...aux.modules, ...find.modules };
+                }
+            });
+        }
+
+        const isEmptyObj = (obj) => {
+            for (const key in obj) {
+                return false;
+            }
+            return true;
+        }
+
+        if(!data.libs && !data.modules && isEmptyObj(aux.libs) && isEmptyObj(aux.modules))
+            return alert(language.modal.shareresources.alert.noType);
+
+        console.log(aux )
 
             
         const str = JSON.stringify(aux, null, 4);
@@ -1572,7 +1882,8 @@ startTranslation(isElectron? electronStore : undefined);
 
         const a = document.createElement("a");
         a.href = url;
-        a.download = `[${date}].spacecad.resources.json`;
+        const fileName = aux.isAddon ? `${aux.name}.spacecad.addon.json` : `[${date}].spacecad.resources.json`;
+        a.download = fileName;
         a.click();
 
         URL.revokeObjectURL(url);
@@ -1634,13 +1945,14 @@ startTranslation(isElectron? electronStore : undefined);
 
     if(isElectron)
     if(electronStore.selectedFile) {
-        setTimeout(() => {
-            selectDOM([...fileList.children].find(el => el.dataset.path === electronStore.selectedFile.path), electronStore.selectedFile);
-        }, 250)
+        selectDOM([...fileList.children].find(el => el.dataset.path === electronStore.selectedFile.path), electronStore.selectedFile);
     } else {
-        setTimeout(() => {
-            SpaceCAD.setPreloadsDom();
-        }, 250)
+        const setPreloadDom = setInterval(() => {
+            if (window.SpaceCAD) {
+                clearInterval(setPreloadDom);
+                SpaceCAD.setPreloadsDom();
+            }
+        });
     }
 
     // rename file

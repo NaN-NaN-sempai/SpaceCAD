@@ -9,10 +9,10 @@ const store = new Store();
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
 
 const fs = require("fs");
-const { spawn } = require('child_process');
+const { spawn, exec } = require('child_process');
 
 
-
+let nowPort;
 const watchport = () => {
     if(fs.existsSync("port.js"))
         fs.watch("port.js", () => {
@@ -21,6 +21,7 @@ const watchport = () => {
                     .match(/\d+/)[0]
             );
 
+            nowPort = port;
             loadUrl(port);
         });
     else
@@ -135,7 +136,9 @@ app.whenReady().then(() => {
 
 
 app.on("before-quit", () => {
-    server.kill();
+    console.log("closing electron...");
+    console.log("closing server port:", nowPort, "pid:", server.pid, );
+    exec(`taskkill /pid ${server.pid} /T /F`);
 }); 
 
 const server = spawn("npx.cmd", [app.isPackaged ? "node" : "nodemon", "server.js"], {

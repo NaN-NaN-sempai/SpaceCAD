@@ -208,42 +208,75 @@ app.post("/createFile", (req, res) => {
 
 
 const setupStorage = () => {
-    if(storage.classes === undefined)
-        storage.classes = {};
+    if(storage.localUser === undefined)
+        storage.localUser = {};
 
-    if(storage.lib === undefined)
-        storage.lib = {};
+    const {localUser} = storage;
+
+    if(typeof localUser.modules !== "object")
+        localUser.modules = {};
+
+    if(typeof localUser.lib !== "object")
+        localUser.lib = {};
+
+    if(!Array.isArray(storage.addons))
+        storage.addons = [];
 }
 app.post("/store/:type", (req, res) => {
     const type = req.params.type;
 
     setupStorage();
     if(type === "class"){
-        const {name, dependencies, classBody, usage, preload} = req.body;
+        const {name, dependencies, classBody, usage, preload, onLoad} = req.body;
         
 
-        if(storage.classes[name] !== undefined)
+        if(storage.localUser.modules[name] !== undefined)
             io.emit("warn", `SpaceCAD Module "${name}" will be overwritten.`);
 
-        storage.classes[name] = {
+        storage.localUser.modules[name] = {
             dependencies,
             classBody,
             usage,
-            preload
+            preload,
+            onLoad
         };
 
         res.send("ok");
     } else if(type === "lib"){
-        const {name, lib, usage, preload}  = req.body;
+        const {name, lib, usage, preload, onLoad}  = req.body;
 
-        if(storage.lib[name] !== undefined)
+        if(storage.localUser.lib[name] !== undefined)
             io.emit("warn", `SpaceCAD Library "${name}" will be overwritten.`);
 
-        storage.lib[name] = {
+        storage.localUser.lib[name] = {
             lib,
             usage,
-            preload
+            preload,
+            onLoad
         };
+
+        res.send("ok");
+    } else if(type === "addon"){
+        const addonList = req.body;
+        
+        addonList.forEach(addon => {
+            const {name, owner, version, modules, libs} = addon;
+
+            const inList = storage.addons.find(addon => addon.name === name && addon.owner === owner);
+            if(inList) {
+                if(inList.version == version) return io.emit("warn", `Addon "${name}" of owner "${owner}" will be ignored as it is already up to date.`);
+                else io.emit("warn", `SpaceCAD Addon "${name}" version "${inList.version}" of owner "${owner}" will be updated to version "${version}".`);
+                storage.addons = storage.addons.filter(addon => !(addon.name === name && addon.owner === owner));
+            }
+
+            storage.addons.push({
+                name,
+                version,
+                owner,
+                modules,
+                libs
+            })
+        });
 
         res.send("ok");
     }
@@ -254,24 +287,94 @@ app.get("/store/:type/:name", (req, res) => {
 
     setupStorage();
     if(type === "class"){
+        let cls;
 
-        if(storage.classes[name] === undefined)
+        if(storage.localUser.modules[name] !== undefined)
+            cls = storage.localUser.modules[name];
+
+        else if(storage.addons.find(cls => cls.modules[name] !== undefined)) {
+            const addon = storage.addons.find(cls => cls.modules[name] !== undefined);
+            cls = {
+                ...addon.modules[name],
+                addonOrigin: {
+                    name: addon.name,
+                    owner: addon.owner
+                }
+            }
+        } else
             res.status(404).send(`Module not found: ${name}`);
-
-        res.json(storage.classes[name]);
+            
+        res.json(cls);
     } else if(type === "classes") {
-        res.json(storage.classes);
+        let obj = {
+            ...storage.localUser.modules,
+        };
+        
+        storage.addons.forEach(addon => {
+            if(addon.modules)
+            Object.entries(addon.modules).forEach(([key, value]) => {
+                obj[key] = {
+                    ...value,
+                    addonOrigin: {
+                        name: addon.name,
+                        owner: addon.owner
+                    }
+                };
+            })            
+        });
+        res.json(obj);
 
     } else if(type === "lib"){
 
-        if(storage.lib[name] === undefined)
+        let lib;
+
+        if(storage.localUser.lib[name] !== undefined)
+            lib = storage.localUser.lib[name];
+        else if(storage.addons.find(lib => lib.lib[name] !== undefined)) {
+            const addon = storage.addons.find(lib => lib.lib[name] !== undefined);
+            lib = {
+                ...addon.lib[name],
+                addonOrigin: {
+                    name: addon.name,
+                    owner: addon.owner
+                }
+            }
+        } else
             res.status(404).send(`Library not found: ${name}`);
 
-        res.json(storage.lib[name]);
+        res.json(lib);
     } else if(type === "libs") {
-        res.json(storage.lib);
+        let obj = {
+            ...storage.localUser.lib,
+        };
+
+        storage.addons.forEach(addon => {
+            if(addon.libs)
+            Object.entries(addon.libs).forEach(([key, value]) => {
+                obj[key] = {
+                    ...value,
+                    addonOrigin: {
+                        name: addon.name,
+                        owner: addon.owner
+                    }
+                };
+            })            
+        });
+
+        res.json(obj);
+    } else if(type === "addon") {
+        const addons = storage.addons.filter(addon => addon.name === name);
+
+        res.json(addons);
+    } else if(type === "addons") {
+        if(name !== "_") {
+            storage.addons = storage.addons.filter(addon => addon.name !== name);
+            res.send("ok");
+            return;
+        }
+        res.json(storage.addons);
     }
-})
+});
 
 const isDirSync = path => {
     try {
