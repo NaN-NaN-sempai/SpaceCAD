@@ -273,7 +273,7 @@
         <br><br>
         SpaceCAD -> documentação do SpaceCAD
         <br><br>
-        SpaceCAD -> criar extensão de intelisense para arquivos .spacecad.js
+        SpaceCAD -> criar extensão de intelisense para arquivos .spacecad.js no vscode
         <br><br>
 
         <span style="background: var(--primary); font-weight: bold; ">(Não essenciais)</span>
@@ -289,6 +289,12 @@
         <br><br>
 
         <div class="title" language-modal-changelog-lastupdates></div>
+
+        <span style="background: var(--primary);">overloadOperator update</span>
+        (08/09/2026 - 19:15) overloadOperator.js -> caputreAST no codigo para capturar ast durante o transform
+        <br><br>
+        (08/09/2026 - 19:02) overloadOperator.js -> ast addons para capturar ast durante o transform
+        <br><br>
 
         <span style="background: var(--primary);">addons</span>
         (07/09/2026 - 18:49) SpaceCAD -> modules onLoad
@@ -1449,12 +1455,12 @@ startTranslation(isElectron? electronStore : undefined);
             })
         });
 
-        try {
-            SpaceCAD.run(load.text);
-        } catch (error) {
-            setTimeout(() => watchFile(file), 500);
-        }
-
+        const interval = setInterval(() => {
+            if(window.SpaceCAD) {
+                clearInterval(interval);
+                SpaceCAD.run(load.text);
+            }
+        });
     }
     const removeWatcher = () => fetch("/removeWatcher");
 

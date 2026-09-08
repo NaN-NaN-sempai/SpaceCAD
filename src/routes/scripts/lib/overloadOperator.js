@@ -572,14 +572,80 @@ class Overloader {
     static evalArgs = (fn, onError) => new Overloader(fn).onError(onError).execute;
 
     constructor(callback) {
-        const transform = (node, parent, key) => {
+        this.addonsAST = [];
+
+        const transform = (node, parent, key, ogAst, captureAST) => {
+            ogAst = ogAst || node;
+            
             if(!node || typeof node !== "object") return;
 
-
-            for(let k in node) {
-                transform(node[k], node, k);
+            const err = m => {
+                logger.error(m);
+                throw new Error(m);
             }
 
+            if (
+                node.type === "CallExpression" &&
+                node.callee.type === "Identifier" &&
+                node.callee.name === "captureAST"
+            ) {
+                
+                const callback = node.arguments[0];
+
+                if (
+                    (
+                        callback?.type === "ArrowFunctionExpression" ||
+                        callback?.type === "FunctionExpression"
+                    ) &&
+                    callback.body?.type === "BlockStatement"
+                ) {
+                    parent[key] =  {
+                        type: "Literal",
+                        value: null,
+                        raw: "null"
+                    };
+
+                    return new Function(`
+                        return ${window.astring.generate(callback)}
+                    `)()
+                } else {
+                    err(`"captureAST" must take a function as argument`);
+                }
+            } else if(node.name === "captureAST") {
+                err(`"captureAST" should be a function call`);
+            }
+
+
+            let breakCicle;
+            for(let k in node) {
+                const child = node[k];
+
+                if (child && typeof child === "object") {
+                    Object.defineProperty(child, "parent", {
+                        value: node,
+                        enumerable: false,
+                        configurable: true
+                    });
+                }
+                const brk = transform(child, node, k, ogAst, captureAST);
+
+                if(brk) {
+                    breakCicle = brk;
+                    break;
+                }
+            }
+            
+            if(typeof breakCicle == "function") return transform(ogAst, null, null, null, breakCicle);
+            
+            if(typeof captureAST == "function")
+            if(captureAST(node, parent, key)) return;
+
+            let addonRet = false;
+            for(let addon of this.addonsAST) {
+                if(addon(node, parent, key)) addonRet = true;
+            }
+            if(addonRet) return;
+            
             if(node.type in Overloader.keys) {
 
                 if(!(node.operator in Overloader.keys[node.type])) return;
@@ -623,6 +689,11 @@ class Overloader {
         Overloader.handlers[key] = handler;
 
         this.addTransformHandler(...type);
+    }
+
+    addAddon(fn) {
+        if(typeof fn != "function") throw new Error("The addon must be a function.");
+        this.addonsAST.push(fn);
     }
 
     addTransformHandler(type, handler) {
