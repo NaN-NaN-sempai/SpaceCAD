@@ -294,6 +294,7 @@ app.post("/openPath", (req, res) => {
     if(directory){
         reqPath = path.dirname(reqPath);
         open(reqPath);
+        return res.send("ok");
     }
 
     if(fs.existsSync(reqPath))
@@ -373,6 +374,7 @@ app.post("/createFile", (req, res) => {
         name: path.basename(fullPath, ".spacecad.js")
     });
 });
+
 
 
 
@@ -467,7 +469,8 @@ app.get("/store/:type/:name", (req, res) => {
                 ...addon.modules[name],
                 addonOrigin: {
                     name: addon.name,
-                    owner: addon.owner
+                    owner: addon.owner,
+                    version: addon.version
                 }
             }
         } else
@@ -486,7 +489,8 @@ app.get("/store/:type/:name", (req, res) => {
                     ...value,
                     addonOrigin: {
                         name: addon.name,
-                        owner: addon.owner
+                        owner: addon.owner,
+                        version: addon.version
                     }
                 };
             })            
@@ -505,7 +509,8 @@ app.get("/store/:type/:name", (req, res) => {
                 ...addon.lib[name],
                 addonOrigin: {
                     name: addon.name,
-                    owner: addon.owner
+                    owner: addon.owner,
+                    version: addon.version
                 }
             }
         } else
@@ -524,7 +529,8 @@ app.get("/store/:type/:name", (req, res) => {
                     ...value,
                     addonOrigin: {
                         name: addon.name,
-                        owner: addon.owner
+                        owner: addon.owner,
+                        version: addon.version
                     }
                 };
             })            
@@ -544,6 +550,7 @@ app.get("/store/:type/:name", (req, res) => {
         res.json(storage.addons);
     }
 });
+
 
 const isDirSync = path => {
     try {

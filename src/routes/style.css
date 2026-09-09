@@ -268,7 +268,7 @@ hr {
             gap: 5px;
         
             min-height: 200px;
-            max-height: calc(100vh - 120px);
+            max-height: calc(100vh - 170px);
             overflow-y: auto;
             width: 300px;
             bottom: 0;
@@ -400,6 +400,71 @@ hr {
 }
 
 
+.floatingTogleable {
+    & .body {
+        position: absolute;
+        bottom: 2.5rem;
+        right: 0;
+    }
+    
+    & .list {
+        padding: 10px;
+
+        & .controller {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+
+            & .name {
+                font-weight: bold;
+                border-bottom: 1px solid var(--secondary);
+
+                & .type {
+                    font-weight: normal;
+                    font-size: .75rem;
+                    margin-left: 5px;
+                    opacity: .5;
+                }
+            }
+
+            & .inputBody {
+                & input {
+                    width: 100%;
+                    margin-bottom: 5px;
+
+                    &[type="number"], &[type="text"] {
+                        border: 1px solid var(--secondary);
+                    }
+
+                    &[type="color"] {
+                        padding: 0;
+                        height: 30px;
+                    }
+                }
+
+                & .inputInfo {
+                    width: 100%;
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: space-between;
+                    gap: 5px;
+                    border-bottom: 1px solid var(--secondary);
+                    padding-bottom: 5px;
+
+                    & > *:not(:last-child) {
+                        border-right: 1px solid var(--secondary);
+                        padding-right: 10px;
+                    }
+
+                    & * {
+                        font-size: .75rem;
+                    }
+                }
+            }
+        } 
+    }
+    
+}
 #logger {
     & .unread {
 
@@ -411,10 +476,6 @@ hr {
         }
     }
     & .body {
-        position: absolute;
-        bottom: 2.5rem;
-        right: 0;
-
         & .title {
             position: relative;
 
@@ -565,10 +626,6 @@ hr {
 
 #resourcesDisplay {
     & .body {
-        
-        position: absolute;
-        bottom: 2.5rem;
-        right: 0;
 
         & .list {
             padding: 10px;
@@ -770,7 +827,11 @@ hr {
         display: inline-block;
     }
 }
-
+.breaklineOnMax {
+    max-width: var(--maxWidth, 200px);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
 
 #showEdges {
     &.edgeHiOn .off {

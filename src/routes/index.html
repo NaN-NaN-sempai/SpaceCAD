@@ -89,7 +89,21 @@
     
         <div class="splitter"></div>
         
-        <div id="resourcesDisplay" class="toggleable">
+        <div id="controllers" class="toggleable floatingTogleable">
+            <label class="buttonLike checkBoxButton">
+                <img class="svgIcon minnor" style="margin-right: 5px;" src="./svg/controller.svg" alt="camera">
+                <span language-bottombuttons-controllers-button> </span>
+                <input class="holdOpen" type="checkbox">
+            </label>
+
+            <div class="body">
+                <h1 class="title"><span language-bottombuttons-controllers-title></span> <img class="svgIcon" src="./svg/controller.svg" alt="arquivo"></h1>
+                <div class="list">
+                </div>
+            </div>
+        </div>
+        
+        <div id="resourcesDisplay" class="toggleable floatingTogleable">
             <label class="buttonLike checkBoxButton">
                 <img class="svgIcon minnor" style="margin-right: 5px;" src="./svg/options/resources.svg" alt="camera">
                 <span language-bottombuttons-resources-button> </span>
@@ -111,7 +125,7 @@
             </div>
         </div>
 
-        <div id="logger" class="toggleable">
+        <div id="logger" class="toggleable floatingTogleable">
             <label class="buttonLike checkBoxButton hasUnread">
                 <img class="svgIcon minnor" style="margin-right: 5px;" src="./svg/options/file.svg" alt="camera">
                 <span language-bottombuttons-logs-button></span>
@@ -269,16 +283,12 @@
         <div class="title" language-modal-changelog-todo></div>
         SpaceCAD Web -> refazer versão web do app em outra guia que rode sem server
         <br><br>
-        SpaceCAD App -> Janela com inputs de ajuda, tipo controladores do MPJS
-        <br><br>
         SpaceCAD -> documentação do SpaceCAD
         <br><br>
         SpaceCAD -> criar extensão de intelisense para arquivos .spacecad.js no vscode
         <br><br>
 
         <span style="background: var(--primary); font-weight: bold; ">(Não essenciais)</span>
-        logica -> SpaceCAD API não deveria mecher no HTML, passar logica de dom para engine.js
-        <br><br>
         SpaceCAD -> hinter: linha com texto na posição final
         <br><br>
         SpaceCAD -> hinter de objeto: linha do objeto até uma posição, mostra informações como nome, tamanho e informações custom
@@ -289,6 +299,14 @@
         <br><br>
 
         <div class="title" language-modal-changelog-lastupdates></div>
+
+        <span style="background: var(--primary);">controllers</span>
+        (09/09/2026 - 02:50) SpaceCAD -> traduções para operadores
+        <br><br>
+        (09/09/2026 - 02:40) SpaceCAD App -> Nova aba de operadores, baseados nos controladores do MPJS
+        <br><br>
+        (08/09/2026 - 23:57) logica -> logica do resources HTML passado para engine.js
+        <br><br>
 
         <span style="background: var(--primary);">overloadOperator update</span>
         (08/09/2026 - 19:15) overloadOperator.js -> caputreAST no codigo para capturar ast durante o transform
@@ -580,6 +598,36 @@ writeLanguage("en-US", { // default
                 opacity: "opacity"
             }
         },
+        controllers: {
+            button: "controllers",
+            title: "Controllers",
+            empty: "no controller was created",
+
+            inputs: {
+                min: "min:",
+                max: "max:",
+                step: "step:",
+                value: "value:",
+                
+                length: "length:",
+                minlength: "min length:",
+                maxlength: "max length:",
+
+                state: "state:",
+                on: "on",
+                off: "off",
+
+                color: "color:",
+
+                types: {
+                    number: "number",
+                    text: "text",
+                    color: "color",
+                    range: "range",
+                    checkbox: "checkbox"
+                }
+            }
+        },
         resources: {
             button: "resources",
             title: "Resources",
@@ -751,6 +799,36 @@ writeLanguage("pt-BR", {
                 opacity: "opacidade"
             }
         },
+        controllers: {
+            button: "operadores",
+            title: "Operadores",
+            empty: "nenhum controlador foi criado",
+
+            inputs: {
+                min: "mín:",
+                max: "máx:",
+                step: "passo:",
+                value: "valor:",
+                
+                length: "largura:",
+                minlength: "largura mínima:",
+                maxlength: "largura máxima:",
+
+                state: "estado:",
+                on: "ativado",
+                off: "desativado",
+
+                color: "cor:",
+
+                types: {
+                    number: "número",
+                    text: "texto",
+                    color: "cor",
+                    range: "deslizante",
+                    checkbox: "caixa de seleção",
+                }
+            }
+        },
         resources: {
             button: "recursos",
             title: "Recursos",
@@ -920,6 +998,36 @@ writeLanguage("fr-FR", {
                 color: "couleur",
                 width: "largeur",
                 opacity: "opacité"
+            }
+        },
+        controllers: {
+            button: "opérateurs",
+            title: "Opérateurs",
+            empty: "aucun opérateur chargé",
+
+            inputs: {
+                min: "mín:",
+                max: "máx:",
+                step: "pas:",
+                value: "valeur:",
+                
+                length: "longueur:",
+                minlength: "longueur minimale:",
+                maxlength: "longueur maximale:",
+
+                state: "etat:",
+                on: "activé",
+                off: "déactivé",
+
+                color: "couleur:",
+
+                types: {
+                    number: "nombre",
+                    text: "texte",
+                    color: "couleur",
+                    range: "curseur",
+                    checkbox: "case à cocher",
+                }
             }
         },
         resources: {
@@ -1193,6 +1301,13 @@ startTranslation(isElectron? electronStore : undefined);
                 electronStore.resourcesListState = evt.target.checked;
             });
 
+            const controllerTogle = document.querySelector("#controllers .checkBoxButton input");
+            controllerTogle.checked = electronStore.controllerListState;
+            controllerTogle.addEventListener("input", (evt) => {
+                electronStore.controllerListState = evt.target.checked;
+            });
+
+
             
             const resetCamera = document.querySelector("#setDefaultCamera")
             resetCamera.addEventListener("click", () => {
@@ -1459,6 +1574,7 @@ startTranslation(isElectron? electronStore : undefined);
             if(window.SpaceCAD) {
                 clearInterval(interval);
                 SpaceCAD.run(load.text);
+                generateResourcesDOM();
             }
         });
     }
@@ -1956,7 +2072,7 @@ startTranslation(isElectron? electronStore : undefined);
         const setPreloadDom = setInterval(() => {
             if (window.SpaceCAD) {
                 clearInterval(setPreloadDom);
-                SpaceCAD.setPreloadsDom();
+                generateResourcesDOM();
             }
         });
     }
@@ -2039,6 +2155,7 @@ startTranslation(isElectron? electronStore : undefined);
     });
     socket.on("fileChanged", (data) => {
         SpaceCAD.run(data.content);
+        generateResourcesDOM();
     });
     socket.on("fileRename", data => {
         const {

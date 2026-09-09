@@ -661,6 +661,653 @@ Object.keys(SpaceCAD).filter(e=>!["Object", "run", "instancesUpdate", "deleteAll
     window[key] = SpaceCAD[key];
 });
 
+const generateResourcesDOM = () => {
+    const resourcesBody = document.query("#resourcesDisplay .body .list");
+
+    resourcesBody.query(".preSavedLibs").innerHTML = "";
+    resourcesBody.query(".preSavedModules").innerHTML = "";
+    resourcesBody.query(".addons").innerHTML = "";
+
+    if(SpaceCAD.loadedResources.libs)
+    Object.entries(SpaceCAD.loadedResources.libs)
+    .forEach(([key, ogVal]) => {
+        const value = ogVal.raw;
+        const parsed = ogVal.parsed;
+
+        resourcesBody.query(".preSavedLibs").append(
+            createElement("div", d => {
+                d.classList.add("resourceBody");
+
+                d.append(
+                    createElement("div", e => {
+                        e.classList.add("resourceName");
+                        e.innerText = key;
+
+                        if(value.preload){
+                            d.classList.add("preload");
+                            e.append(
+                                createElement("span", e => {
+                                    e.innerText = language.bottombuttons.resources.preload
+                                })
+                            )
+                        }
+                        
+                        if(parsed) {
+                            const type = typeof parsed;
+                            
+                            e.title = value.addonOrigin? `${language.bottombuttons.resources.addon} ${value.addonOrigin.name}\n${language.bottombuttons.resources.owner} ${value.addonOrigin.owner}\nversion: ${value.addonOrigin.version}` : "";
+
+                            e.append(
+                                createElement("span", e => {
+                                    e.classList.add("type", type);
+                                    e.innerText = language.bottombuttons.resources.types[type] ?? type;
+                                }),
+
+                                createElement("br"),
+
+                                ...(value.addonOrigin? [
+                                    createElement("span", e => {
+                                        e.classList.add("info", "key");
+                                        e.setlang.bottombuttons.resources.addon$;
+                                    }),
+                                    createElement("span", e => {
+                                        e.classList.add("info");
+                                        e.innerText = value.addonOrigin.name
+                                    }),
+                                ]: [])
+                            )
+                        }
+                    }),
+                    createElement("span", e => {
+                        e.classList.add("usage");
+                        e.innerHTML = value.usage ?? language.bottombuttons.resources.nousage;
+                        if(!value.usage) e.classList.add("nousage");
+                    })
+                )
+            })
+        );
+    });
+
+    if(SpaceCAD.loadedResources.modules)
+    Object.entries(SpaceCAD.loadedResources.modules)
+    .forEach(([key, ogVal]) => {
+        const value = ogVal.raw;
+        const parsed = ogVal.parsed;
+
+        resourcesBody.query(".preSavedModules").append(
+            createElement("div", d => {
+                d.classList.add("resourceBody");
+
+                d.append(
+                    createElement("p", e => {
+                        e.classList.add("resourceName");
+                        e.innerText = key;
+
+
+                        if(value.preload){
+                            d.classList.add("preload");
+                            e.append(
+                                createElement("span", e => {
+                                    e.innerText = language.bottombuttons.resources.preload
+                                })
+                            )
+                        }
+                        
+                        if(parsed) {
+                            const cls = parsed;
+
+                            e.title = value.addonOrigin? `${language.bottombuttons.resources.addon} ${value.addonOrigin.name}\n${language.bottombuttons.resources.owner} ${value.addonOrigin.owner}\nversion: ${value.addonOrigin.version}` : "";
+                            e.append(
+                                createElement("span", e => {
+                                    e.classList.add("type", "class");
+                                    const clsName = Object.getPrototypeOf(cls)?.name;
+                                    e.innerText = language.bottombuttons.resources.types[clsName] ?? clsName;
+                                }),
+                                
+
+                                createElement("br"),
+
+                                ...(value.addonOrigin? [
+                                    createElement("span", e => {
+                                        e.classList.add("info", "key");
+                                        e.setlang.bottombuttons.resources.addon$;
+                                    }),
+                                    createElement("span", e => {
+                                        e.classList.add("info");
+                                        e.innerText = value.addonOrigin.name
+                                    }),
+                                ]: [])
+                            )
+                        }
+                    }),
+                    createElement("span", e => {
+                        e.classList.add("usage");
+                        e.innerHTML = value.usage ?? language.bottombuttons.resources.nousage;
+                        if(!value.usage) e.classList.add("nousage");
+                    })
+                )
+            })
+        )
+    });
+
+
+
+    if(SpaceCAD.loadedResources.addons)
+    SpaceCAD.loadedResources.addons
+    .forEach(ogAddon => {
+        const addon = ogAddon.raw;
+
+        resourcesBody.query(".addons").append(
+            createElement("div", d => {
+                d.classList.add("resourceBody", "preload");
+
+                d.append(
+                    createElement("p", e => {
+                        e.classList.add("resourceName");
+                        e.innerText = addon.name;
+                        e.css.paddingLeft = "12px";
+
+                        setupDropdown(e, "contextmenu", createElement("button", e => {
+                            e.setlang.bottombuttons.resources.removeaddonbtn$;
+                            e.css = {
+                                color: "white",
+                                background: "red",
+                                cursor: "pointer"
+                            };
+
+                            e.on("click", () => {
+                                syncFetch("/store/addons/"+addon.name);
+                                SpaceCAD.setPreloads();
+                                generateResourcesDOM();
+                                logger.log("addon removed", addon.name);
+                            })
+                        }))
+
+                        e.append(
+                            createElement("span", e => {
+                                e.classList.add("preload", "ellipsisOnMax");
+                                e.css.var.maxWidth = "70px";
+                                e.innerText = e.title = addon.version;
+                            }),
+                            createElement("br"),
+                            createElement("p", e => {
+                                e.classList.add("info", "key");
+                                e.setlang.bottombuttons.resources.owner$;
+                            }),
+                            createElement("p", e => {
+                                e.classList.add("info");
+                                e.innerText = e.title = addon.owner;
+                            })
+                        )
+                    }),        
+                    createElement("div", e => {
+                        e.classList.add("resourceBody", "preload");
+                        const containerscss = {
+                            display: "flex",
+                            flexWrap: "wrap",
+                            alignItems: "center",
+                            flexDirection: "row",
+                            gap: "5px",
+                        }
+
+                        const setItem = (el, res, type) => {
+                            el.classList.add("buttonLike");
+                            el.innerText = res.key;
+
+                            const parsed = res.value.parsed;
+                            if(parsed) {
+                                if(type == "lib" && typeof parsed != "object") return;
+
+                                if(!parsed.usage) return;
+
+                                setupDropdown(el, createElement("pre", e => {
+                                    e.classList.add("breaklineOnMax");
+                                    e.css.var.maxWidth = "100%";
+                                    e.innerHTML = parsed.usage;
+                                }));
+
+                                let interval = null;
+                                el.on(["mouseenter", "mouseleave"], ({type}, el) => {                                        
+                                    if(type == "mouseenter")
+                                        interval = setTimeout(() => {
+                                            el.dropdownOpen();
+                                        }, 500);
+                                    else
+                                        clearTimeout(interval);
+                                })
+                            }
+                        }
+                        
+                        e.append(
+                            createElement("span", e => {
+                                e.classList.add("resourceName");
+                                e.setlang.bottombuttons.resources.libs$;
+                                e.css.fontSize = "1em";
+                                e.css.marginBottom = "10px";
+                            }),
+                            createElement("br"),
+                            createElement("br"),
+                            createElement("div", e => {
+                                e.css = containerscss;
+                                
+                                const libs = ogAddon.libs?
+                                Object.entries(ogAddon.libs).map(([key, value]) => ({
+                                    key,
+                                    value
+                                })): [];
+
+                                if(libs.length == 0)
+                                    libs.push(null);
+
+                                e.append(
+                                    ...libs.map(lib => {
+                                        if(!lib)
+                                            return createElement("span", e => {
+                                                e.css.opacity = 0.5;
+                                                e.setlang.bottombuttons.resources.nolibs$;
+                                            })
+                                        return createElement("span", e => {
+                                            setItem(e, lib, "lib");
+                                        })
+                                    })
+                                )
+                            }),
+                            createElement("br"),
+                            createElement("span", e => {
+                                e.classList.add("resourceName");
+                                e.setlang.bottombuttons.resources.modules$;
+                                e.css.fontSize = "1em";
+                            }),
+                            createElement("br"),
+                            createElement("br"),
+                            createElement("div", e => {
+                                e.css = containerscss;
+                                
+                                const libs = ogAddon.modules?
+                                Object.entries(ogAddon.modules).map(([key, value]) => ({
+                                    key,
+                                    value
+                                })): [];
+
+                                if(libs.length == 0)
+                                    libs.push(null);
+
+                                e.append(
+                                    ...libs.map(lib => {
+                                        if(!lib)
+                                            return createElement("span", e => {
+                                                e.css.opacity = 0.5;
+                                                e.setlang.bottombuttons.resources.nomodules$;
+                                            })
+                                        return createElement("span", e => {
+                                            setItem(e, lib, "module");
+                                        })
+                                    })
+                                )
+                            }),
+                            
+                        );
+                    })
+                )
+            })
+        )
+    });
+    
+    
+    
+    if(resourcesBody.query(".preSavedLibs").children.length == 0)
+        resourcesBody.query(".preSavedLibs").append(
+            createElement("div", e => {
+                e.classList.add("resourceBody");
+
+                e.append(
+                    createElement("span", e => {
+                        e.innerText = language.bottombuttons.resources.nolibs;
+                    })
+                )
+            })
+        )
+    
+    if(resourcesBody.query(".preSavedModules").children.length == 0)
+        resourcesBody.query(".preSavedModules").append(
+            createElement("div", e => {
+                e.classList.add("resourceBody");
+
+                e.append(
+                    createElement("span", e => {
+                        e.innerText = language.bottombuttons.resources.nomodules;
+                    })
+                )
+            })
+        )
+    
+    if(resourcesBody.query(".addons").children.length == 0)
+        resourcesBody.query(".addons").append(
+            createElement("div", e => {
+                e.classList.add("resourceBody");
+
+                e.append(
+                    createElement("span", e => {
+                        e.innerText = language.bottombuttons.resources.noaddons;
+                    })
+                )
+            })
+        )
+
+    
+
+    // controllers
+
+    setupControllers();
+    controllers = [];
+
+}
+let controllers = [];
+const setupControllers = () => {
+    const list = document.query("#controllers .list");
+    
+    if(controllers.length == 0) {
+        list.innerHTML = "";
+
+        list.append(
+            createElement("span", e => {
+                e.setlang.bottombuttons.controllers.empty$;
+            })
+        );
+    } else {
+        list.children.forEach(c => {
+            if(controllers.indexOf(c) == -1)
+                c.remove();
+        });
+    }
+    
+}
+const createController = (name, prop) => {
+    if(!name) {
+        const message = `controller requires a name`;
+        logger.error(message);
+        throw new Error(message);
+    }
+
+    const emptyProp = prop == null;
+
+    const defaultRange = {
+        type: "range",
+        min: 0,
+        max: 1,
+        value: 0,
+        step: 0.01,
+    };
+    const defaultText = {
+        type: "text",
+        value: "",
+        minlength: 0,
+    }
+    if(typeof prop == "object") {
+        if(prop.type == "text")
+            prop = recursiveProxy(prop, defaultText);
+
+        if(prop.type == "number")
+            prop = recursiveProxy(prop, defaultRange);
+
+        else 
+            prop = recursiveProxy(prop, defaultRange);
+
+
+    } else {
+        prop = defaultRange;
+    }
+    
+    const list = document.query("#controllers .list");
+
+    let dom = list.query(`[data-name="${name}"]`);
+
+
+    const pureValue = () => {
+        const input = dom.query("input");
+        
+        if(input.type == "checkbox")
+            return input.checked;
+        else if(["number", "range"].includes(input.type))
+            return parseFloat(input.value);
+        else
+            return input.value;
+    }
+    const getValue = () => {
+        controllers.push(dom);
+        
+        return pureValue();
+    }
+
+
+    if(dom != null) {
+        if(dom.dataset.prop != JSHON.stringify(prop) && !emptyProp)
+            dom.remove();
+        else
+            return getValue();
+    }
+
+    dom = createElement("div", e => {
+        e.classList.add("controller");
+        e.dataset.name = name;
+        e.dataset.prop = JSHON.stringify(prop);
+
+        e.append(createElement("span", e => {
+            e.classList.add("name");
+
+            e.append(
+                createElement("span", e => {
+                    e.innerHTML = name;
+                }),
+                createElement("span", e => {
+                    e.classList.add("type");
+                    e.innerHTML = language.bottombuttons.controllers.inputs.types[prop.type] || prop.type;
+                })
+            );
+        }));
+
+        e.append(createElement("div", e => {
+            e.classList.add("inputBody");
+
+                e.append(
+                    createElement("input", e => {
+                        Object.entries(prop).forEach(([key, value]) => {
+                            e[key] = value;
+                        });
+
+                        if(prop.type == "text" && e.placeholder == "")
+                            e.placeholder = `${name}`;
+
+                        const setOutput = () => {
+                            const out = e.parentNode.query(".inputInfo .valueOutput");;
+
+                            if(out) {
+                                if(e.type == "text")
+                                    out.innerHTML = e.value.length || 0;
+                                if(e.type == "checkbox")
+                                    out.innerHTML = e.checked? 
+                                        language.bottombuttons.controllers.inputs.on:
+                                        language.bottombuttons.controllers.inputs.off;
+                                else
+                                    out.innerHTML = e.value || 0;
+                            }
+                        }
+                        
+                        setTimeout(() => {
+                            setOutput();
+                        });                        
+
+                        e.on("input", (_, el) => {
+                            setOutput();
+
+                            if(typeof prop.callback == "function")
+                                prop.callback(pureValue());
+                            
+                            if(!prop.noReload) 
+                                SpaceCAD.run(SpaceCAD.lastCode);
+                        });
+                    }),
+                    createElement("div", e => {
+                        e.classList.add("inputInfo");
+
+                        const css = {
+                            marginRight: "5px",
+                            opacity: 0.5
+                        }
+
+                        if(["number", "range"].includes(prop.type)) {
+                            e.append(
+                                createElement("span", e => {
+                                    e.append(
+                                        createElement("span", e => {
+                                            e.classList.add("type");
+                                            e.css = css;
+                                            e.setlang.bottombuttons.controllers.inputs.min$;
+                                        }),
+                                        createElement("span", e => {
+                                            e.innerHTML = prop.min || 0;
+                                        })
+                                    );
+                                }),
+                                createElement("span", e => {
+                                    e.append(
+                                        createElement("span", e => {
+                                            e.classList.add("type");
+                                            e.css = css;
+                                            e.setlang.bottombuttons.controllers.inputs.step$;
+                                        }),
+                                        createElement("span", e => {
+                                            e.innerHTML = prop.step || 1;
+                                        })
+                                    );
+                                }),
+                                createElement("span", e => {
+                                    e.append(
+                                        createElement("span", e => {
+                                            e.classList.add("type");
+                                            e.css = css;
+                                            e.setlang.bottombuttons.controllers.inputs.max$;
+                                        }),
+                                        createElement("span", e => {
+                                            e.innerHTML = prop.max || 0;
+                                        })
+                                    );
+                                }),
+                                createElement("span", e => {
+                                    e.append(
+                                        createElement("span", e => {
+                                            e.classList.add("type");
+                                            e.css = css;
+                                            e.setlang.bottombuttons.controllers.inputs.value$;
+                                        }),
+                                        createElement("span", e => {
+                                            e.classList.add("valueOutput");
+                                            e.innerHTML = prop.value || 0;
+                                        })
+                                    );
+                                }),
+                            )
+
+
+                        } else if(["text"].includes(prop.type)) {
+                            e.append(
+                                createElement("span", e => {
+                                    e.append(
+                                        createElement("span", e => {
+                                            e.classList.add("type");
+                                            e.css = css;
+                                            e.setlang.bottombuttons.controllers.inputs.minlength$;
+                                        }),
+                                        createElement("span", e => {
+                                            e.innerHTML = prop.minlength != null ?
+                                            prop.minlength > 0 ? prop.minlength : 0: 0;
+                                        })
+                                    );
+                                }),
+                                createElement("span", e => {
+                                    e.append(
+                                        createElement("span", e => {
+                                            e.classList.add("type");
+                                            e.css = css;
+                                            e.setlang.bottombuttons.controllers.inputs.length$;
+                                        }),
+                                        createElement("span", e => {
+                                            e.classList.add("valueOutput");
+                                            e.innerHTML = prop.value != null ? prop.value.length : 0;
+                                        })
+                                    );
+                                }),
+                                createElement("span", e => {
+                                    e.append(
+                                        createElement("span", e => {
+                                            e.classList.add("type");
+                                            e.css = css;
+                                            e.setlang.bottombuttons.controllers.inputs.maxlength$;
+                                        }),
+                                        createElement("span", e => {
+                                            e.innerHTML = prop.maxlength || "∞";
+                                        })
+                                    );
+                                }),
+                            )
+                        } else if(["checkbox"].includes(prop.type)) {
+                            e.append(
+                                createElement("span", e => {
+                                    e.append(
+                                        createElement("span", e => {
+                                            e.classList.add("type");
+                                            e.css = css;
+                                            e.setlang.bottombuttons.controllers.inputs.state$;
+                                        }),
+                                        createElement("span", e => {
+                                            e.classList.add("valueOutput");
+                                            e.innerHTML = prop.checked != null ?
+                                            prop.checked? 
+                                            language.bottombuttons.controllers.inputs.on :
+                                            language.bottombuttons.controllers.inputs.off :
+                                            language.bottombuttons.controllers.inputs.off;
+                                        })
+                                    );
+                                }),
+                            )
+                        } else if(["color"].includes(prop.type)) {
+                            e.append(
+                                createElement("span", e => {
+                                    e.append(
+                                        createElement("span", e => {
+                                            e.classList.add("type");
+                                            e.css = css;
+                                            e.setlang.bottombuttons.controllers.inputs.color$;
+                                        }),
+                                        createElement("span", e => {
+                                            e.classList.add("valueOutput");
+                                            e.innerHTML = prop.color || "#f27a02";
+                                        })
+                                    );
+                                }),
+                            )
+                        }
+                    })
+                )
+        }));
+
+    });
+
+    list.append(dom);
+
+    return getValue();
+}
+
+const controller = new Proxy({}, {
+    get: (obj, prop) => {
+        return createController(prop);
+    },
+    set: (obj, prop, value) => {
+        if(typeof value == "object")
+        return createController(prop, value);
+    }
+});
+
 window.iframeRun = SpaceCAD.run;
 
 const changePerspectiveButton = document.querySelector("#changePerspective");
