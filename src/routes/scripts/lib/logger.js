@@ -113,14 +113,17 @@ class Logger {
                 {type, message, stack, read: false};
 
             this.logList.push(obj);
-            if(this.logList.length > this.max)
+            if(this.logList.length >= this.max)
                 this.logList.pop();
 
             if(!(this.dom instanceof HTMLElement)) return;
 
+            if(this.dom.children.length >= this.max) {
+                this.dom.children[0].remove();
+            }
+
             const body = document.createElement("div");
-            body.classList.add("item");
-            body.classList.add(type);
+            body.classList.add("item", type);
 
             const messageDom = document.createElement("div");
             messageDom.classList.add("message");
@@ -128,38 +131,47 @@ class Logger {
 
             const treeBuilder = ({type, value, raw, path}, parent, firstOpen = true) => {
                 const setHoverHighlight = (e) => {
-                    const getSpaceParent = e => {
-                        if(e.parentElement == messageDom) return null;
-                        if(e.parentElement.isSpaceCAD) return e.parentElement;
-                        return getSpaceParent(e.parentElement);
+                    const getSpaceParents = e => {
+                        const parents = [];
+
+                        while(e.parentElement && e.parentElement != messageDom) {
+                            e = e.parentElement;
+
+                            if(e.isSpaceCAD)
+                                parents.push(e);
+                        }
+
+                        return parents;
                     }
                     e.on("mouseenter", (evt,e) => {
                         if(!raw.isSpaceCAD) return;
 
-                        const parent = getSpaceParent(e);
-                        if (parent) {
+                        const parents = getSpaceParents(e);
+
+                        parents.forEach(parent => {
                             parent.dispatchEvent(
                                 new MouseEvent("mouseleave", {
                                     bubbles: false,
                                     relatedTarget: e
                                 })
                             );
-                        }
+                        });
                         
                         raw.addHighLight("__hover_highlight", "rgb(109, 203, 65)", 3, 10, "ignore check");
                     });
                     e.on("mouseleave", (evt,e) => {
                         if(!raw.isSpaceCAD) return;
 
-                        const parent = getSpaceParent(e);
-                        if (parent) {
+                        const parents = getSpaceParents(e);
+
+                        parents.forEach(parent => {
                             parent.dispatchEvent(
                                 new MouseEvent("mouseenter", {
                                     bubbles: false,
                                     relatedTarget: e
                                 })
                             );
-                        }
+                        });
                         
                         raw.removeHighLight("__hover_highlight");
                     });
@@ -658,13 +670,10 @@ class Logger {
             body.append(fileNameDom, messageDom, stackDom);
             this.dom.append(body);
 
-            if(this.dom.children.length > this.max)
-                this.dom.children[this.dom.children.length - 1].remove();
-
-            scrollBottom();            
+            scrollBottom();   
         }
         
-        return new Proxy(this, {
+        const proxy = (doConsole = true) => new Proxy(this, {
             get(target, key, receiver) {
                 if (typeof key === "symbol")
                     return Reflect.get(target, key, receiver);
@@ -681,11 +690,21 @@ class Logger {
                 if(key == "og")
                     return og;
 
+                if(key == "noOg")
+                    return proxy(false);
+
+                if(key == "throw")
+                    return function(...args) {
+                        this.noOg.error(...args);
+                        throw args.length == 1? args[0] : args;
+                    }
+
                 return function(...args) {
                     const stack = new Error().stack;
 
                     generateBody(key, args, stack);
-                    return Reflect.apply(og[key], og, args);
+                    if(doConsole) return Reflect.apply(og[key], og, args);
+                    else return undefined;
                 };
             },
             set(target, key, value) {
@@ -721,5 +740,7 @@ class Logger {
                 }          
             }
         });
+
+        return proxy();
     }
 }

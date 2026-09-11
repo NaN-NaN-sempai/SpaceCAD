@@ -223,7 +223,7 @@ hr {
     flex-direction: row;
     justify-content: flex-end;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: wrap-reverse;
     gap: 5px;
     max-width: 80vw;
 
@@ -256,6 +256,7 @@ hr {
         color: white;
         border-radius: 5px;
         border: 1px solid var(--secondary);
+        z-index: 1;
 
         & .title {
             padding: 10px;
@@ -398,22 +399,23 @@ hr {
         }
     }
 }
-
-
-.floatingTogleable {
+#controllers {
     & .body {
-        position: absolute;
-        bottom: 2.5rem;
-        right: 0;
+        & .title {
+            & .options {
+                position: absolute;
+                right: 3px;
+            }
+        }
     }
-    
-    & .list {
-        padding: 10px;
 
+    & .list {
         & .controller {
             display: flex;
             flex-direction: column;
             gap: 5px;
+
+            margin-bottom: 20px;
 
             & .name {
                 font-weight: bold;
@@ -462,6 +464,19 @@ hr {
                 }
             }
         } 
+    }
+}
+
+
+.floatingTogleable {
+    & .body {
+        position: absolute;
+        bottom: 2.7rem;
+        right: 0;
+    }
+    
+    & .list {
+        padding: 10px;
     }
     
 }

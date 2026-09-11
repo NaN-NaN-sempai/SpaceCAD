@@ -568,10 +568,10 @@ class Overloader {
         }),
     }
 
-    static eval = (fn, onError) => new Overloader(fn).onError(onError).execute();
-    static evalArgs = (fn, onError) => new Overloader(fn).onError(onError).execute;
+    static eval = (fn, onError, pushInstance = false) => new Overloader(fn, pushInstance || false).onError(onError).execute();
+    static evalArgs = (fn, onError, pushInstance = false) => new Overloader(fn, pushInstance || false).onError(onError).execute;
 
-    constructor(callback) {
+    constructor(callback, pushInstance = true) {
         this.addonsAST = [];
 
         const transform = (node, parent, key, ogAst, captureAST) => {
@@ -670,6 +670,7 @@ class Overloader {
 
         this.generated = window.astring.generate(this.ast);
 
+        if(pushInstance)
         Overloader.instances.push(this);
     }
 

@@ -231,6 +231,7 @@ const SpaceCAD = class SpaceCAD {
             },
         }
     );
+    static createdResources = [];
     static get addons() {
         const req = syncFetch("/store/addons/_");
 
@@ -245,6 +246,8 @@ const SpaceCAD = class SpaceCAD {
             addons: []
         };
 
+        const createdResources = SpaceCAD.createdResources;
+
         Object.entries(SpaceCAD.libs).forEach(([key, value]) => {
             SpaceCAD.loadedResources.libs[key] = {
                 raw: value,
@@ -252,7 +255,16 @@ const SpaceCAD = class SpaceCAD {
             const obj = SpaceCAD.loadedResources.libs[key];
 
             try {
-                obj.parsed = value.lib.jshonParse;
+                let find = createdResources.find(o => o.str == value.lib);
+                if(!find) {
+                    find = {
+                        str: value.lib,
+                        parsed: value.lib.jshonParse
+                    }
+                    createdResources.push(find);
+                }
+
+                obj.parsed = find.parsed;
                 
                 if(!value.preload) return;
 
@@ -273,7 +285,16 @@ const SpaceCAD = class SpaceCAD {
             const obj = SpaceCAD.loadedResources.modules[key];
             
             try {
-                const cls = new Function("return " + value.classBody)();
+                let find = createdResources.find(o => o.str == value.classBody);
+                if(!find) {
+                    find = {
+                        str: value.classBody,
+                        parsed: new Function("return " + value.classBody)()
+                    }
+                    createdResources.push(find);
+                }
+
+                const cls = find.parsed;
                 const constructor = (...args) => new cls(...args);
     
                 obj.parsed = cls;
@@ -421,7 +442,7 @@ const SpaceCAD = class SpaceCAD {
     static libKeys = [];
     static deleteAll = () => {
         while(SpaceCAD.instances.length > 0) {
-            SpaceCAD.instances.forEach(instance => instance.delete());
+            SpaceCAD.instances[0].delete();
         }
         SpaceCAD.Mesh.instances = [];
     }
@@ -437,11 +458,13 @@ const SpaceCAD = class SpaceCAD {
         console.clear();
     }
     static lastCode = "";
-    static run = (code, restore = true) => {
+    static runLastCode = () => SpaceCAD.run(SpaceCAD.lastCode, true, false);
+    static run = (code, restore = true, setPreloads = true) => {
         SpaceCAD.runLoop = () => {};
 
         const regex = /\bexpose\b/g;
         const hasExpose = regex.test(code);
+        const rawCode = code;
         if (hasExpose) {
             code = `
                 let __ExposeObject = {};
@@ -455,17 +478,18 @@ const SpaceCAD = class SpaceCAD {
             SpaceCAD.restoreDefaultState();
             sceneObjectsEmpty();
             SpaceCAD.Classes.forEach(cls => cls.instances = []);
-            SpaceCAD.lastCode = code;
+            SpaceCAD.lastCode = rawCode;
+            logger.noOg.clear();
         }
         const fn = new Function(code);
 
         const run = Overloader.eval(fn, error => console.error(error));
 
-        
-        if(hasExpose && typeof run.loop === "function")
+        if(hasExpose && typeof run.loop === "function" && SpaceCAD.runLoop+"" != run.loop+"")
             SpaceCAD.runLoop = run.loop;
 
-        SpaceCAD.setPreloads();
+        if(setPreloads)
+            SpaceCAD.setPreloads();
 
         if(SpaceCAD.edgeHilighting) {
             SpaceCAD.toggleEdgeHilight(false);
@@ -513,6 +537,21 @@ const SpaceCAD = class SpaceCAD {
         SpaceCAD.roots.forEach(root => ns(root));
 
         return arr;
+    }
+
+    static disposeObject(object) {
+        object.traverse(obj => {
+            obj.geometry?.dispose();
+
+            if (obj.material) {
+                if (Array.isArray(obj.material))
+                    obj.material.forEach(mat => mat.dispose());
+                else
+                    obj.material.dispose();
+            }
+        });
+
+        object.removeFromParent();
     }
     
     static Classes = [];
@@ -636,10 +675,11 @@ const SpaceCAD = class SpaceCAD {
 
         delete() {
             [...this.children].forEach(child => {
-                if (typeof child.delete === "function")
+                if (typeof child.delete === "function") {
                     child.delete();
-                else
-                    child.removeFromParent();
+                } else {
+                    SpaceCAD.disposeObject(child);
+                }
             });
 
             const index = SpaceCAD.instances.indexOf(this);

@@ -95,9 +95,14 @@
                 <span language-bottombuttons-controllers-button> </span>
                 <input class="holdOpen" type="checkbox">
             </label>
-
+            
             <div class="body">
-                <h1 class="title"><span language-bottombuttons-controllers-title></span> <img class="svgIcon" src="./svg/controller.svg" alt="arquivo"></h1>
+                <h1 class="title">
+                    <span language-bottombuttons-controllers-title></span> <img class="svgIcon" src="./svg/controller.svg" alt="arquivo">
+                    <button class="options">
+                        <i class="hamburger"></i>
+                    </button>
+                </h1>
                 <div class="list">
                 </div>
             </div>
@@ -289,6 +294,8 @@
         <br><br>
 
         <span style="background: var(--primary); font-weight: bold; ">(Não essenciais)</span>
+        logger -> implementar hljs from "highlight.js" no logger
+        <br><br>
         SpaceCAD -> hinter: linha com texto na posição final
         <br><br>
         SpaceCAD -> hinter de objeto: linha do objeto até uma posição, mostra informações como nome, tamanho e informações custom
@@ -298,7 +305,31 @@
         SpaceCAD plane com text -> adicionar html dentro do plane 
         <br><br>
 
+
+
         <div class="title" language-modal-changelog-lastupdates></div>
+
+        <span style="background: var(--primary);">general optimizations, Color, controllers</span>
+        (11/09/2026 - 01:01) logger -> bugfix: highlight em objetos SpaceCAD só funcionavam em 1 nuvel de inpeção, passado disso o pai voltava a ser highlightado
+        <br><br>
+        (11/09/2026 - 00:53) SpaceCAD API -> bugfix: bug que ignorava expose.loop ao executar SpaceCAD.runLastCode
+        <br><br>
+        (11/09/2026 - 00:35) controllers: delay configuravel para reexecução do codigo dar input num controller
+        <br><br>
+        (11/09/2026 - 00:04) optimização -> setupDropdown criava muitos eventListeners que não eram apagados, agora ao editar o innerHTML ou innerText de um element, se ele ou dentro dele tiver qualquer elemento com dropdown, ele remove os eventListeners
+        <br><br>
+        (10/09/2026 - 05:35) controller: novo input tipo "2d", retorna um v2
+        <br><br>
+        (10/09/2026 - 03:09) new colors.js: API para trabalhar com cores, por padrão suporta cores do THREE
+        <br><br>
+        (09/09/2026 - 23:24) logger -> thros: usar o logger.noOg.error e depois da um throw
+        <br><br>
+        (09/09/2026 - 21:21) logger -> agora ao passar do maximo de logs ele apaga os antigos no HTML e limiti do logger do engine diminuido para o padrão 1000
+        <br><br>
+        (09/09/2026 - 20:53) utils -> doc abreviação de document
+        <br><br>
+        (09/09/2026 - 20:50) utils -> [HTMLElement] proto -> byId, byTag, byClass, allId, allTag, allClass
+        <br><br>
 
         <span style="background: var(--primary);">controllers</span>
         (09/09/2026 - 02:50) SpaceCAD -> traduções para operadores
@@ -602,12 +633,22 @@ writeLanguage("en-US", { // default
             button: "controllers",
             title: "Controllers",
             empty: "no controller was created",
+            options: {
+                delay: "input delay",
+                delaytitle: "time in milliseconds to wait between outputs",
+                immediately: "immediately",
+            },
 
             inputs: {
                 min: "min:",
                 max: "max:",
                 step: "step:",
                 value: "value:",
+
+                minx: "min x:",
+                maxx: "max x:",
+                miny: "min y:",
+                maxy: "max y:",
                 
                 length: "length:",
                 minlength: "min length:",
@@ -624,7 +665,9 @@ writeLanguage("en-US", { // default
                     text: "text",
                     color: "color",
                     range: "range",
-                    checkbox: "checkbox"
+                    checkbox: "checkbox",
+
+                    "2d": "plane",
                 }
             }
         },
@@ -802,13 +845,23 @@ writeLanguage("pt-BR", {
         controllers: {
             button: "operadores",
             title: "Operadores",
-            empty: "nenhum controlador foi criado",
+            empty: "nenhum operador foi criado",
+            options: {
+                delay: "atraso de entrada",
+                delaytitle: "tempo em milissegundos para aguardar entre saídas",
+                immediately: "imediatamente",
+            },
 
             inputs: {
                 min: "mín:",
                 max: "máx:",
                 step: "passo:",
                 value: "valor:",
+
+                minx: "mín x:",
+                maxx: "máx x:",
+                miny: "mín y:",
+                maxy: "máx y:",
                 
                 length: "largura:",
                 minlength: "largura mínima:",
@@ -826,6 +879,8 @@ writeLanguage("pt-BR", {
                     color: "cor",
                     range: "deslizante",
                     checkbox: "caixa de seleção",
+
+                    "2d": "plano",
                 }
             }
         },
@@ -997,19 +1052,29 @@ writeLanguage("fr-FR", {
             options: {
                 color: "couleur",
                 width: "largeur",
-                opacity: "opacité"
+                opacity: "opacité",
             }
         },
         controllers: {
             button: "opérateurs",
             title: "Opérateurs",
             empty: "aucun opérateur chargé",
+            options: {
+                delay: "délai de saisie",
+                delaytitle: "Temps en millisecondes à attendre entre les sorties",
+                immediately: "immediatement",
+            },
 
             inputs: {
                 min: "mín:",
                 max: "máx:",
                 step: "pas:",
                 value: "valeur:",
+
+                minx: "mín x:",
+                maxx: "máx x:",
+                miny: "mín y:",
+                maxy: "máx y:",
                 
                 length: "longueur:",
                 minlength: "longueur minimale:",
@@ -1027,6 +1092,8 @@ writeLanguage("fr-FR", {
                     color: "couleur",
                     range: "curseur",
                     checkbox: "case à cocher",
+
+                    "2d": "surface",
                 }
             }
         },
@@ -1265,6 +1332,7 @@ startTranslation(isElectron? electronStore : undefined);
     loadScript(
         "./scripts/lib/overloadOperator.js",
         "./scripts/lib/SpaceCAD.js", 
+        "./scripts/lib/colors.js",
         "./scripts/engine.js", () => {
             const input = document.querySelector("#logger .checkBoxButton input");
             const domList = document.querySelector("#logger .list");
@@ -1306,6 +1374,45 @@ startTranslation(isElectron? electronStore : undefined);
             controllerTogle.addEventListener("input", (evt) => {
                 electronStore.controllerListState = evt.target.checked;
             });
+            document.querySelector("#controllers .title .options").dropdown([
+                createElement("label", e => {
+                    e.setlang.bottombuttons.controllers.options.delay$;
+                    e.setlang.title.bottombuttons.controllers.options.delaytitle$;
+                    e.css = {
+                        display: "flex",
+                        alignItems: "center",
+                        flexDirection: "column",
+                    }
+                    
+                    e.append(
+                        createElement("input", e => {
+                            e.type = "range";
+                            e.min = 0;
+                            e.max = 10000;
+                            e.value = electronStore.controllerDelay ?? 500;
+                            
+                            e.on("input", (evt) => {
+                                electronStore.controllerDelay = e.value;
+                                if(e.value == 0) {
+                                    e.parentElement.querySelector(".output").innerText = language.bottombuttons.controllers.options.immediately;
+                                } else {
+                                    e.parentElement.querySelector(".output").innerText = e.value + " ms";
+                                }
+                            });
+                        }),
+
+                        createElement("span", e => {
+                            e.classList.add("output");
+                            const v = (electronStore.controllerDelay ?? 500);
+                            if(v == 0) {
+                                e.innerText = language.bottombuttons.controllers.options.immediately;
+                            } else {
+                                e.innerText =  v + " ms";
+                            }
+                        })
+                    )
+                })
+            ], 500)
 
 
             
@@ -1340,7 +1447,6 @@ startTranslation(isElectron? electronStore : undefined);
                 createElement("button", e => {
                     setTranslate(e, "bottombuttons-logs-clear");
                     e.addEventListener("click", () => {
-                        logger.clear();
                         unread.classList.toggle("hide", true);
                     });
                 })
@@ -2063,6 +2169,29 @@ startTranslation(isElectron? electronStore : undefined);
         newFileModal.modal.close();
     });
 
+
+    
+    document.all(".toggleable .list").forEach(el => {
+        el.setMax = () => {
+            const {rect} = el;
+            const margin = 
+                40 + // botões da janela
+                (el.parentElement.query(".title")?.rect?.height || 0) + // titulo do togleable
+                5; // margin
+
+            if(rect.top <= margin) {
+                const distBottom = innerHeight - rect.bottom;
+                el.css.maxHeight = `${innerHeight - distBottom - margin}px` ;
+            } else {
+                el.css.maxHeight = "";
+            }
+        }
+    })
+
+    const setTogleableMaxHeight = () => {
+        document.all(".toggleable .list").forEach(el => el.setMax());
+    }
+    on("resize", setTogleableMaxHeight);
 
 
     if(isElectron)

@@ -244,7 +244,7 @@ Object.defineProperties(String.prototype, {
         get: function (value) {
             return JSHON.parse(this+"");
         },
-        set: () => {}
+        set: () => {},
     }
 });
 const on = function (...args) {
@@ -318,11 +318,153 @@ const off = function (...args) {
 }
 window.on = on;
 window.off = off;
+const callbacsOnInnerHTML = [];
 [HTMLDocument, HTMLElement].forEach(proto => {
+    if(proto == HTMLElement) {
+
+        const html = Object.getOwnPropertyDescriptor(
+            Element.prototype,
+            "innerHTML"
+        );
+        const text = Object.getOwnPropertyDescriptor(
+            HTMLElement.prototype,
+            "innerText"
+        );
+        
+        Object.defineProperties(proto.prototype, {
+            innerHTML: {
+                get: function () {
+                    return html.get.call(this);
+                },
+                set(value) {
+                    callbacsOnInnerHTML.forEach(c => c(this, value));
+                    return html.set.call(this, value);
+                }
+            },
+
+            innerText: {
+                get: function () {
+                    return text.get.call(this);
+                },
+                set(value) {
+                    callbacsOnInnerHTML.forEach(c => c(this, value));
+                    return text.set.call(this, value);
+                }
+            },
+            
+            rect: {
+                get: function () {
+                    return this.getBoundingClientRect();
+                },
+                set: () => {}
+            },
+            childIndex: {
+                get: function () {
+                    return this.parentNode.children.indexOf(this);
+                },
+                set: () => {} 
+            },
+            appendText: {
+                get: function () {
+                    return (value) => this.appendChild(document.createTextNode(value));
+                },
+                set: () => {}
+            },
+
+            css: {
+                get() {
+                    const element = this;
+                    const computed = getComputedStyle(element);
+
+                    return new Proxy(computed, {
+                        get(target, prop) {
+                            if(prop == "var") 
+                                return new Proxy(computed, {
+                                    get(_, prop) {
+                                        prop = prop.startsWith("--") ? prop : `--${prop}`;
+                                        return getComputedStyle(element).getPropertyValue(prop);
+                                    },
+                                    set(_, prop, value) {
+                                        prop = prop.startsWith("--") ? prop : `--${prop}`;
+                                        element.style.setProperty(prop, value);
+                                        return true;
+                                    }
+                                })
+                            return target[prop];
+                        },
+
+                        set(_, prop, value) {
+                            element.style[prop] = value;
+                            return true;
+                        }
+                    });
+                },
+                set(value) {
+                    if (typeof value != "object") return;
+
+                    Object.entries(value).forEach(([prop, value]) => {
+                        this.style[prop] = value;
+                    });
+                }
+            },
+
+            dropdown: {
+                get: () => function (...agrs) {
+                    setupDropdown(this, ...agrs);
+                },
+                set: () => {}
+            },
+            modal: {
+                get: function () {
+                    if(this.getAttribute("modal") == null) 
+                        return null;
+
+                    return new Modal(this);
+                },
+                set: () => {}
+            },
+            asObject: {
+                get: function () {
+                    if(this.tagName != "FORM") 
+                        return null;
+
+                    return ObjectForm.on(this).get();
+                },
+                set: () => {}
+            },
+            onForm: {
+                get: function () {
+                    if(this.tagName != "FORM") 
+                        return null;
+
+                    return (...args) => ObjectForm.on(this, ...args)
+                },
+                set: () => {}
+            },
+        });
+    }
     Object.defineProperties(proto.prototype, {
         query: {
             get: function () {
                 return (value) => this.querySelector(value);
+            },
+            set: () => {}
+        },
+        byId: {
+            get: function () {
+                return (value) => this.getElementById(value);
+            },
+            set: () => {}
+        },
+        byClass: {
+            get: function () {
+                return (value) => this.getElementsByClassName(value);
+            },
+            set: () => {}
+        },
+        byTag: {
+            get: function () {
+                return (value) => this.getElementsByTagName(value);
             },
             set: () => {}
         },
@@ -331,6 +473,21 @@ window.off = off;
                 return (value) => this.querySelectorAll(value);
             },
             set: () => {}
+        },
+        allId: {
+            get: function () {
+                return (value) => this.querySelectorAll("#" + value);
+            }  
+        },
+        allClass: {
+            get: function () {
+                return (value) => this.querySelectorAll("." + value);
+            }
+        },
+        allTag: {
+            get: function () {
+                return (value) => this.querySelectorAll(value);
+            }
         },
         on: {
             get: function () {
@@ -341,95 +498,6 @@ window.off = off;
         off: {
             get: function () {
                 return off.bind(this);
-            },
-            set: () => {}
-        },
-        rect: {
-            get: function () {
-                return this.getBoundingClientRect();
-            },
-            set: () => {}
-        },
-        childIndex: {
-            get: function () {
-                return this.parentNode.children.indexOf(this);
-            },
-            set: () => {} 
-        },
-        appendText: {
-            get: function () {
-                return (value) => this.appendChild(document.createTextNode(value));
-            },
-            set: () => {}
-        },
-
-        css: {
-            get() {
-                const element = this;
-                const computed = getComputedStyle(element);
-
-                return new Proxy(computed, {
-                    get(target, prop) {
-                        if(prop == "var") 
-                            return new Proxy(computed, {
-                                get(_, prop) {
-                                    prop = prop.startsWith("--") ? prop : `--${prop}`;
-                                    return getComputedStyle(element).getPropertyValue(prop);
-                                },
-                                set(_, prop, value) {
-                                    prop = prop.startsWith("--") ? prop : `--${prop}`;
-                                    element.style.setProperty(prop, value);
-                                    return true;
-                                }
-                            })
-                        return target[prop];
-                    },
-
-                    set(_, prop, value) {
-                        element.style[prop] = value;
-                        return true;
-                    }
-                });
-            },
-            set(value) {
-                if (typeof value != "object") return;
-
-                Object.entries(value).forEach(([prop, value]) => {
-                    this.style[prop] = value;
-                });
-            }
-        },
-
-        dropdown: {
-            get: () => function (...agrs) {
-                setupDropdown(this, ...agrs);
-            },
-            set: () => {}
-        },
-        modal: {
-            get: function () {
-                if(this.getAttribute("modal") == null) 
-                    return null;
-
-                return new Modal(this);
-            },
-            set: () => {}
-        },
-        asObject: {
-            get: function () {
-                if(this.tagName != "FORM") 
-                    return null;
-
-                return ObjectForm.on(this).get();
-            },
-            set: () => {}
-        },
-        onForm: {
-            get: function () {
-                if(this.tagName != "FORM") 
-                    return null;
-
-                return (...args) => ObjectForm.on(this, ...args)
             },
             set: () => {}
         },
@@ -489,6 +557,12 @@ window.off = off;
         array: {
             get: function () {
                 return Array.from(this);
+            },
+            set: () => {}
+        },
+        at: {
+            get: function () {
+                return (...args) => Array.from(this).at(...args);
             },
             set: () => {}
         },
@@ -553,6 +627,7 @@ window.off = off;
         }
     })
 });
+const doc = document;
 const recursiveProxies = new WeakSet();
 const isProxy = obj =>
     obj !== null &&
@@ -730,6 +805,28 @@ function textFromHTML(html) {
     return doc.body.textContent;
 }
 
+const getClassMethods = obj => {
+    const methods = new Set();
+
+    let proto = Object.getPrototypeOf(obj);
+
+    while(proto) {
+        for(const name of Object.getOwnPropertyNames(proto)) {
+            if([
+                "jshon",
+                "hasOwnProperty", "isPrototypeOf","propertyIsEnumerable",
+                "toString", "valueOf", "typeis", "toLocaleString"].includes(name) || 
+                (name.startsWith("__") && name.endsWith("__"))
+            ) continue;
+            if(name !== "constructor" && typeof obj[name] === "function")
+                methods.add([name, obj[name]]);
+        }
+
+        proto = Object.getPrototypeOf(proto);
+    }
+
+    return [...methods];
+};
 
 /**
  * @function createElement
@@ -788,6 +885,12 @@ const createSvgIcon = (element, src, text) => {
     if(text) element.appendText(text);;
 }
 
+const removeDropdownWindowListeners = (el) => {
+    [...el.all("*"), el].forEach(e => {
+        e.removeWindowListeners?.()
+    })
+}
+callbacsOnInnerHTML.push(removeDropdownWindowListeners);
 const setupDropdown = (...args) => {
     if(!args[0]) throw new Error("No element provided");
 
@@ -798,6 +901,8 @@ const setupDropdown = (...args) => {
     const list = (Array.isArray(args[0]) ? args.shift() : [args.shift()]).filter(e => e != undefined);
 
     const ignoreContextClass = typeof args[0] === "boolean" ? args.shift() : null;
+
+    const hoverInDelay = typeof args[0] === "number" ? args.shift() : null;
 
     // const appendInstead = typeof args[0] === "boolean" ? args.shift() : null;
 
@@ -854,6 +959,8 @@ const setupDropdown = (...args) => {
 
         dom.appendChild(menu);
 
+        dom.windowListeners = dom.windowListeners || [];
+
         dom.addEventListener(eventType, (evt) => {
             if(eventType === "contextmenu") {
                 evt.preventDefault();
@@ -861,10 +968,29 @@ const setupDropdown = (...args) => {
             }
             openDropdown();
         });
-        window.addEventListener("mousemove", closeIfOutside);
+        dom.windowListeners.push(on("mousemove", closeIfOutside))
 
         if(eventType === "contextmenu")
-            window.addEventListener("click", closeIfOutside);
+            dom.windowListeners.push(on("click", closeIfOutside));
+
+        dom.removeWindowListeners = () => {
+            dom.windowListeners.forEach(evt => off(evt));
+            dom.windowListeners = [];
+        }
+
+        if(hoverInDelay != null) {
+            let timeout;
+            dom.on(["mouseenter", "mouseleave"], (evt, el) => {
+                const type = evt.type;
+                
+                if(type == "mouseenter")
+                    timeout = setTimeout(() => {
+                        el.dropdownOpen();
+                    }, 500)
+                else
+                    clearTimeout(timeout);
+            });
+        }
     }
 
     

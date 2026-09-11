@@ -360,14 +360,35 @@ THREE.Euler.prototype.__overload_anyAssignArithmetic = function (that, operator)
 
 
 // GLOBALS
-const v2 = (...ags) => new THREE.Vector2(...ags);
-const v3 = (...ags) => new THREE.Vector3(...ags);
-const v = (...ags) => new THREE.Vector3(...ags);
-const v4 = (...ags) => new THREE.Vector4(...ags);
-const v0 = new THREE.Vector3(0, 0, 0);
-const vx = new THREE.Vector3(1, 0, 0);
-const vy = new THREE.Vector3(0, 1, 0);
-const vz = new THREE.Vector3(0, 0, 1);
+Object.defineProperties(window, {
+    v2: {
+        value: (...args) => new THREE.Vector2(...args),
+    },
+
+    v3: {
+        value: (...args) => new THREE.Vector3(...args),
+    },
+
+    v: {
+        value: (...args) => new THREE.Vector3(...args),
+    },
+
+    v4: {
+        value: (...args) => new THREE.Vector4(...args),
+    },
+    v0: {
+        get() { return new THREE.Vector3(0, 0, 0) }
+    },
+    vx: {
+        get() { return new THREE.Vector3(1, 0, 0) }
+    },
+    vy: {
+        get() { return new THREE.Vector3(0, 1, 0) }
+    },
+    vz: {
+        get() { return new THREE.Vector3(0, 0, 1) }
+    },
+});
 
 
 // arrow
@@ -409,118 +430,8 @@ class Arrow3D extends THREE.Group {
     }
 }
 
-const logger = new Logger(document.querySelector("#logger .body .list"), 5000);
+const logger = new Logger(document.querySelector("#logger .body .list"));
 
-electronStore.edgeHilighting = electronStore.edgeHilighting == undefined?
-{
-    color: "#f27a02",
-    width: 1,
-    opacity: 1
-}:
-electronStore.edgeHilighting;
-const doEdgesIfToggled = () => {
-    const origin = document.query("#showEdges");
-    const color = origin.query('[type="color"]').value;
-    const width = parseInt(origin.query('.width').value);
-    const opacity = parseFloat(origin.query('.opacity').value);
-
-    origin.query(".colorOutput").innerHTML = color;
-    origin.query(".widthOutput").innerHTML = width;
-    origin.query(".opacityOutput").innerHTML = opacity;
-
-    electronStore.edgeHilighting = {color, width, opacity};
-
-    if(!SpaceCAD.edgeHilighting) return;
-
-
-    SpaceCAD.toggleEdgeHilight(false);
-    SpaceCAD.toggleEdgeHilight(true, color, width, opacity);
-}
-    
-// UI
-setupDropdown(document.query("#showEdges"), "contextmenu", [
-    createElement("label", e => {
-        e.setlang.bottombuttons.edges.options.color$;
-        e.on("click", (evt, e) => {evt.stopPropagation()})
-        e.append(
-            createElement("span", e=>{
-                e.classList.add("colorOutput");
-                e.innerHTML = electronStore.edgeHilighting?.color || "#f27a02";
-                e.css.marginLeft = "10px";
-            }),
-            createElement("br"),
-            createElement("input", e => {
-                e.type = "color";
-                e.css = {
-                    width: "149px",
-                    height: "20px",
-                    padding: "0px"
-                };
-                e.value = electronStore.edgeHilighting?.color || "#f27a02";
-
-                e.on("input", doEdgesIfToggled);
-            })
-        )
-    }),
-    createElement("hr"),
-    createElement("label", e => {
-        e.setlang.bottombuttons.edges.options.width$;
-        e.on("click", (evt, e) => {evt.stopPropagation()})
-        e.append(
-            createElement("span", e=>{
-                e.classList.add("widthOutput");
-                e.innerHTML = electronStore.edgeHilighting?.width || 1;
-                e.css.marginLeft = "10px";
-            }),
-            createElement("br"),
-            createElement("input", e => {
-                e.type = "range";
-                e.min = 1;
-                e.max = 10;
-                e.value = 1;
-                e.step = 1;
-                e.value = electronStore.edgeHilighting?.width || 1;
-                e.style.width ="100%";
-                e.classList.add("width");
-                e.on("input", doEdgesIfToggled);
-            })
-        )
-    }),
-    createElement("hr"),
-    createElement("label", e => {
-        e.setlang.bottombuttons.edges.options.opacity$;
-        e.on("click", (evt, e) => {evt.stopPropagation()})
-        e.append(
-            createElement("span", e=>{
-                e.classList.add("opacityOutput");
-                e.innerHTML = electronStore.edgeHilighting?.opacity || 1;
-                e.css.marginLeft = "10px";
-            }),
-            createElement("br"),
-            createElement("input", e => {
-                e.type = "range";
-                e.min = 0;
-                e.max = 1;
-                e.value = 1;
-                e.step = .01;
-                e.value = electronStore.edgeHilighting?.opacity || 1;
-                e.style.width ="100%";
-                e.classList.add("opacity");
-                e.on("input", doEdgesIfToggled);
-            })
-        )
-    })
-]);
-
-document.query("#showEdges").on("click", (evt, e) => {
-    const color = e.query('[type="color"]').value;
-    const width = parseInt(e.query('.width').value);
-    const opacity = parseFloat(e.query('.opacity').value);
-    SpaceCAD.toggleEdgeHilight(undefined, color, width, opacity);
-    
-    e.classList.toggle("edgeHiOn", !SpaceCAD.edgeHilighting);
-    e.title = SpaceCAD.edgeHilighting? language.bottombuttons.edges.hide : language.bottombuttons.edges.show;
-});
 
 
 const scene = new THREE.Scene();
@@ -655,12 +566,192 @@ const cameraSetDefault = () => {
 camera.rotation.order = "YXZ";
 
 scene.camera = camera;
+
+
 const SpaceCAD = window.SpaceCAD = generateSpaceCAD(scene, logger);
 
 Object.keys(SpaceCAD).filter(e=>!["Object", "run", "instancesUpdate", "deleteAll", "restoreDefaultState"].includes(e)).forEach(key => {
     window[key] = SpaceCAD[key];
 });
 
+window.iframeRun = SpaceCAD.run;
+
+Color.GlobalizeNames();
+const {color} = Color;
+
+
+
+
+
+// RENDERER
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+const canvas = renderer.domElement;
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+
+const pmremGenerator = new THREE.PMREMGenerator(renderer);
+const environmentMap = pmremGenerator.fromScene(
+    new THREE.RoomEnvironment(),
+    0.04
+).texture;
+
+scene.environment = environmentMap;
+UIScene.environment = environmentMap;
+
+
+/* 
+use to create textures
+*/
+const auxCanvas = (sizeX = 256, sizeY = 256) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = sizeX;
+    canvas.height = sizeY;
+
+    canvas.ctx = canvas.getContext("2d");
+
+    return canvas;
+}
+
+
+// WORLD OBJECTS
+const light = new THREE.DirectionalLight(0xffffff, 2);
+light.position.set(5, 10, 5);
+
+scene.add(light);
+
+
+SpaceCAD.axesHelper.toggleSpacing(1);
+scene.add(SpaceCAD.axesHelper);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// USER INTERFACE AND INTERACTIONS
+
+electronStore.edgeHilighting = electronStore.edgeHilighting == undefined?
+{
+    color: "#f27a02",
+    width: 1,
+    opacity: 1
+}:
+electronStore.edgeHilighting;
+const doEdgesIfToggled = () => {
+    const origin = document.query("#showEdges");
+    const color = origin.query('[type="color"]').value;
+    const width = parseInt(origin.query('.width').value);
+    const opacity = parseFloat(origin.query('.opacity').value);
+
+    origin.query(".colorOutput").innerHTML = color;
+    origin.query(".widthOutput").innerHTML = width;
+    origin.query(".opacityOutput").innerHTML = opacity;
+
+    electronStore.edgeHilighting = {color, width, opacity};
+
+    if(!SpaceCAD.edgeHilighting) return;
+
+
+    SpaceCAD.toggleEdgeHilight(false);
+    SpaceCAD.toggleEdgeHilight(true, color, width, opacity);
+}
+    
+// UI
+setupDropdown(document.query("#showEdges"), "contextmenu", [
+    createElement("label", e => {
+        e.setlang.bottombuttons.edges.options.color$;
+        e.on("click", (evt, e) => {evt.stopPropagation()})
+        e.append(
+            createElement("span", e=>{
+                e.classList.add("colorOutput");
+                e.innerHTML = electronStore.edgeHilighting?.color || "#f27a02";
+                e.css.marginLeft = "10px";
+            }),
+            createElement("br"),
+            createElement("input", e => {
+                e.type = "color";
+                e.css = {
+                    width: "149px",
+                    height: "20px",
+                    padding: "0px"
+                };
+                e.value = electronStore.edgeHilighting?.color || "#f27a02";
+
+                e.on("input", doEdgesIfToggled);
+            })
+        )
+    }),
+    createElement("hr"),
+    createElement("label", e => {
+        e.setlang.bottombuttons.edges.options.width$;
+        e.on("click", (evt, e) => {evt.stopPropagation()})
+        e.append(
+            createElement("span", e=>{
+                e.classList.add("widthOutput");
+                e.innerHTML = electronStore.edgeHilighting?.width || 1;
+                e.css.marginLeft = "10px";
+            }),
+            createElement("br"),
+            createElement("input", e => {
+                e.type = "range";
+                e.min = 1;
+                e.max = 10;
+                e.value = 1;
+                e.step = 1;
+                e.value = electronStore.edgeHilighting?.width || 1;
+                e.style.width ="100%";
+                e.classList.add("width");
+                e.on("input", doEdgesIfToggled);
+            })
+        )
+    }),
+    createElement("hr"),
+    createElement("label", e => {
+        e.setlang.bottombuttons.edges.options.opacity$;
+        e.on("click", (evt, e) => {evt.stopPropagation()})
+        e.append(
+            createElement("span", e=>{
+                e.classList.add("opacityOutput");
+                e.innerHTML = electronStore.edgeHilighting?.opacity || 1;
+                e.css.marginLeft = "10px";
+            }),
+            createElement("br"),
+            createElement("input", e => {
+                e.type = "range";
+                e.min = 0;
+                e.max = 1;
+                e.value = 1;
+                e.step = .01;
+                e.value = electronStore.edgeHilighting?.opacity || 1;
+                e.style.width ="100%";
+                e.classList.add("opacity");
+                e.on("input", doEdgesIfToggled);
+            })
+        )
+    })
+]);
+
+document.query("#showEdges").on("click", (evt, e) => {
+    const color = e.query('[type="color"]').value;
+    const width = parseInt(e.query('.width').value);
+    const opacity = parseFloat(e.query('.opacity').value);
+    SpaceCAD.toggleEdgeHilight(undefined, color, width, opacity);
+    
+    e.classList.toggle("edgeHiOn", !SpaceCAD.edgeHilighting);
+    e.title = SpaceCAD.edgeHilighting? language.bottombuttons.edges.hide : language.bottombuttons.edges.show;
+});
+
+
+// controllers
 const generateResourcesDOM = () => {
     const resourcesBody = document.query("#resourcesDisplay .body .list");
 
@@ -1031,7 +1122,12 @@ const createController = (name, prop) => {
 
     const emptyProp = prop == null;
 
+    const base = {
+        reload: true
+    }
+
     const defaultRange = {
+        ...base,
         type: "range",
         min: 0,
         max: 1,
@@ -1039,16 +1135,37 @@ const createController = (name, prop) => {
         step: 0.01,
     };
     const defaultText = {
+        ...base,
         type: "text",
         value: "",
         minlength: 0,
-    }
+    };
+    const default2D = {
+        ...base,
+        type: "2d",
+        maxX: 1000,
+        maxY: 1000,
+        minX: -1000,
+        minY: -1000,
+        value: v0,
+        boundry: true, // if can move if mouse goes out of box
+    };
     if(typeof prop == "object") {
         if(prop.type == "text")
             prop = recursiveProxy(prop, defaultText);
 
         if(prop.type == "number")
             prop = recursiveProxy(prop, defaultRange);
+
+        if(prop.type == "2d") {
+            prop = recursiveProxy(prop, default2D);
+
+            if(prop.minX > prop.maxX)
+                logger.throw("Controller 2D: inconpactible minX and maxX");
+            
+            if(prop.minY > prop.maxY)
+                logger.throw("Controller 2D: inconpactible minY and maxY");
+        }
 
         else 
             prop = recursiveProxy(prop, defaultRange);
@@ -1064,8 +1181,18 @@ const createController = (name, prop) => {
 
 
     const pureValue = () => {
-        const input = dom.query("input");
+        const input = dom.query("input") || dom.query(".inputObject");
         
+        if(input.dataset.type == "2d") {
+            const out = dom.query(".inputInfo");
+            
+            const x = parseFloat(out.query(".xOutput").dataset.rawValue);
+            const y = parseFloat(out.query(".yOutput").dataset.rawValue);
+            
+            return v2(x, y);
+        }
+        if(input.type == "color") 
+            return color(input.value);
         if(input.type == "checkbox")
             return input.checked;
         else if(["number", "range"].includes(input.type))
@@ -1077,6 +1204,23 @@ const createController = (name, prop) => {
         controllers.push(dom);
         
         return pureValue();
+    }
+
+    const propOnChange = () => {
+        const delay = prop.inputDelay ?? parseFloat(document.querySelector("#controllers .title .options input").value);
+
+        if(typeof prop.callback == "function")
+            prop.callback(pureValue());
+
+        if(window.controllerInputTimeout)
+            return;
+
+        if(prop.reload)
+            SpaceCAD.runLastCode();
+
+        window.controllerInputTimeout = setTimeout(() => {
+            window.controllerInputTimeout = null;
+        }, delay);
     }
 
 
@@ -1108,8 +1252,148 @@ const createController = (name, prop) => {
 
         e.append(createElement("div", e => {
             e.classList.add("inputBody");
+            
+            e.append(
+                ...[
+                    // 2d
+                    prop.type == "2d" ? 
+                    createElement("div", e => {
+                        e.classList.add("inputObject");
+                        e.dataset.type = "2d";
 
-                e.append(
+                        e.append(
+                            createElement("div", e => {
+                                const margin = 10;
+                                const setBG = ({x, y}) => {
+                                    e.css.background = `
+                                        linear-gradient(var(--primary), var(--primary)) center / 2px 20px no-repeat,
+                                        linear-gradient(var(--primary), var(--primary)) center / 20px 2px no-repeat,
+                                        linear-gradient(var(--primary), var(--primary)) ${x*100}% ${y*100}% / 2px 100% no-repeat,
+                                        linear-gradient(var(--primary), var(--primary)) ${x*100}% ${y*100}% / 100% 2px no-repeat,
+                                        ${cssVar.tertiary}
+                                    `;
+                                };
+                                const percent = (n, min, max) => min + parseFloat(n) * (max - min);
+                                const rawPercent = (n, min, max) => (parseFloat(n)-min)/(max-min);
+                                e.css = {
+                                    width: `calc(100% - ${margin * 2}px)`,
+                                    height: "200px",
+                                    margin: `${margin}px`,
+                                    borderRadius: "10px",
+                                    boxShadow: "inset 0 5px 10px rgba(0, 0, 0, 0.5)",
+                                    position: "relative",
+                                    cursor: "pointer",
+                                };
+
+                                setBG({
+                                    x: rawPercent(prop.value.x, prop.minX, prop.maxX),
+                                    y: rawPercent(prop.value.y, prop.minY, prop.maxY)
+                                });
+
+                                const translateVal = (e, val) => {
+                                    const { x, y } = val;
+
+                                    setBG(val);
+
+                                    if(prop.minX != prop.maxX)
+                                    e.css.left = `${x * 100}%`;
+
+                                    if(prop.minY != prop.maxY)
+                                    e.css.top = `${y * 100}%`;
+                                };
+                                let dragging = false;
+                            
+
+                                const setOutput = (x, y) => {
+                                    const out = e.parentElement.parentElement.parentElement.query(".inputInfo");
+
+                                    x = percent(x, prop.minX, prop.maxX);
+                                    y = percent(y, prop.minY, prop.maxY);
+
+                                    if (prop.boundry) {
+                                        x = Math.max(prop.minX, Math.min(prop.maxX, x));
+                                        y = Math.max(prop.minY, Math.min(prop.maxY, y));
+                                    }
+
+                                    out.query(".xOutput").dataset.rawValue = x;
+                                    out.query(".xOutput").innerHTML = x.toFixed(2);
+                                    out.query(".yOutput").dataset.rawValue = -y;
+                                    out.query(".yOutput").innerHTML = -y.toFixed(2);
+
+                                    pureValue();
+
+                                    propOnChange();
+                                }
+
+                                const getCord = (evt) => {
+                                    const {rect} = e;
+
+                                    
+                                    const x = Math.max(
+                                        10 / rect.width,
+                                        Math.min(1 - 10 / rect.width, (evt.clientX - rect.left) / rect.width)
+                                    );
+                                    const y = Math.max(
+                                        10 / rect.height,
+                                        Math.min(1 - 10 / rect.height, (evt.clientY - rect.top) / rect.height)
+                                    );
+                                    const rawX = (evt.clientX - rect.left) / rect.width;
+                                    const rawY = (evt.clientY - rect.top) / rect.height;
+
+
+                                    translateVal(e.children[0], {
+                                        x,
+                                        y
+                                    });
+
+                                    setOutput(rawX, rawY);
+                                }
+                                e.on("mousedown", (evt) => {
+                                    evt.preventDefault();
+                                    dragging = true;
+
+                                    getCord(evt);
+
+                                    e.css.cursor = "grabbing";
+                                });
+
+                                on("mousemove", (evt) => {
+                                    if(!dragging)
+                                        return;
+
+                                    const {rect} = e;
+
+                                    getCord(evt);
+                                })
+
+                                on("mouseup", (evt) => {
+                                    dragging = false;
+                                    e.css.cursor = "pointer";
+                                });
+
+
+                                e.append(
+                                    createElement("div", e => {
+
+                                        e.css = {
+                                            width: "20px",
+                                            height: "20px",
+                                            background: cssVar.secondary,
+                                            borderRadius: "5px",
+                                            position: "absolute",
+                                            left: "50%",
+                                            top: "50%",
+                                            transform: "translate(-50%, -50%)",
+                                            boxShadow: "0 5px 5px rgba(0, 0, 0, 0.5), inset 0 3px 4px rgba(255, 255, 255, 0.2)",
+                                        }
+                                    })
+                                )
+                                
+                            })
+                        );
+                    }):
+
+                    // general inputs
                     createElement("input", e => {
                         Object.entries(prop).forEach(([key, value]) => {
                             e[key] = value;
@@ -1131,164 +1415,263 @@ const createController = (name, prop) => {
                                 else
                                     out.innerHTML = e.value || 0;
                             }
+
+                            propOnChange();
                         }
                         
                         setTimeout(() => {
                             setOutput();
                         });                        
 
-                        e.on("input", (_, el) => {
-                            setOutput();
-
-                            if(typeof prop.callback == "function")
-                                prop.callback(pureValue());
-                            
-                            if(!prop.noReload) 
-                                SpaceCAD.run(SpaceCAD.lastCode);
-                        });
+                        e.on("input", setOutput);
                     }),
-                    createElement("div", e => {
-                        e.classList.add("inputInfo");
+                ],
+                createElement("div", e => {
+                    const inputInfo = e;
+                    e.classList.add("inputInfo");
 
-                        const css = {
-                            marginRight: "5px",
-                            opacity: 0.5
-                        }
+                    const css = {
+                        marginRight: "5px",
+                        opacity: 0.5
+                    }
 
-                        if(["number", "range"].includes(prop.type)) {
-                            e.append(
-                                createElement("span", e => {
-                                    e.append(
-                                        createElement("span", e => {
-                                            e.classList.add("type");
-                                            e.css = css;
-                                            e.setlang.bottombuttons.controllers.inputs.min$;
-                                        }),
-                                        createElement("span", e => {
-                                            e.innerHTML = prop.min || 0;
-                                        })
-                                    );
-                                }),
-                                createElement("span", e => {
-                                    e.append(
-                                        createElement("span", e => {
-                                            e.classList.add("type");
-                                            e.css = css;
-                                            e.setlang.bottombuttons.controllers.inputs.step$;
-                                        }),
-                                        createElement("span", e => {
-                                            e.innerHTML = prop.step || 1;
-                                        })
-                                    );
-                                }),
-                                createElement("span", e => {
-                                    e.append(
-                                        createElement("span", e => {
-                                            e.classList.add("type");
-                                            e.css = css;
-                                            e.setlang.bottombuttons.controllers.inputs.max$;
-                                        }),
-                                        createElement("span", e => {
-                                            e.innerHTML = prop.max || 0;
-                                        })
-                                    );
-                                }),
-                                createElement("span", e => {
-                                    e.append(
-                                        createElement("span", e => {
-                                            e.classList.add("type");
-                                            e.css = css;
-                                            e.setlang.bottombuttons.controllers.inputs.value$;
-                                        }),
-                                        createElement("span", e => {
-                                            e.classList.add("valueOutput");
-                                            e.innerHTML = prop.value || 0;
-                                        })
-                                    );
-                                }),
-                            )
+                    if(["number", "range"].includes(prop.type)) {
+                        e.append(
+                            createElement("span", e => {
+                                e.append(
+                                    createElement("span", e => {
+                                        e.classList.add("type");
+                                        e.css = css;
+                                        e.setlang.bottombuttons.controllers.inputs.min$;
+                                    }),
+                                    createElement("span", e => {
+                                        e.innerHTML = prop.min || 0;
+                                    })
+                                );
+                            }),
+                            createElement("span", e => {
+                                e.append(
+                                    createElement("span", e => {
+                                        e.classList.add("type");
+                                        e.css = css;
+                                        e.setlang.bottombuttons.controllers.inputs.step$;
+                                    }),
+                                    createElement("span", e => {
+                                        e.innerHTML = prop.step || 1;
+                                    })
+                                );
+                            }),
+                            createElement("span", e => {
+                                e.append(
+                                    createElement("span", e => {
+                                        e.classList.add("type");
+                                        e.css = css;
+                                        e.setlang.bottombuttons.controllers.inputs.max$;
+                                    }),
+                                    createElement("span", e => {
+                                        e.innerHTML = prop.max || 0;
+                                    })
+                                );
+                            }),
+                            createElement("span", e => {
+                                e.append(
+                                    createElement("span", e => {
+                                        e.classList.add("type");
+                                        e.css = css;
+                                        e.setlang.bottombuttons.controllers.inputs.value$;
+                                    }),
+                                    createElement("span", e => {
+                                        e.classList.add("valueOutput");
+                                        e.innerHTML = prop.value || 0;
+                                    })
+                                );
+                            }),
+                        )
 
 
-                        } else if(["text"].includes(prop.type)) {
+                    } else if(["text"].includes(prop.type)) {
+                        e.append(
+                            createElement("span", e => {
+                                e.append(
+                                    createElement("span", e => {
+                                        e.classList.add("type");
+                                        e.css = css;
+                                        e.setlang.bottombuttons.controllers.inputs.minlength$;
+                                    }),
+                                    createElement("span", e => {
+                                        e.innerHTML = prop.minlength != null ?
+                                        prop.minlength > 0 ? prop.minlength : 0: 0;
+                                    })
+                                );
+                            }),
+                            createElement("span", e => {
+                                e.append(
+                                    createElement("span", e => {
+                                        e.classList.add("type");
+                                        e.css = css;
+                                        e.setlang.bottombuttons.controllers.inputs.length$;
+                                    }),
+                                    createElement("span", e => {
+                                        e.classList.add("valueOutput");
+                                        e.innerHTML = prop.value != null ? prop.value.length : 0;
+                                    })
+                                );
+                            }),
+                            createElement("span", e => {
+                                e.append(
+                                    createElement("span", e => {
+                                        e.classList.add("type");
+                                        e.css = css;
+                                        e.setlang.bottombuttons.controllers.inputs.maxlength$;
+                                    }),
+                                    createElement("span", e => {
+                                        e.innerHTML = prop.maxlength || "∞";
+                                    })
+                                );
+                            }),
+                        )
+                    } else if(["checkbox"].includes(prop.type)) {
+                        e.append(
+                            createElement("span", e => {
+                                e.append(
+                                    createElement("span", e => {
+                                        e.classList.add("type");
+                                        e.css = css;
+                                        e.setlang.bottombuttons.controllers.inputs.state$;
+                                    }),
+                                    createElement("span", e => {
+                                        e.classList.add("valueOutput");
+                                        e.innerHTML = prop.checked != null ?
+                                        prop.checked? 
+                                        language.bottombuttons.controllers.inputs.on :
+                                        language.bottombuttons.controllers.inputs.off :
+                                        language.bottombuttons.controllers.inputs.off;
+                                    })
+                                );
+                            }),
+                        )
+                    } else if(["color"].includes(prop.type)) {
+                        e.append(
+                            createElement("span", e => {
+                                e.append(
+                                    createElement("span", e => {
+                                        e.classList.add("type");
+                                        e.css = css;
+                                        e.setlang.bottombuttons.controllers.inputs.color$;
+                                    }),
+                                    createElement("span", e => {
+                                        e.classList.add("valueOutput");
+                                        e.innerHTML = prop.color || "#f27a02";
+                                    })
+                                );
+                            }),
+                        )
+                    } else if(["2d"].includes(prop.type)) {
+                        e.append(
+                            createElement("span", e => {
+                                e.append(
+                                    createElement("span", e => {
+                                        e.classList.add("type");
+                                        e.css = css;
+                                        e.innerHTML = "x:"
+                                    }),
+                                    createElement("span", e => {
+                                        e.classList.add("valueOutput", "xOutput");
+                                        e.dataset.rawValue = prop.value.x || 0;
+                                        e.innerHTML = (prop.value.x || 0).toFixed(2);
+                                    })
+                                );
+                            }),
+                            createElement("span", e => {
+                                e.append(
+                                    createElement("span", e => {
+                                        e.classList.add("type");
+                                        e.css = css;
+                                        e.innerHTML = "y:"
+                                    }),
+                                    createElement("span", e => {
+                                        e.classList.add("valueOutput", "yOutput");
+                                        e.dataset.rawValue = prop.value.y || 0;
+                                        e.innerHTML = (prop.value.y || 0).toFixed(2);
+                                    })
+                                );
+                            }),
+                        );
+                        inputInfo.css.border = "none";
+                    }
+                }),
+                ...(
+                    ["2d"].includes(prop.type)?
+                    [ 
+                        createElement("div", e => {
+                            e.classList.add("inputInfo");
+
+                            const css = {
+                                marginRight: "5px",
+                                opacity: 0.5
+                            }
                             e.append(
-                                createElement("span", e => {
-                                    e.append(
-                                        createElement("span", e => {
-                                            e.classList.add("type");
-                                            e.css = css;
-                                            e.setlang.bottombuttons.controllers.inputs.minlength$;
-                                        }),
-                                        createElement("span", e => {
-                                            e.innerHTML = prop.minlength != null ?
-                                            prop.minlength > 0 ? prop.minlength : 0: 0;
-                                        })
-                                    );
-                                }),
-                                createElement("span", e => {
-                                    e.append(
-                                        createElement("span", e => {
-                                            e.classList.add("type");
-                                            e.css = css;
-                                            e.setlang.bottombuttons.controllers.inputs.length$;
-                                        }),
-                                        createElement("span", e => {
-                                            e.classList.add("valueOutput");
-                                            e.innerHTML = prop.value != null ? prop.value.length : 0;
-                                        })
-                                    );
-                                }),
-                                createElement("span", e => {
-                                    e.append(
-                                        createElement("span", e => {
-                                            e.classList.add("type");
-                                            e.css = css;
-                                            e.setlang.bottombuttons.controllers.inputs.maxlength$;
-                                        }),
-                                        createElement("span", e => {
-                                            e.innerHTML = prop.maxlength || "∞";
-                                        })
-                                    );
-                                }),
-                            )
-                        } else if(["checkbox"].includes(prop.type)) {
-                            e.append(
-                                createElement("span", e => {
-                                    e.append(
-                                        createElement("span", e => {
-                                            e.classList.add("type");
-                                            e.css = css;
-                                            e.setlang.bottombuttons.controllers.inputs.state$;
-                                        }),
-                                        createElement("span", e => {
-                                            e.classList.add("valueOutput");
-                                            e.innerHTML = prop.checked != null ?
-                                            prop.checked? 
-                                            language.bottombuttons.controllers.inputs.on :
-                                            language.bottombuttons.controllers.inputs.off :
-                                            language.bottombuttons.controllers.inputs.off;
-                                        })
-                                    );
-                                }),
-                            )
-                        } else if(["color"].includes(prop.type)) {
-                            e.append(
-                                createElement("span", e => {
-                                    e.append(
-                                        createElement("span", e => {
-                                            e.classList.add("type");
-                                            e.css = css;
-                                            e.setlang.bottombuttons.controllers.inputs.color$;
-                                        }),
-                                        createElement("span", e => {
-                                            e.classList.add("valueOutput");
-                                            e.innerHTML = prop.color || "#f27a02";
-                                        })
-                                    );
-                                }),
-                            )
-                        }
-                    })
+                            createElement("span", e => {
+                                e.append(
+                                    createElement("span", e => {
+                                        e.classList.add("type");
+                                        e.css = css;
+                                        e.setlang.bottombuttons.controllers.inputs.minx$;
+                                    }),
+                                    createElement("span", e => {
+                                        e.classList.add("valueOutput");
+                                        e.css.fontSize = ".5rem";
+                                        e.innerHTML = e.title = prop.minX || 0;
+                                    })
+                                );
+                            }),
+                            createElement("span", e => {
+                                e.append(
+                                    createElement("span", e => {
+                                        e.classList.add("type");
+                                        e.css = css;
+                                        e.setlang.bottombuttons.controllers.inputs.maxx$;
+                                    }),
+                                    createElement("span", e => {
+                                        e.classList.add("valueOutput");
+                                        e.css.fontSize = ".5rem";
+                                        e.innerHTML = e.title = prop.maxX || 0;
+                                    })
+                                );
+                            }),
+                            createElement("span", e => {
+                                e.append(
+                                    createElement("span", e => {
+                                        e.classList.add("type");
+                                        e.css = css;
+                                        e.setlang.bottombuttons.controllers.inputs.miny$;
+                                    }),
+                                    createElement("span", e => {
+                                        e.classList.add("valueOutput");
+                                        e.css.fontSize = ".5rem";
+                                        e.innerHTML = e.title = prop.minY || 0;
+                                    })
+                                );
+                            }),
+                            createElement("span", e => {
+                                e.append(
+                                    createElement("span", e => {
+                                        e.classList.add("type");
+                                        e.css = css;
+                                        e.setlang.bottombuttons.controllers.inputs.maxy$;
+                                    }),
+                                    createElement("span", e => {
+                                        e.classList.add("valueOutput");
+                                        e.css.fontSize = ".5rem";
+                                        e.innerHTML = e.title = prop.maxY || 0;
+                                    })
+                                );
+                            }),
+                        );
+                        })
+                    ]: []
                 )
+            )
         }));
 
     });
@@ -1308,7 +1691,6 @@ const controller = new Proxy({}, {
     }
 });
 
-window.iframeRun = SpaceCAD.run;
 
 const changePerspectiveButton = document.querySelector("#changePerspective");
 const setPerspectiveDom = () => {
@@ -1327,65 +1709,6 @@ const changePerspective = () => {
 changePerspectiveButton.on("click", changePerspective);
 setPerspectiveDom();
 
-
-
-
-
-// RENDERER
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-const canvas = renderer.domElement;
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-
-
-const pmremGenerator = new THREE.PMREMGenerator(renderer);
-const environmentMap = pmremGenerator.fromScene(
-    new THREE.RoomEnvironment(),
-    0.04
-).texture;
-
-scene.environment = environmentMap;
-UIScene.environment = environmentMap;
-
-
-/* 
-use to create textures
-*/
-const auxCanvas = (sizeX = 256, sizeY = 256) => {
-    const canvas = document.createElement("canvas");
-    canvas.width = sizeX;
-    canvas.height = sizeY;
-
-    canvas.ctx = canvas.getContext("2d");
-
-    return canvas;
-}
-
-
-// WORLD OBJECTS
-const light = new THREE.DirectionalLight(0xffffff, 2);
-light.position.set(5, 10, 5);
-
-scene.add(light);
-
-
-SpaceCAD.axesHelper.toggleSpacing(1);
-scene.add(SpaceCAD.axesHelper);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// USER INTERFACE AND INTERACTIONS
 // camera look from rotation
 document.query(".bottomItens").all(".cameraLook").on("click", (evt, e) => {
     const direction = e.query("img").alt;
@@ -1419,6 +1742,9 @@ document.query(".bottomItens").all(".cameraLook").on("click", (evt, e) => {
 })
 
 
+
+
+// engine especific
 const cursor = document.querySelector('#tempCursor').style;
 const setCursor = url => {
     cursor.backgroundImage = `url(/cursor/${url})`;
