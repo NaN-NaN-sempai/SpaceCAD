@@ -76,10 +76,26 @@
         </button>
 
         <div class="btnList ignore">
-            <button language-bottombuttons-defaultcamera-position></button>
-            <button language-bottombuttons-defaultcamera-orientation></button>
-            <button language-bottombuttons-defaultcamera-zoom></button>
-            <button language-bottombuttons-defaultcamera-perspective></button>
+            <label class="buttonLike checkBoxButton">
+                <img class="svgIcon minnor" style="margin-right: 5px;" src="./svg/position.svg" alt="camera">
+                <span language-bottombuttons-defaultcamera-position> </span>
+                <input class="holdOpen" type="checkbox">
+            </label>
+            <label class="buttonLike checkBoxButton">
+                <img class="svgIcon minnor" style="margin-right: 5px;" src="./svg/rotation.svg" alt="camera">
+                <span language-bottombuttons-defaultcamera-orientation> </span>
+                <input class="holdOpen" type="checkbox">
+            </label>
+            <label class="buttonLike checkBoxButton">
+                <img class="svgIcon minnor" style="margin-right: 5px;" src="./svg/zoom.svg" alt="camera">
+                <span language-bottombuttons-defaultcamera-zoom> </span>
+                <input class="holdOpen" type="checkbox">
+            </label>
+            <label class="buttonLike checkBoxButton">
+                <img class="svgIcon minnor" style="margin-right: 5px;" src="./svg/perspectiveDefault.svg" alt="camera">
+                <span language-bottombuttons-defaultcamera-perspective> </span>
+                <input class="holdOpen" type="checkbox">
+            </label>
         </div>
 
         <button id="showEdges" class="iconButton edgeHiOn" language-title-bottombuttons-edges-show>
@@ -286,7 +302,11 @@
     <!-- CHANGELOG -->
     <div modal id="changelog" class="question">
         <div class="title" language-modal-changelog-todo></div>
+        SpaceCAD -> importar packages npm por codigo spacecad.js
+        <br><br>
         SpaceCAD Web -> refazer versão web do app em outra guia que rode sem server
+        <br><br>
+        engine controller -> salvar valor do input no electronStore -> path do arquivo -> nome do input
         <br><br>
         SpaceCAD -> documentação do SpaceCAD
         <br><br>
@@ -309,6 +329,22 @@
 
         <div class="title" language-modal-changelog-lastupdates></div>
 
+        <span style="background: var(--primary);">controllers saved value, controller linear, default camera new icons</span>
+        (12/09/2026 - 19:12) SpaceCAD -> controller -> novo operador tipo linear e mouselock para input 2d e linear com boundry false
+        <br><br>
+        (12/09/2026 - 18:19) util -> [HTMLElement] proto -> innerListener -> adiciona um callback que é executado quando o innerHTML ou innerText for alterado no elemento especicado, removeInnerListener -> remove o callback, innerListeners -> array de callbacks
+        <br><br>
+        (12/09/2026 - 16:32) engine update -> os valores dos operadores são salvos no electronStore
+        <br><br>
+        (12/09/2026 - 15:06) logger -> throw agora tem erros expecificos: throw ou throw.error -> erro, throw.type -> tipo, throw.reference -> referencia, throw.syntax -> sintaxe, throw.range -> intervalo, throw.uri -> uri, throw.aggregator -> agregador
+        <br><br>
+        (11/09/2026 - 06:02) style -> removido estilo padrão para inputs tipo cor
+        <br><br>
+        (11/09/2026 - 05:55) SpaceCAD API -> normalização de cores em edgeHiglight
+        <br><br>
+        (11/09/2026 - 04:58) UI -> novos icones para restaurar camera -> posição, rotação, zoom, perspectiva
+        <br><br>
+
         <span style="background: var(--primary);">general optimizations, Color, controllers</span>
         (11/09/2026 - 01:01) logger -> bugfix: highlight em objetos SpaceCAD só funcionavam em 1 nuvel de inpeção, passado disso o pai voltava a ser highlightado
         <br><br>
@@ -322,7 +358,7 @@
         <br><br>
         (10/09/2026 - 03:09) new colors.js: API para trabalhar com cores, por padrão suporta cores do THREE
         <br><br>
-        (09/09/2026 - 23:24) logger -> thros: usar o logger.noOg.error e depois da um throw
+        (09/09/2026 - 23:24) logger -> throw: usar o logger.noOg.error e depois da um throw
         <br><br>
         (09/09/2026 - 21:21) logger -> agora ao passar do maximo de logs ele apaga os antigos no HTML e limiti do logger do engine diminuido para o padrão 1000
         <br><br>
@@ -637,6 +673,12 @@ writeLanguage("en-US", { // default
                 delay: "input delay",
                 delaytitle: "time in milliseconds to wait between outputs",
                 immediately: "immediately",
+
+                clearcache: "clear file cache",
+                clearcachetitle: "clear the saved values of the controller for this file",
+
+                clearallcache: "clear cache",
+                clearallcachetitle: "clear the saved values of the controller for all files",
             },
 
             inputs: {
@@ -666,7 +708,8 @@ writeLanguage("en-US", { // default
                     color: "color",
                     range: "range",
                     checkbox: "checkbox",
-
+                    
+                    linear: "linear",
                     "2d": "plane",
                 }
             }
@@ -850,6 +893,12 @@ writeLanguage("pt-BR", {
                 delay: "atraso de entrada",
                 delaytitle: "tempo em milissegundos para aguardar entre saídas",
                 immediately: "imediatamente",
+
+                clearcache: "limpar cache do arquivo",
+                clearcachetitle: "limpar os valores salvos dos operadores deste arquivo",
+
+                clearallcache: "limpar cache",
+                clearallcachetitle: "limpar os valores salvos dos operadores de todos os arquivos",
             },
 
             inputs: {
@@ -880,6 +929,7 @@ writeLanguage("pt-BR", {
                     range: "deslizante",
                     checkbox: "caixa de seleção",
 
+                    linear: "linear",
                     "2d": "plano",
                 }
             }
@@ -1063,6 +1113,12 @@ writeLanguage("fr-FR", {
                 delay: "délai de saisie",
                 delaytitle: "Temps en millisecondes à attendre entre les sorties",
                 immediately: "immediatement",
+
+                clearcache: "effacer le cache du fichier",
+                clearcachetitle: "effacer les valeurs sauvegardées de l'opérateur pour ce fichier",
+
+                clearallcache: "effacer le cache",
+                clearallcachetitle: "effacer les valeurs sauvegardées de l'opérateur pour tous les fichiers",
             },
 
             inputs: {
@@ -1093,6 +1149,7 @@ writeLanguage("fr-FR", {
                     range: "curseur",
                     checkbox: "case à cocher",
 
+                    linear: "linear",
                     "2d": "surface",
                 }
             }
@@ -1411,7 +1468,51 @@ startTranslation(isElectron? electronStore : undefined);
                             }
                         })
                     )
-                })
+                }),
+                
+                createElement("hr"),
+                
+                createElement("label", e => {
+                    e.setlang.title.bottombuttons.controllers.options.clearcachetitle$;
+                    e.css.width = "100%";
+                    
+                    e.append(
+                        createElement("buttom", e => {
+                            e.setlang.bottombuttons.controllers.options.clearcache$;
+                            e.classList.add("buttonLike");
+
+                            e.on("click", () => {
+                                if(!isElectron) return;
+                                if(electronStore.selectedFile == null) return;
+                                
+                                electronStore.controllers[electronStore.selectedFile] = {};
+                                SpaceCAD.runLastCode();
+                            })
+
+                        })
+                    )
+                }),
+                createElement("hr"),
+                
+                createElement("label", e => {
+                    e.setlang.title.bottombuttons.controllers.options.clearallcachetitle$;
+                    e.css.width = "100%";
+                    
+                    e.append(
+                        createElement("buttom", e => {
+                            e.setlang.bottombuttons.controllers.options.clearallcache$;
+                            e.classList.add("buttonLike");
+
+                            e.on("click", () => {
+                                if(!isElectron) return;
+
+                                electronStore.controllers = {};
+                                SpaceCAD.runLastCode();
+                            })
+
+                        })
+                    )
+                }),
             ], 500)
 
 
@@ -1432,6 +1533,11 @@ startTranslation(isElectron? electronStore : undefined);
 
             buttonList.forEach((el, index) => {
                 el.closeMenu = true;
+
+                el.css = {
+                    width: "100%",
+                    justifyContent: "left",
+                }
                 
                 el.addEventListener("click", (e) => {
                     e.stopPropagation();
@@ -2299,6 +2405,15 @@ startTranslation(isElectron? electronStore : undefined);
             name: newName.split(".spacecad")[0],
             fullName: newName
         };
+
+        if(electronStore.controllers[oldPath]) {
+            electronStore.controllers[newPath] = electronStore.controllers[oldPath];
+            delete electronStore.controllers[oldPath];
+
+            electronStore.controllers = {
+                ...electronStore.controllers
+            };
+        }
 
         editFile(file);
     })

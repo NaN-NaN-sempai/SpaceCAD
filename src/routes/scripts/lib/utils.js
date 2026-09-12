@@ -192,39 +192,47 @@
 Object.defineProperties(Array.prototype, {
     populate: {
         get: function (value) {
-            let allNumber = this.map(e => typeof e == "number").reduce((a, b) => a && b, true);
-            if(!allNumber) {
-                console.warn("Array must only contain numbers to be populated");
+            if(
+                !this.every(e => typeof e == "number" ||
+                (Array.isArray(e) && typeof e[0] == "number" && e[1] != undefined))
+            ) {
+                logger.warn("Array.populate: Invalid Array.\nArray must contain only numbers or Arrays [number, boolean (if number included)].\nReturning original array.");
                 return this;
             }
-            if(this.length < 2) {
-                console.warn("Array must have at least 2 values to be populated");
-                return this;
-            }
+            const thisArr = [...this];
+
+            if(this.length < 2) 
+                thisArr.unshift(0);
 
             const array = [];
 
             const generate = (from, to, ignoreFirst = false) => {
-                const arr = [];
-
-                if(from > to) 
-                    for (let i = from; i >= to; i--) 
-                        arr.push(i);
-                else 
-                    for (let i = from; i <= to; i++) 
-                        arr.push(i);
-
-                if(ignoreFirst)
-                    arr.shift();
-
-                return arr;
+                if(from > to) {
+                    for(let i = from - ignoreFirst; i >= to; i--)
+                        array.push(i);
+                } else {
+                    for(let i = from + ignoreFirst; i <= to; i++)
+                        array.push(i);
+                }
             }
 
-            this.forEach((v, i) => {
-                if(this[i + 1] == undefined) return;
-                const arr = generate(this[i], this[i+1], i != 0);
-                array.push(...arr);
-            })
+            const nIncluded = (n, pre) => {
+                if(typeof n == "number")
+                    return n;
+
+                if(n[1])
+                    return n[0];
+                else
+                    return n[0] + (pre? 1: -1);
+            }
+
+            for(let i = 0; i < thisArr.length - 1; i++) {
+                generate(
+                    nIncluded(thisArr[i], true),
+                    nIncluded(thisArr[i+1], false),
+                    i != 0
+                );
+            }
 
             return array;
         },
@@ -332,12 +340,28 @@ const callbacsOnInnerHTML = [];
         );
         
         Object.defineProperties(proto.prototype, {
+            innerListeners: {
+                value: [],
+            },
+            innerListener: {
+                value(callback) {
+                    this.innerListeners.push(callback);
+
+                    return callback;
+                }
+            },
+            removeInnerListener: {
+                value(callback) {
+                    this.innerListeners = this.innerListeners.filter(c => c != callback);
+                }
+            },
             innerHTML: {
                 get: function () {
                     return html.get.call(this);
                 },
                 set(value) {
                     callbacsOnInnerHTML.forEach(c => c(this, value));
+                    this.innerListeners.forEach(c => c(this, value));
                     return html.set.call(this, value);
                 }
             },
@@ -348,6 +372,7 @@ const callbacsOnInnerHTML = [];
                 },
                 set(value) {
                     callbacsOnInnerHTML.forEach(c => c(this, value));
+                    this.innerListeners.forEach(c => c(this, value));
                     return text.set.call(this, value);
                 }
             },
@@ -654,10 +679,27 @@ const recursiveProxy = (config, defaults) => {
     if(isProxy(config)) 
         config = resolveProxy(config);
 
+
+    const defaultObject =
+        defaults !== null &&
+        (typeof defaults === "object" || typeof defaults === "function")
+            ? defaults
+            : {};
+            
     const proxy =  new Proxy(config, {
-        get(target, key) {
-            const value = target[key];
-            const defaultValue = defaults?.[key];
+        get(target, key, receiver) {
+            const descriptor = Reflect.getOwnPropertyDescriptor(target, key);
+            const value = Reflect.get(target, key, receiver);
+            const defaultValue = defaultObject?.[key];
+
+            // Regra obrigatória do Proxy para propriedades imutáveis.
+            if (
+                descriptor &&
+                descriptor.configurable === false &&
+                descriptor.writable === false
+            ) {
+                return value;
+            }
 
             if (value && typeof value === "object") {
                 return recursiveProxy(value, defaultValue);
@@ -672,12 +714,12 @@ const recursiveProxy = (config, defaults) => {
             if (descriptor)
                 return descriptor;
 
-            if (defaults && key in defaults) {
+            if (key in defaultObject) {
                 return {
                     enumerable: true,
                     configurable: true,
                     writable: true,
-                    value: defaults[key]
+                    value: defaultObject[key]
                 };
             }
         },
@@ -686,7 +728,7 @@ const recursiveProxy = (config, defaults) => {
             return [
                 ...new Set([
                     ...Reflect.ownKeys(target),
-                    ...Reflect.ownKeys(defaults ?? {})
+                    ...Reflect.ownKeys(defaultObject ?? {})
                 ])
             ];
         }

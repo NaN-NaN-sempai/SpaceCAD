@@ -3,6 +3,7 @@ const generateSpaceCAD = Overloader.evalArgs((scene, console = window?.console) 
 const camera = scene.camera;
     
 const SpaceCAD = class SpaceCAD {
+    static npmPackages = new Map();
     static store = function (preload = false) {
         let cls = isClass(this)? this : this.constructor;
 
@@ -373,6 +374,67 @@ const SpaceCAD = class SpaceCAD {
         
         return req;
     }
+    
+
+    static windowProperties = {};
+    static libKeys = [];
+    static deleteAll = () => {
+        while(SpaceCAD.instances.length > 0) {
+            SpaceCAD.instances[0].delete();
+        }
+        SpaceCAD.Mesh.instances = [];
+    }
+    static restoreDefaultState = () => {
+        SpaceCAD.libKeys.forEach(key => {
+            delete window[key];
+        });
+        SpaceCAD.libKeys = [];
+        Object.entries(SpaceCAD.windowProperties).forEach(([key, value]) => {
+            window[key] = value;
+        });
+        SpaceCAD.windowProperties = {};
+        console.clear();
+    }
+    static lastCode = "";
+    static runLastCode = () => SpaceCAD.run(SpaceCAD.lastCode, true, false);
+    static run = (code, restore = true, setPreloads = true) => {
+        SpaceCAD.runLoop = () => {};
+
+        const regex = /\bexpose\b/g;
+        const hasExpose = regex.test(code);
+        const rawCode = code;
+        if (hasExpose) {
+            code = `
+                let __ExposeObject = {};
+                ${code.replace(regex, "__ExposeObject")}
+                return __ExposeObject;
+            `;
+        }
+
+        if(restore) {
+            SpaceCAD.deleteAll();
+            SpaceCAD.restoreDefaultState();
+            sceneObjectsEmpty();
+            SpaceCAD.Classes.forEach(cls => cls.instances = []);
+            SpaceCAD.lastCode = rawCode;
+            logger.noOg.clear();
+        }
+        const fn = new Function(code);
+
+        const run = Overloader.eval(fn, error => console.error(error));
+
+        if(hasExpose && typeof run.loop === "function" && SpaceCAD.runLoop+"" != run.loop+"")
+            SpaceCAD.runLoop = run.loop;
+
+        if(setPreloads)
+            SpaceCAD.setPreloads();
+
+        if(SpaceCAD.edgeHilighting) {
+            SpaceCAD.toggleEdgeHilight(false);
+            SpaceCAD.toggleEdgeHilight(true, SpaceCAD.edgeHilightingColor, SpaceCAD.edgeHilightingWidth, SpaceCAD.edgeHilightingOpacity);
+        }
+        return run;
+    }
 
     static useInstances = [];
     static useEnable = false;
@@ -435,67 +497,6 @@ const SpaceCAD = class SpaceCAD {
         
 
         return obj;
-    }
-
-
-    static windowProperties = {};
-    static libKeys = [];
-    static deleteAll = () => {
-        while(SpaceCAD.instances.length > 0) {
-            SpaceCAD.instances[0].delete();
-        }
-        SpaceCAD.Mesh.instances = [];
-    }
-    static restoreDefaultState = () => {
-        SpaceCAD.libKeys.forEach(key => {
-            delete window[key];
-        });
-        SpaceCAD.libKeys = [];
-        Object.entries(SpaceCAD.windowProperties).forEach(([key, value]) => {
-            window[key] = value;
-        });
-        SpaceCAD.windowProperties = {};
-        console.clear();
-    }
-    static lastCode = "";
-    static runLastCode = () => SpaceCAD.run(SpaceCAD.lastCode, true, false);
-    static run = (code, restore = true, setPreloads = true) => {
-        SpaceCAD.runLoop = () => {};
-
-        const regex = /\bexpose\b/g;
-        const hasExpose = regex.test(code);
-        const rawCode = code;
-        if (hasExpose) {
-            code = `
-                let __ExposeObject = {};
-                ${code.replace(regex, "__ExposeObject")}
-                return __ExposeObject;
-            `;
-        }
-
-        if(restore) {
-            SpaceCAD.deleteAll();
-            SpaceCAD.restoreDefaultState();
-            sceneObjectsEmpty();
-            SpaceCAD.Classes.forEach(cls => cls.instances = []);
-            SpaceCAD.lastCode = rawCode;
-            logger.noOg.clear();
-        }
-        const fn = new Function(code);
-
-        const run = Overloader.eval(fn, error => console.error(error));
-
-        if(hasExpose && typeof run.loop === "function" && SpaceCAD.runLoop+"" != run.loop+"")
-            SpaceCAD.runLoop = run.loop;
-
-        if(setPreloads)
-            SpaceCAD.setPreloads();
-
-        if(SpaceCAD.edgeHilighting) {
-            SpaceCAD.toggleEdgeHilight(false);
-            SpaceCAD.toggleEdgeHilight(true, SpaceCAD.edgeHilightingColor, SpaceCAD.edgeHilightingWidth, SpaceCAD.edgeHilightingOpacity);
-        }
-        return run;
     }
 
     static currentSpace = null;
@@ -722,7 +723,23 @@ const SpaceCAD = class SpaceCAD {
             if(this.spaceType == SpaceCAD.Group)
                 return this.spaceChildren.forEach(child => child.addHighLight(...args));
 
-            const [name="__edges", color = SpaceCAD.edgeHilightingColor||"#f27a02", width = SpaceCAD.edgeHilightingWidth??1, opacity = SpaceCAD.edgeHilightingOpacity??1] = args;
+            let [name="__edges", color = SpaceCAD.edgeHilightingColor||"#f27a02", width = SpaceCAD.edgeHilightingWidth??1, opacity = SpaceCAD.edgeHilightingOpacity??1] = args;
+
+            const unexpected = () => logger.throw(`Unexpected color type. ${color} (${typeof color})`);
+            if(typeof color == "object") {
+                if(color instanceof String) {
+                    if( color.ColorInstance == null)
+                        color = new Color(color);
+                    color = color.asHEX.str;
+                }
+                else if(!(color instanceof THREE.Color))
+                    unexpected();
+
+            } else if(
+                color == null ||
+                typeof color !== "string" &&
+                typeof color !== "number" 
+            ) unexpected();
 
             const edges = new THREE.EdgesGeometry(this.geometry);
             let line;

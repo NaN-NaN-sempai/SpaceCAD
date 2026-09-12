@@ -693,11 +693,55 @@ class Logger {
                 if(key == "noOg")
                     return proxy(false);
 
-                if(key == "throw")
-                    return function(...args) {
-                        this.noOg.error(...args);
-                        throw args.length == 1? args[0] : args;
+                if(key == "throw") {
+                    const err = (...args) => { 
+                        return proxy(false).error(...args);
                     }
+                    const fn = (...args) => {
+                        err(...args);
+                        throw new Error(args.length == 1? args[0] : args);
+                    }
+
+                    const types = {
+                        error: fn,
+                        type: (...args) => {
+                            err("Type:\n", ...args);
+                            throw new TypeError(args.length == 1? args[0] : args);
+                        },
+                        reference: (...args) => {
+                            err("Reference: ", ...args);
+                            throw new ReferenceError(args.length == 1? args[0] : args);
+                        },
+                        syntax: (...args) => {
+                            err("Syntax:\n", ...args);
+                            throw new SyntaxError(args.length == 1? args[0] : args);
+                        },
+                        range: (...args) => {
+                            err("Range:\n", ...args);
+                            throw new RangeError(args.length == 1? args[0] : args);
+                        },
+                        uri: (...args) => {
+                            err("URI:\n", ...args);
+                            throw new URIError(args.length == 1? args[0] : args);
+                        },
+                        aggregator: (...args) => {
+                            err("Aggregator:\n", ...args);
+                            throw new AggregateError(args.length == 1? args[0] : args);
+                        },
+                        custom: (name) => {
+                            return (...args) => {
+                                err(name + ":\n", ...args);
+                                throw new Error(name + ":\n" + (args.length == 1? args[0] : args));
+                            }
+                        }
+                    }
+
+                    for(const type in types)
+                        fn[type] = (...args) => types[type](...args);
+
+
+                    return fn;
+                }
 
                 return function(...args) {
                     const stack = new Error().stack;

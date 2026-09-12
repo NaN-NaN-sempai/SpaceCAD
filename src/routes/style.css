@@ -166,6 +166,19 @@ input {
     color: white;
     padding: 10px;
     border-radius: 5px;
+
+    &[type="color"] {
+        outline: none;
+        appearance: none;
+        -webkit-appearance: none;
+
+        &::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        &::-webkit-color-swatch {
+            border: none;
+        }
+    }
 }
 
 hr {

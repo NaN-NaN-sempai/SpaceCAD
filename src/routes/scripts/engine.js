@@ -1093,6 +1093,7 @@ const generateResourcesDOM = () => {
     controllers = [];
 
 }
+
 let controllers = [];
 const setupControllers = () => {
     const list = document.query("#controllers .list");
@@ -1113,11 +1114,10 @@ const setupControllers = () => {
     }
     
 }
+electronStore.controllers = electronStore.controllers || {};
 const createController = (name, prop) => {
     if(!name) {
-        const message = `controller requires a name`;
-        logger.error(message);
-        throw new Error(message);
+        logger.throw.syntax(`controller requires a name`);
     }
 
     const emptyProp = prop == null;
@@ -1140,15 +1140,26 @@ const createController = (name, prop) => {
         value: "",
         minlength: 0,
     };
+    const boundry = {
+        boundry: true, // if can move if mouse goes out of box
+    }
+    const defaultLinear = {
+        ...base,
+        ...boundry,
+        type: "linear",
+        max: 1000,
+        min: -1000,
+        value: 0,
+    };
     const default2D = {
         ...base,
+        ...boundry,
         type: "2d",
         maxX: 1000,
         maxY: 1000,
         minX: -1000,
         minY: -1000,
         value: v0,
-        boundry: true, // if can move if mouse goes out of box
     };
     if(typeof prop == "object") {
         if(prop.type == "text")
@@ -1167,6 +1178,9 @@ const createController = (name, prop) => {
                 logger.throw("Controller 2D: inconpactible minY and maxY");
         }
 
+        if(prop.type == "linear")
+            prop = recursiveProxy(prop, defaultLinear);
+
         else 
             prop = recursiveProxy(prop, defaultRange);
 
@@ -1175,9 +1189,7 @@ const createController = (name, prop) => {
         prop = defaultRange;
     }
     
-    const list = document.query("#controllers .list");
-
-    let dom = list.query(`[data-name="${name}"]`);
+    
 
 
     const pureValue = () => {
@@ -1190,6 +1202,13 @@ const createController = (name, prop) => {
             const y = parseFloat(out.query(".yOutput").dataset.rawValue);
             
             return v2(x, y);
+        }
+        if(input.dataset.type == "linear") {
+            const out = dom.query(".inputInfo");
+            
+            const x = parseFloat(out.query(".valueOutput").dataset.rawValue);
+            
+            return x;
         }
         if(input.type == "color") 
             return color(input.value);
@@ -1205,7 +1224,71 @@ const createController = (name, prop) => {
         
         return pureValue();
     }
+    
+    const list = document.query("#controllers .list");
 
+    let dom = list.query(`[data-name="${name}"]`);
+
+    if(dom != null) {
+        if(dom.dataset.prop != JSHON.stringify(prop) && !emptyProp)
+            dom.remove();
+        else
+            return getValue();
+    }
+
+
+    const propCopy = resolveProxy(prop);
+
+
+    let storeTimeout;
+    const store = (value) => {
+        if(isElectron) {
+            if(storeTimeout) return value;
+
+            storeTimeout = setTimeout(() => {
+                storeTimeout = null;
+            }, 500);
+
+            if(electronStore.selectedFile?.path == null) return;
+           
+            const file = encodeURI(electronStore.selectedFile.path);
+            const controller = electronStore.controllers[file] || {};
+            
+            controller[name] = value;
+
+            electronStore.controllers = {
+                ...electronStore.controllers,
+                [file]: controller
+            }
+            
+            return value;
+        }
+        else 
+            return;
+    }
+    if(isElectron && electronStore.selectedFile?.path != null) {
+        const file = encodeURI(electronStore.selectedFile.path);
+        let storedController = electronStore.controllers[file];
+
+        if(storedController == null) 
+            storedController = {};
+
+        if(storedController[name] == null) {
+            storedController[name] = 
+                prop.type == "2d"?
+                    v2(prop.value.x, prop.value.y):
+                    prop[prop.type == "checkbox"? "checked": "value"];
+        } else {
+            prop[prop.type == "checkbox"? "checked": "value"] = storedController[name];
+        }
+
+        electronStore.controllers = {
+            ...electronStore.controllers,
+            [file]: storedController
+        };
+    }
+
+    
     const propOnChange = () => {
         const delay = prop.inputDelay ?? parseFloat(document.querySelector("#controllers .title .options input").value);
 
@@ -1223,18 +1306,10 @@ const createController = (name, prop) => {
         }, delay);
     }
 
-
-    if(dom != null) {
-        if(dom.dataset.prop != JSHON.stringify(prop) && !emptyProp)
-            dom.remove();
-        else
-            return getValue();
-    }
-
     dom = createElement("div", e => {
         e.classList.add("controller");
         e.dataset.name = name;
-        e.dataset.prop = JSHON.stringify(prop);
+        e.dataset.prop = JSHON.stringify(propCopy);
 
         e.append(createElement("span", e => {
             e.classList.add("name");
@@ -1278,6 +1353,7 @@ const createController = (name, prop) => {
                                 e.css = {
                                     width: `calc(100% - ${margin * 2}px)`,
                                     height: "200px",
+                                    overflow: "hidden",
                                     margin: `${margin}px`,
                                     borderRadius: "10px",
                                     boxShadow: "inset 0 5px 10px rgba(0, 0, 0, 0.5)",
@@ -1287,7 +1363,7 @@ const createController = (name, prop) => {
 
                                 setBG({
                                     x: rawPercent(prop.value.x, prop.minX, prop.maxX),
-                                    y: rawPercent(prop.value.y, prop.minY, prop.maxY)
+                                    y: rawPercent(-prop.value.y, prop.minY, prop.maxY)
                                 });
 
                                 const translateVal = (e, val) => {
@@ -1301,6 +1377,7 @@ const createController = (name, prop) => {
                                     if(prop.minY != prop.maxY)
                                     e.css.top = `${y * 100}%`;
                                 };
+                                
                                 let dragging = false;
                             
 
@@ -1315,6 +1392,9 @@ const createController = (name, prop) => {
                                         y = Math.max(prop.minY, Math.min(prop.maxY, y));
                                     }
 
+
+                                    store({x, y: -y});
+
                                     out.query(".xOutput").dataset.rawValue = x;
                                     out.query(".xOutput").innerHTML = x.toFixed(2);
                                     out.query(".yOutput").dataset.rawValue = -y;
@@ -1325,20 +1405,44 @@ const createController = (name, prop) => {
                                     propOnChange();
                                 }
 
+                                let lastX;
+                                let lastY;
+
+                                let over = false;
                                 const getCord = (evt) => {
                                     const {rect} = e;
 
+                                    let newX = evt.clientX;
+                                    let newY = evt.clientY;
+
+                                    if(!prop.boundry)
+                                    if(newX < rect.left || newX > rect.right ||
+                                        newY < rect.top || newY > rect.bottom) {
+                                            if(!over) {
+                                                over = true;
+
+                                                e.requestPointerLock();
+                                            }
+
+                                            newX = lastX + evt.movementX;
+                                            newY = lastY + evt.movementY;
+                                    }
+
+                                    lastX = newX;
+                                    lastY = newY;
+
                                     
+                                    const maxDom = prop.boundry? 13: 0;
                                     const x = Math.max(
-                                        10 / rect.width,
-                                        Math.min(1 - 10 / rect.width, (evt.clientX - rect.left) / rect.width)
+                                        maxDom / rect.width,
+                                        Math.min(1 - maxDom / rect.width, (newX - rect.left) / rect.width)
                                     );
                                     const y = Math.max(
-                                        10 / rect.height,
-                                        Math.min(1 - 10 / rect.height, (evt.clientY - rect.top) / rect.height)
+                                        maxDom / rect.height,
+                                        Math.min(1 - maxDom / rect.height, (newY - rect.top) / rect.height)
                                     );
-                                    const rawX = (evt.clientX - rect.left) / rect.width;
-                                    const rawY = (evt.clientY - rect.top) / rect.height;
+                                    const rawX = (newX - rect.left) / rect.width;
+                                    const rawY = (newY - rect.top) / rect.height;
 
 
                                     translateVal(e.children[0], {
@@ -1361,19 +1465,29 @@ const createController = (name, prop) => {
                                     if(!dragging)
                                         return;
 
-                                    const {rect} = e;
-
                                     getCord(evt);
                                 })
 
                                 on("mouseup", (evt) => {
                                     dragging = false;
                                     e.css.cursor = "pointer";
+
+                                    if(over) {
+                                        doc.exitPointerLock();
+                                        over = false;
+                                    }
                                 });
 
 
                                 e.append(
                                     createElement("div", e => {
+                                        let x = (prop.value.x - prop.minX) / (prop.maxX - prop.minX) * 100;
+                                        let y = (-prop.value.y - prop.minY) / (prop.maxY - prop.minY) * 100;
+
+                                        if(!prop.boundry) {
+                                            x = x < 0 ? 0 : x > 100 ? 100 : x;
+                                            y = y < 0 ? 0 : y > 100 ? 100 : y;
+                                        }
 
                                         e.css = {
                                             width: "20px",
@@ -1381,10 +1495,147 @@ const createController = (name, prop) => {
                                             background: cssVar.secondary,
                                             borderRadius: "5px",
                                             position: "absolute",
-                                            left: "50%",
+                                            left: x + "%",
+                                            top: y + "%",
+                                            transform: "translate(-50%, -50%)",
+                                            boxShadow: "0 5px 5px rgba(0, 0, 0, 0.5), inset 0 -3px 3px rgba(0, 0, 0, 0.5), inset 0 3px 4px rgba(255, 255, 255, 0.2)",
+                                        }
+                                    })
+                                )
+                                
+                            })
+                        );
+                    }):
+
+                    prop.type == "linear" ? 
+                    createElement("div", e => {
+                        e.classList.add("inputObject");
+                        e.dataset.type = "linear";
+
+                        e.append(
+                            createElement("div", e => {
+                                const max = prop.max || prop.maxX;
+                                const min = prop.min || prop.minX;
+
+                                const margin = 10;
+                                const percent = (n, min, max) => min + parseFloat(n) * (max - min);
+                                e.css = {
+                                    width: `calc(100% - ${margin * 2}px)`,
+                                    height: "30px",
+                                    overflow: "hidden",
+                                    margin: `${margin}px`,
+                                    borderRadius: "10px",
+                                    boxShadow: "inset 0 5px 10px rgba(0, 0, 0, 0.5)",
+                                    position: "relative",
+                                    cursor: "pointer",
+                                    background: `
+                                        linear-gradient(var(--primary), var(--primary)) center / 2px 20px no-repeat,
+                                        linear-gradient(var(--primary), var(--primary)) 50% 50% / 100% 2px no-repeat,
+                                        ${cssVar.tertiary}`
+                                };
+
+
+                                const translateVal = (e, val) => {
+                                    if(min != max)
+                                    e.css.left = `${val * 100}%`;
+                                };
+                                
+                                let dragging = false;
+                            
+
+                                const setOutput = (x) => {
+                                    const out = e.parentElement.parentElement.parentElement.query(".inputInfo");
+
+                                    x = percent(x, min, max);
+
+                                    if (prop.boundry) {
+                                        x = Math.max(min, Math.min(max, x));
+                                    }
+
+                                    store(x);
+
+                                    out.query(".valueOutput").dataset.rawValue = x;
+                                    out.query(".valueOutput").innerHTML = x.toFixed(2);
+
+                                    pureValue();
+
+                                    propOnChange();
+                                }
+
+                                let lastX = 0;
+                                let over;
+                                const getCord = (evt) => {
+                                    const {rect} = e;
+
+                                    let newX = evt.clientX;
+
+                                    if(!prop.boundry)
+                                    if(evt.clientX > rect.right || evt.clientX < rect.left) {
+                                        if(!over) {
+                                            over = true;
+
+                                            e.requestPointerLock();
+                                        }
+                                        
+                                        
+                                        newX = lastX + evt.movementX;
+                                    }
+
+                                    lastX = newX;
+
+                                    const maxDom = prop.boundry? 13: 0;
+                                    const x = Math.max(
+                                        maxDom / rect.width,
+                                        Math.min(1 - maxDom / rect.width, (newX - rect.left) / rect.width)
+                                    );
+                                    const rawX = (newX - rect.left) / rect.width;
+
+                                    translateVal(e.children[0], x);
+
+                                    setOutput(rawX);
+                                }
+                                e.on("mousedown", (evt) => {
+                                    evt.preventDefault();
+                                    dragging = true;
+
+                                    getCord(evt);
+
+                                    e.css.cursor = "grabbing";
+                                });
+
+                                on("mousemove", (evt) => {
+                                    if(!dragging)
+                                        return;
+
+                                    getCord(evt);
+                                })
+
+                                on("mouseup", (evt) => {
+                                    dragging = false;
+                                    e.css.cursor = "pointer";
+
+                                    if(over) {
+                                        over = false;
+                                        doc.exitPointerLock();
+                                    }
+                                });
+
+
+                                e.append(
+                                    createElement("div", e => {
+                                        let x = (prop.value - min) / (max - min) * 100;
+                                        x = x < 0 ? 0 : x > 100 ? 100 : x;
+
+                                        e.css = {
+                                            width: "20px",
+                                            height: "20px",
+                                            background: cssVar.secondary,
+                                            borderRadius: "5px",
+                                            position: "absolute",
+                                            left: x + "%",
                                             top: "50%",
                                             transform: "translate(-50%, -50%)",
-                                            boxShadow: "0 5px 5px rgba(0, 0, 0, 0.5), inset 0 3px 4px rgba(255, 255, 255, 0.2)",
+                                            boxShadow: "0 5px 5px rgba(0, 0, 0, 0.5), inset 0 -3px 3px rgba(0, 0, 0, 0.5), inset 0 3px 4px rgba(255, 255, 255, 0.2)",
                                         }
                                     })
                                 )
@@ -1398,12 +1649,14 @@ const createController = (name, prop) => {
                         Object.entries(prop).forEach(([key, value]) => {
                             e[key] = value;
                         });
+                        e[prop.type == "checkbox"? "checked": "value"] = prop[prop.type == "checkbox"? "checked": "value"]
 
                         if(prop.type == "text" && e.placeholder == "")
                             e.placeholder = `${name}`;
 
                         const setOutput = () => {
-                            const out = e.parentNode.query(".inputInfo .valueOutput");;
+                            
+                            const out = e.parentNode.query(".inputInfo .valueOutput");
 
                             if(out) {
                                 if(e.type == "text")
@@ -1417,6 +1670,7 @@ const createController = (name, prop) => {
                             }
 
                             propOnChange();
+                            store(e.value);
                         }
                         
                         setTimeout(() => {
@@ -1598,6 +1852,49 @@ const createController = (name, prop) => {
                             }),
                         );
                         inputInfo.css.border = "none";
+                    } else if(["linear"].includes(prop.type)) {
+                        e.append(
+                            createElement("span", e => {
+                                e.append(
+                                    createElement("span", e => {
+                                        e.classList.add("type");
+                                        e.css = css;
+                                        e.setlang.bottombuttons.controllers.inputs.min$;
+                                    }),
+                                    createElement("span", e => {
+                                        e.dataset.rawValue = prop.min || prop.minX || 0;
+                                        e.innerHTML = (prop.min || prop.minX || 0).toFixed(2);
+                                    })
+                                );
+                            }),
+                            createElement("span", e => {
+                                e.append(
+                                    createElement("span", e => {
+                                        e.classList.add("type");
+                                        e.css = css;
+                                        e.setlang.bottombuttons.controllers.inputs.max$;
+                                    }),
+                                    createElement("span", e => {
+                                        e.dataset.rawValue = prop.max || prop.maxX || 0;
+                                        e.innerHTML = (prop.max || prop.maxX || 0).toFixed(2);
+                                    })
+                                );
+                            }),
+                            createElement("span", e => {
+                                e.append(
+                                    createElement("span", e => {
+                                        e.classList.add("type");
+                                        e.css = css;
+                                        e.setlang.bottombuttons.controllers.inputs.value$;
+                                    }),
+                                    createElement("span", e => {
+                                        e.classList.add("valueOutput");
+                                        e.dataset.rawValue = prop.value || 0;
+                                        e.innerHTML = (prop.value || 0).toFixed(2);
+                                    })
+                                );
+                            }),
+                        );
                     }
                 }),
                 ...(

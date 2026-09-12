@@ -152,8 +152,8 @@ class Color {
     }
 
     
-    static color = c => {
-        const instance = new Color(c);
+    static color = (...args) => {
+        const instance = new Color(...args);
 
         return instance.output
     }
@@ -196,7 +196,7 @@ class Color {
             },
             str: {
                 get: () => {
-                    return inst.Output(true) + "";
+                    return inst.outputString();
                 }
             },
             asHEX: {
@@ -252,7 +252,7 @@ class Color {
             if( 
                 this instanceof String ||
                 window.THREE != undefined && this instanceof THREE.Color
-            ) return this.instance;
+            ) return this.ColorInstance;
             else return this;
         }
 
@@ -294,28 +294,32 @@ class Color {
         }
 
 
-        Output(ignoreDefault = false) {
+        static setupProps = (obj, instance) => {
+            getClassMethods(instance)
+            .forEach(([key, value]) => obj[key] = value);
+            
+            obj.ColorInstance = instance;
+            instance.ColorParent = obj;
+
+            Color.setProperties(obj, instance);
+        }
+        outputTHREE() {
+            const instance = this.getInstance();
+            if(window.THREE != undefined) {
+                const { r, g, b } = instance.asRGB;
+                const color = new THREE.Color(r/255, g/255, b/255);
+                ColorRoot.setupProps(color, instance);
+                return color;
+            } else {
+                logger.warn("THREE is not loaded");
+            }
+
+            return this.outputStringObject();
+        }
+        outputString() {
             const instance = this.getInstance();
             const { type } = instance;
             let output;
-
-            const setupProps = obj => {
-                getClassMethods(instance)
-                .forEach(([key, value]) => obj[key] = value);
-                
-                obj.instance = instance;
-                instance.colorParent = obj;
-
-                Color.setProperties(obj, instance);
-            }
-
-
-            if(window.THREE != undefined && Color.defaultOutputType == "three" && !ignoreDefault) {
-                const { r, g, b } = instance.asRGB;
-                const color = new THREE.Color(r/255, g/255, b/255);
-                setupProps(color);
-                return color;
-            }
             
             if(type == "hex") output = instance.toString();
             if(type == "named") output = instance.hex.toString();
@@ -333,11 +337,27 @@ class Color {
             if(type == "oklch")
                 output = `oklch(${instance.l * 100}% ${instance.c} ${instance.h}${instance.hasAlpha ? ` / ${instance.alpha}` : ""})`;
             
-            
-            output = new String(output);
+            return output;
+        }
+        outputStringObject() {
+            const instance = this.getInstance();
+            const { type } = instance;
+            const str = this.outputString();
+
+
+            const output = new String(str);
+            ColorRoot.setupProps(output, instance);
             output.stringInstance = true;
 
             return output;
+        }
+        Output(ignoreDefault = false) {
+            if(!ignoreDefault) {
+                if(this.outputType == "three") return this.outputTHREE();
+                if(this.outputType == "string") return this.outputStringObject();
+            }
+            
+            return this.outputString();  
         }
 
         to(type) {
@@ -1210,6 +1230,7 @@ class Color {
                 Color.err(`named space color must contain "(" and ")", got: ${c}`);
             }
         } else {
+            if(!c.includes(" ")) return new Color.HEX(c);
             let value = c;
             
             if(c.includes("(") && c.includes(")")) {
@@ -1222,7 +1243,7 @@ class Color {
         return null;
     }
         
-    constructor(c) {
+    constructor(c, defaultOutput = Color.defaultOutputType) {
         let retColor;
 
         if(c?.instance instanceof Color.ColorRoot) {
@@ -1245,6 +1266,9 @@ class Color {
             retColor = new Color.RGB(c[0], c[1], c[2], c[3]);
         } else if(window.THREE != null && c instanceof window.THREE.Color) {
             retColor = new Color.RGB(c.r, c.g, c.b);
+        } else if(typeof c == "object" && c instanceof String) {
+            if(c.ColorInstance) return c.ColorInstance;
+            else retColor = new Color(c.toString());
         } else {
             Color.err(`Unexpected color type: ${typeof c}`, c);
         }
@@ -1252,6 +1276,9 @@ class Color {
         if(!retColor) {
             Color.err(`Unexpected color output: ${c}`);
         }
+
+        retColor.outputType = defaultOutput;
+
 
         return retColor;
     }
