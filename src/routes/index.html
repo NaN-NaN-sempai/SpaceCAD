@@ -373,6 +373,10 @@
 
         <div class="title" language-modal-changelog-lastupdates></div>
 
+        <span style="background: var(--primary);">popup minnor change</span>
+        (16/09/2026 - 10:44) UI -> popup botão tipo cancelar
+        <br><br>
+
         <span style="background: var(--primary);">In-App Editor, SpaceCAD API update, UI smoothing, prevent app closing</span>
         (16/09/2026 - 10:39) UI -> popup gera um form modal temporário que é destruido ao fechar
         <br><br>
@@ -773,6 +777,9 @@
                                 } else if(type == "confirm") {
                                     e.type = "button";
                                     e.classList.add("confirm");
+                                } else if(type == "cancel") {
+                                    e.type = "button";
+                                    e.classList.add("cancel");
                                 } else {
                                     e.type = "button";
                                 }
@@ -3602,7 +3609,7 @@ startTranslation(isElectron? electronStore : undefined);
             editor.changeFileText = () => {
                 if(editor.getValue() !== editor.fileText) {
                     windowEditor.classList.add("unsaved");
-                    if(isElectron) return;
+                    if(!isElectron) return;
                         
                     close.preventClosing.unsavedCode = (doClose) => {
                         appPopup(
