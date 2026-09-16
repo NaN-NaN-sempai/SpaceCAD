@@ -373,6 +373,10 @@
 
         <div class="title" language-modal-changelog-lastupdates></div>
 
+        <span style="background: var(--primary);">appPopup bugfix</span>
+        (16/09/2026 - 10:51) UI -> appPopup bugfix q estava fazendo o form reiniciar a pagina
+        <br><br>
+
         <span style="background: var(--primary);">popup minnor change</span>
         (16/09/2026 - 10:44) UI -> popup botão tipo cancelar
         <br><br>
@@ -2683,7 +2687,9 @@ startTranslation(isElectron? electronStore : undefined);
                             modal.close();
                         }
                     },
-                    (form, modal) => modal.close()
+                    (form, modal) => {
+                        modal.close()
+                    }
                 )
             } else {
                 return alert(res.error);
@@ -3617,10 +3623,12 @@ startTranslation(isElectron? electronStore : undefined);
                             language.editor.title.popup.message,
                             language.editor.title.popup.cancel,
                             language.editor.title.popup.confirm,
-                            (form, modal) => {
+                            (form, modal, evt) => {
+                                evt.preventDefault();
                                 modal.close();
                             },
-                            () => {
+                            (form, modal, evt) => {
+                                evt.preventDefault();
                                 doClose();
                             },
                         )

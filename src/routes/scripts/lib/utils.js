@@ -1402,7 +1402,7 @@ class ObjectForm {
             form.addEventListener("submit", (evt) => {
                 this.callback.forEach(fn => {
                     if(typeof fn == "function")
-                    fn(this.get());
+                    fn(evt, this);
                 });
             });
 
