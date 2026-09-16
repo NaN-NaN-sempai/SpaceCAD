@@ -148,10 +148,9 @@ class Color {
         "violet": "#ee82ee",
         "wheat": "#f5deb3",
         "whitesmoke": "#f5f5f5",
-        "yellowgreen": "#9acd32"
+        "yellowgreen": "#9acd32",
+        transparent: "#00000000"
     }
-
-    
     static color = (...args) => {
         const instance = new Color(...args);
 
@@ -183,6 +182,51 @@ class Color {
             else if(val < 0) return 0;
             else return val;
         }
+    }
+
+    static mix(a, b, amount = 0.5) {
+        amount = Color.asPorc(amount);
+
+        if(!(a instanceof Color.ColorRoot)) a = new Color(a);
+        if(!(b instanceof Color.ColorRoot)) b = new Color(b);
+
+        const aRGB = a.asRGB;
+        const bRGB = b.asRGB;
+
+        const colorArr = [
+            Math.round(aRGB.r * (1 - amount) + bRGB.r * amount),
+            Math.round(aRGB.g * (1 - amount) + bRGB.g * amount),
+            Math.round(aRGB.b * (1 - amount) + bRGB.b * amount),
+        ];
+
+        if(aRGB.hasAlpha)
+            colorArr.push(Math.round(aRGB.alpha * (1 - amount) + (bRGB.alpha ?? 1) * amount));
+
+        let newColor;
+
+        if(aRGB.type != "named") newColor  = new Color(colorArr).to(aRGB.type);
+        else newColor = new Color(colorArr);
+
+        return newColor;
+    }
+    static darken = (a, amount) => Color.mix(a, "black", amount);
+    static lighten = (a, amount) => Color.mix(a, "white", amount);
+    static opacity = (a, amount) => {
+        if(!(a instanceof Color.ColorRoot)) a = new Color(a);
+
+        const aRGB = a.asRGB;
+        const colorArr = [
+            aRGB.r,
+            aRGB.g,
+            aRGB.b,
+        ];
+
+        if(aRGB.hasAlpha)
+            colorArr.push(Math.round(aRGB.alpha * (1 - amount)));
+        else 
+            colorArr.push(amount);
+
+        return new Color(colorArr).to(aRGB.type);
     }
 
     static defaultOutputType = "three";
@@ -262,35 +306,22 @@ class Color {
             if(!(color instanceof ColorRoot)) 
                 color = new Color(color);
 
-            amount = Color.asPorc(amount);
-
-            const rgb = instance.asRGB;
-            color = color.asRGB;
-
-            const colorArr = [
-                Math.round(rgb.r * (1 - amount) + color.r * amount),
-                Math.round(rgb.g * (1 - amount) + color.g * amount),
-                Math.round(rgb.b * (1 - amount) + color.b * amount),
-            ];
-
-            if(rgb.hasAlpha)
-                colorArr.push(Math.round(rgb.alpha * (1 - amount) + (color.alpha ?? 1) * amount));
-
-            let newColor;
-
-            if(instance.type != "named") newColor  = new Color(colorArr).to(instance.type);
-            else newColor = new Color(colorArr);
+            const newColor = Color.mix(instance, color, amount);
 
             return newColor.output;
         }
 
         darken(amount = 0.1) {
             const instance = this.getInstance();
-            return instance.mix(black, amount); 
+            return Color.darken(instance, amount);
         }
         lighten(amount = 0.1) {
             const instance = this.getInstance();
-            return instance.mix(white, amount);
+            return Color.lighten(instance, amount);
+        }
+        opacity(amount = 0.1) {
+            const instance = this.getInstance();
+            return Color.opacity(instance, amount);
         }
 
 

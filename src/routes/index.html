@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title> SpaceCAD </title>
  
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="titlebar.css">
+    <link rel="stylesheet" href="style/style.css">
+    <link rel="stylesheet" href="style/titlebar.css">
+    <link rel="stylesheet" href="style/monaco.css">
 </head>
 <body>
     <div class="titlebar">
@@ -39,10 +40,33 @@
             <button id="maximize">□</button>
             <button id="close">×</button>
         </div>
-
     </div>
 
     <div id="tempCursor"></div>
+
+    <div id="appDisplay">
+        <div class="separateWindow" id="windowEditor">
+            <div class="window" id="localEditor">
+                <div class="body">
+                    <div class="titleBar">
+                        <div class="title">
+                            <span class="fileName"></span>
+                            <span class="unsaved" language.editor.title.unsaved></span>
+                            <span class="filePath"></span>
+                        </div>
+                        <div class="buttons">
+                            <button class="options">
+                                <i class="hamburger"></i>
+                            </button>
+                            <button class="close" language.title.editor.title.close>×</button>
+                        </div>
+                    </div>
+                    <div class="monaco"></div>
+                </div>
+            </div>
+        </div>
+        <div id="mainEngine"></div>        
+    </div>
 
 
     <div class="bottomItens">
@@ -52,17 +76,20 @@
         <button class="cameraLook iconButton" language-title-bottombuttons-setlook-bottom>
             <img class="svgIcon" src="./svg/lookBottom.svg" alt="bottom">
         </button>
-        <button class="cameraLook iconButton" language-title-bottombuttons-setlook-right>
-            <img class="svgIcon" src="./svg/lookRight.svg" alt="right">
-        </button>
         <button class="cameraLook iconButton" language-title-bottombuttons-setlook-left>
             <img class="svgIcon" src="./svg/lookLeft.svg" alt="left">
+        </button>
+        </button>
+        <button class="cameraLook iconButton" language-title-bottombuttons-setlook-right>
+            <img class="svgIcon" src="./svg/lookRight.svg" alt="right">
         </button>
         <button class="cameraLook iconButton" language-title-bottombuttons-setlook-front>
             <img class="svgIcon" src="./svg/lookFront.svg" alt="front">
         </button>
         <button class="cameraLook iconButton" language-title-bottombuttons-setlook-back>
             <img class="svgIcon" src="./svg/lookBack.svg" alt="back">
+        </button>
+        <button class="iconButton minimizeCameraLook">
         </button>
 
         <div class="splitter"></div>
@@ -188,6 +215,7 @@
         <input type="text" name="path" language-placeholder-modal-newfile-dirplaceholder>
         <input type="button" id="selectDir" value="selecionar diretorio">
         <hr>
+        <input type="hidden" name="content" value="">
         <div class="buttons">
             <input type="button" class="cancel" closemodal language-value-modal-newfile-cancel>
             <input type="submit" class="confirm" language-value-modal-newfile-confirm>
@@ -299,14 +327,30 @@
         </div>
     </form>
 
+
+
+    <form modal id="confirmPopupModal" class="question">
+        <div class="title">
+            <span class="titleText"></span> <img class="svgIcon" src="./svg/atention.svg" alt="export resources">
+        </div>
+        <p class="message"></p>
+        <hr>
+        <div class="buttons">
+            <input type="submit" class="cancel">
+            <input type="submit" class="confirm" >
+        </div>
+    </form>
+
     <!-- CHANGELOG -->
     <div modal id="changelog" class="question">
         <div class="title" language-modal-changelog-todo></div>
-        SpaceCAD -> importar packages npm por codigo spacecad.js
-        <br><br>
         SpaceCAD Web -> refazer versão web do app em outra guia que rode sem server
         <br><br>
-        engine controller -> salvar valor do input no electronStore -> path do arquivo -> nome do input
+
+        <span style="background: var(--primary); font-weight: bold; ">(No Futuro)</span>
+        Os 3 abaixo poderiam utilizar a mesma fonte:
+        <br><br>
+        monaco -> hinters para o editor local
         <br><br>
         SpaceCAD -> documentação do SpaceCAD
         <br><br>
@@ -329,12 +373,64 @@
 
         <div class="title" language-modal-changelog-lastupdates></div>
 
+        <span style="background: var(--primary);">In-App Editor, SpaceCAD API update, UI smoothing, prevent app closing</span>
+        (16/09/2026 - 10:39) UI -> popup gera um form modal temporário que é destruido ao fechar
+        <br><br>
+        (16/09/2026 - 09:53) app -> electronStore agora é interpretado como localStorage se isElectron for false
+        <br><br>
+        (16/09/2026 - 09:21) editor -> mensagem de não salvo e esconder caminho
+        <br><br>
+        (16/09/2026 - 08:54) editor -> auto execução
+        <br><br>
+        (16/09/2026 - 07:56) editor -> colorização desabilitada para comentarios e textos, suporte para template ${}
+        <br><br>
+        (16/09/2026 - 06:36) SpaceCAD UI -> novos icones para limpar registros, editor executar codgio, editor salvar, editor salvar como e editor autosalvar
+        <br><br>
+        (16/09/2026 - 01:15) style -> nova animação de abrir / fechar modals
+        <br><br>
+        (16/09/2026 - 00:29) utils -> utils de listas html agora tambem inclui array, os valores são filtrados com somente elementos html
+        <br><br>
+        (16/09/2026 - 00:03) SpaceCAD -> ao salvar, pergunta se quer sobreescrever o arquivo se ele existir
+        <br><br>
+        (14/09/2026 - 18:43) SpaceCAD -> editor: executar codigo, salvar arquivo, salvar altomatico se existir um arquivo aberto
+        <br><br>
+        (14/09/2026 - 17:53) SpaceCAD -> appPopup: popup com botões e mensagens
+        <br><br>
+        (14/09/2026 - 17:49) SpaceCAD -> previnir app de fechar com close.preventClosing.meuCallbackDePrevenção
+        <br><br>
+        (14/09/2026 - 15:14) editor -> animação para abrir e fechar, e fechar automatico se width menor que --minWidth
+        <br><br>
+        (14/09/2026 - 15:02) editor -> tema com estilos baseados em valores do window e SpaceCAD.codeScope
+        <br><br>
+        (14/09/2026 - 10:49) SpaceCAD API -> agora o escopo da execução do codigo é acessivel por SpaceCAD.codeScope
+        <br><br>
+        (14/09/2026 - 05:50) SpaceCAD UI -> editor local dentro do app (apenas visualização por enquanto)
+        <br><br>
+        (14/09/2026 - 01:35) utils -> ProxyAccumulator.ObjectTraverser -> Proxy recursivo que percorre um objeto
+        <br><br>
+        (14/09/2026 - 01:21) utils -> ProxyAccumulator: Proxy recursivo com callback para resolução
+        <br><br>
+        (13/09/2026 - 22:09) SpaceCAD -> engine e libs configuradas para mudanças no tamanho do canvas do THREE
+        <br><br>
+        (13/09/2026 - 19:16) SpaceCAD UI -> esconder botões de definir orientação agora pode esconder todos se for clicado com o botão direito
+        <br><br>
+        (13/09/2026 - 16:24) SpaceCAD UI -> botões de definir orientação agora minimizam, excondendo traz, direita e baixo
+        <br><br>
+        (13/09/2026 - 16:24) SpaceCAD UI -> toggleables agora tem z-index definido e sobrepoem uns aos outros
+        <br><br>
+        (13/09/2026 - 02:47) SpaceCAD API -> Objetos SpaceCAD agora pode setar position, rotation, scale, quaternion diretamente, ex: meuObjeto.position = {x: 10, y:20, z: 30};
+        <br><br>
+        (13/09/2026 - 00:10) SpaceCAD -> icone com a resolução melhor
+        <br><br>
+
         <span style="background: var(--primary);">controllers saved value, controller linear, default camera new icons</span>
         (12/09/2026 - 19:12) SpaceCAD -> controller -> novo operador tipo linear e mouselock para input 2d e linear com boundry false
         <br><br>
         (12/09/2026 - 18:19) util -> [HTMLElement] proto -> innerListener -> adiciona um callback que é executado quando o innerHTML ou innerText for alterado no elemento especicado, removeInnerListener -> remove o callback, innerListeners -> array de callbacks
         <br><br>
         (12/09/2026 - 16:32) engine update -> os valores dos operadores são salvos no electronStore
+        <br><br>
+        (12/09/2026 - 15:32) engine update -> apagar cache dos operadores do arquivo local e de todos os arquivos, nas opções na aba operadores
         <br><br>
         (12/09/2026 - 15:06) logger -> throw agora tem erros expecificos: throw ou throw.error -> erro, throw.type -> tipo, throw.reference -> referencia, throw.syntax -> sintaxe, throw.range -> intervalo, throw.uri -> uri, throw.aggregator -> agregador
         <br><br>
@@ -579,11 +675,25 @@
     const minimize = document.querySelector("#minimize");
     const maximize = document.querySelector("#maximize");
     const close = document.querySelector("#close");
+    close.preventClosing = {};
 
     if(isElectron){
         minimize.addEventListener("click", titlbar.minimize);
         maximize.addEventListener("click", titlbar.maximize);
-        close.addEventListener("click", titlbar.close);
+        close.addEventListener("click", () => {
+            let prevent = false;
+            Object.entries(close.preventClosing)
+            .forEach(([key, value]) => {
+                if(typeof value == "function") {
+                    value(titlbar.close);
+                    prevent = true;
+                }
+
+            })            
+            
+            if(!prevent)
+                titlbar.close()
+        });
         electron.isFullscreen().then(b => document.body.classList.toggle('fullscreen', b));
         window.electron.onFullscreen(fullscreen => {
             document.querySelector("#options #optionsFullscreen img").src = `./svg/options/${fullscreen? "fullscreenOut" : "fullscreen"}.svg`;
@@ -593,6 +703,104 @@
         document.querySelector(".window-buttons").style.display = "none";
     }
 
+    const appPopup = (title, message, confirm, cancel, onConfirm, onCancel) => {
+        const el = doc.byId("confirmPopupModal");
+        el.modal.onOpen((modal) => {
+            el.query(".title .titleText").innerHTML = title;
+            el.query(".message").innerHTML = message;
+
+            const form = modal.element.onForm((evt, form) => {
+                evt.preventDefault();
+
+                const submitter = evt.submitter.className;
+
+                console.log(onConfirm, onCancel, submitter);
+
+                if(submitter == "cancel" && typeof onCancel == "function")
+                    onCancel(form, modal, evt);
+                else if(submitter == "confirm" && typeof onConfirm == "function")
+                    onConfirm(form, modal, evt);
+            });
+
+            const inputs = form.elementsObject();
+
+            inputs.submit.value = confirm;
+            modal.element.query(".cancel").value = cancel;
+        }).open();
+        
+    }
+
+
+    const popup = (title, message, buttons = [], onModalOpen = () => {}, onSubmit = () => {}, onModalClose = () => {}, ) => {
+        const form = createElement("form", e => {
+            e.setAttribute("modal", "");
+            e.setAttribute("class", "question");
+
+            e.append(
+                createElement("div", e => {
+                    e.classList.add("title");
+                    e.append(
+                        createElement("span", e => {
+                            e.classList.add("titleText");
+                            e.innerHTML = title;
+                        }),
+                        createElement("img", e => {
+                            e.classList.add("svgIcon");
+                            e.src = "./svg/atention.svg";
+                        })
+                    );
+                }),
+
+                createElement("p", e => {
+                    e.classList.add("message");
+                    e.innerHTML = message;
+                }),
+
+                Array.isArray(buttons) && buttons.length?
+                createElement("hr"): "",
+
+                Array.isArray(buttons)?
+                createElement("div", e => {
+                    e.classList.add("buttons");
+                    
+                    buttons.forEach(button => {
+                        const [html, func, type] = button;
+
+                        e.append(
+                            createElement("input", e => {
+                                if(type == "submit") {
+                                    e.type = "submit";
+                                } else if(type == "confirm") {
+                                    e.type = "button";
+                                    e.classList.add("confirm");
+                                } else {
+                                    e.type = "button";
+                                }
+                                e.value = html;
+
+                                e.addEventListener("click", (evt, form) => {
+                                    func(evt, form);
+                                });
+                            })
+                        )
+                    })
+                }):null,
+
+            )
+            
+        }).onForm(onSubmit);
+
+        console.log(form);
+
+
+        const modal = form.element.modal;
+        return modal
+            .onClose(onModalClose, ()=>{
+                form.remove();
+                modal.remove();
+            })
+            .onOpen(onModalOpen).open();
+    }
 
     let version = "";
     fetch("/version").then(res => res.json()).then(v => {
@@ -611,10 +819,36 @@
                 return true;
             }
         })
-        : {};
+        : new Proxy({}, {
+            get(_, key) {
+                const val = localStorage.getItem(key);
+
+                return val !== undefined? JSON.parse(val) : null;
+            },
+
+            set(_, key, value) {
+                localStorage.setItem(key, JSON.stringify(value));
+                return true;
+            }
+        });
 
     if(!electronStore.savedFiles)
         electronStore.savedFiles = [];
+
+    const awaitValue = (callback, value = "THREE") => {
+        const interval = setInterval(() => {
+            let val;
+            try {
+                val = typeof value == "function"? value(): window[value];
+            } catch(e) {
+                
+            }
+            if(val) {
+                clearInterval(interval);
+                callback(window[value]);
+            }
+        })
+    }
 </script>
 <script type="importmap">
 {
@@ -643,7 +877,9 @@ writeLanguage("en-US", { // default
             left: "view from left",
             right: "view from right",
             front: "view from front",
-            back: "view from back"
+            back: "view from back",
+            minimizecamera: "show less buttons",
+            maximizecamera: "show all view from buttons",
         },
         defaultcamera: {
             position: "position",
@@ -762,6 +998,7 @@ writeLanguage("en-US", { // default
         options: {
             new: "new file",
             open: "open file",
+            togleeditor: "toggle the local editor",
             import: "import resource",
             export: "export resource",
             unload: "unload file",
@@ -796,7 +1033,13 @@ writeLanguage("en-US", { // default
             alert: {
                 invalidName: "invalid file name",
                 noDir: "select a directory"
-            }
+            },
+            alreadexists: {
+                title: "The inserted file name already exists",
+                message: "Do you want to overwrite it?",
+                confirm: "overwrite",
+                cancel: "cancel"
+            },
         },
         rename: {
             title: "Rename File",
@@ -851,6 +1094,29 @@ writeLanguage("en-US", { // default
             lastupdates: "Last Updates",
         },
     },
+    editor: {
+        title: {
+            untitled: "untitled",
+
+            run: "run code",
+            save: "save",
+            saveasnew: "save as new file",
+            close: "close the editor",
+            autosaving: "auto saving",
+            autorun: "auto run",
+            hidefilepath: "hide file path",
+            unsaved: "unsaved",
+
+            popup: {
+                title: "There are unsaved changes",
+                message: "There are unsaved changes on the code, are you sure discard them?",
+                confirm: "discard changes",
+                cancel: "cancel",
+
+                nofile: "no file selected, save file is disabled",
+            }
+        }
+    },
 });
 writeLanguage("pt-BR", {
     name: "Português (Brasil)",
@@ -863,7 +1129,10 @@ writeLanguage("pt-BR", {
             left: "ver da esquerda",
             right: "ver da direita",
             front: "ver da frente",
-            back: "ver de trás"
+            back: "ver de trás",
+            
+            minimizecamera: "mostrar menos botões",
+            maximizecamera: "mostrar todos os botões de orientação",
         },
         defaultcamera: {
             position: "posição",
@@ -937,12 +1206,12 @@ writeLanguage("pt-BR", {
         resources: {
             button: "recursos",
             title: "Recursos",
-            libs: "bibliotecas:",
+            libs: "bíbliotecas:",
             modules: "módulos:",            
             addons: "extensões:",
             preload: "precarregado",
             nousage: "nenhum uso fornecido",
-            nolibs: "nehuma biblioteca",
+            nolibs: "nehuma bíblioteca",
             nomodules: "nehum módulo",
             noaddons: "nehuma extensão",
             addon: "extensão:",
@@ -982,6 +1251,7 @@ writeLanguage("pt-BR", {
         options: {
             new: "novo arquivo",
             open: "abrir arquivo",
+            togleeditor: "editor de texto",
             import: "importar recurso",
             export: "exportar recurso",
             unload: "descarregar arquivo",
@@ -1009,14 +1279,20 @@ writeLanguage("pt-BR", {
             title: "Novo SpaceCAD",
             name: "Nome do Arquivo",
             nameplaceholder: "nome do arquivo",
-            dir: "Diretorio",
+            dir: "diretório",
             dirplaceholder: "ex: C:\\Users\\user\\Desktop",
             confirm: "criar",
             cancel: "cancelar",
             alert: {
-                invalidName: "nome de arquivo invalido",
+                invalidName: "nome de arquivo inválido",
                 noDir: "selecione um diretorio"
-            }
+            },
+            alreadexists: {
+                title: "O nome do arquivo ja existe",
+                message: "Deseja sobrescrever?",
+                confirm: "sobrescrever",
+                cancel: "cancelar"
+            },
         },
         rename: {
             title: "Renomear Arquivo",
@@ -1036,10 +1312,10 @@ writeLanguage("pt-BR", {
             select: "selecionar arquivo",
             selecttypetext: "importando os seguintes recursos:",
             libs: "bibliotecas",
-            modules: "modulos",
+            modules: "módulos",
             addons: "extensões",
             overwrite: "sobrescrever todos os recursos",
-            overwritetext: "se selecionado, seus recursos serao deletados e os novos adicionados.",
+            overwritetext: "se selecionado, seus recursos serão apagados e os novos adicionados.",
             addontext: "sobrescrever é desativado ao importar addons.",
             confirm: "importar",
             cancel: "cancelar",
@@ -1050,8 +1326,8 @@ writeLanguage("pt-BR", {
         },
         shareresources: {
             title: "Exportar Recursos",
-            libs: "exportar bibliotecas",
-            modules: "exportar modulos",
+            libs: "exportar bíbliotecas",
+            modules: "exportar módulos",
             addons: "exportar extensões",
             asaddon: "exportar como extensão",
             addonname: "nome da extensão",
@@ -1062,13 +1338,36 @@ writeLanguage("pt-BR", {
             alert: {
                 noType: "tipo de recurso não selecionado",
                 invalideaddonname: "nome de extensão invalido",
-                noaddonname: "nome da extensão é obrigatorio",
-                noaddonowner: "autor da extensão é obrigatorio",
+                noaddonname: "nome da extensão é obrigatório",
+                noaddonowner: "autor da extensão é obrigatório",
             }
         },
         changelog: {
-            todo: "Á Fazer",
-            lastupdates: "Ultimas Atualizacoes",
+            todo: "A Fazer",
+            lastupdates: "Últimas Atualizações",
+        }
+    },
+    editor: {
+        title: {
+            untitled: "sem nome",
+
+            run: "executar código",
+            save: "salvar",
+            saveasnew: "salvar como novo arquivo",
+            close: "fechar o editor",
+            autosaving: "salvamento automático",
+            autorun: "execução automática",
+            hidefilepath: "esconder caminho do arquivo",
+            unsaved: "não salvo",
+
+            popup: {
+                title: "Existem alterações não salvas",
+                message: "Existem alterações não salvas no código, deseja descartá-las?",
+                confirm: "descartar alterações",
+                cancel: "cancelar",
+
+                nofile: "nenhum arquivo aberto, salvamento de arquivos desabilitado",
+            }
         }
     },
 });
@@ -1083,7 +1382,9 @@ writeLanguage("fr-FR", {
             left: "voir de gauche",
             right: "voir de droite",
             front: "voir de face",
-            back: "voir de derrière"
+            back: "voir de derrière",
+            minimizecamera: "afficher moins de boutons",
+            maximizecamera: "afficher tous les boutons de l'orientation",
         },
         defaultcamera: {
             position: "position",
@@ -1112,7 +1413,7 @@ writeLanguage("fr-FR", {
             options: {
                 delay: "délai de saisie",
                 delaytitle: "Temps en millisecondes à attendre entre les sorties",
-                immediately: "immediatement",
+                immediately: "immédiatement",
 
                 clearcache: "effacer le cache du fichier",
                 clearcachetitle: "effacer les valeurs sauvegardées de l'opérateur pour ce fichier",
@@ -1136,9 +1437,9 @@ writeLanguage("fr-FR", {
                 minlength: "longueur minimale:",
                 maxlength: "longueur maximale:",
 
-                state: "etat:",
+                state: "état:",
                 on: "activé",
-                off: "déactivé",
+                off: "désactivé",
 
                 color: "couleur:",
 
@@ -1161,14 +1462,14 @@ writeLanguage("fr-FR", {
             modules: "modules:",         
             addons: "extensions:",
             preload: "préchargé",
-            nousage: "utilisation non prévue",
+            nousage: "aucune utilisation fournie",
             nolibs: "aucune bibliothèque chargée",
             nomodules: "aucun module chargé",
             noaddons: "aucune extension chargée",
             addon: "extension:",
             owner: "propriétaire:",
             removeaddonbtn: "supprimer extension",
-            removeaddon: "Voulez-vous vraiment supprimer cette extension?",
+            removeaddon: "Voulez-vous vraiment supprimer cette extension ?",
             types: {
                 object: "objet",
                 string: "chaîne",
@@ -1184,8 +1485,8 @@ writeLanguage("fr-FR", {
                 SvgToObject: "Svg vers Objet",
                 SvgToObjectFromFile: "Svg vers Objet d’un fichier",
 
-                Construct: "Construit",
-                ConstructGroup: "Groupe de Construits",
+                Construct: "Construct",
+                ConstructGroup: "Groupe de Construct",
             },
         },
         logs: {
@@ -1203,6 +1504,7 @@ writeLanguage("fr-FR", {
         options: {
             new: "nouveau fichier",
             open: "ouvrir le fichier",
+            togleeditor: "ouvrir l’éditeur",
             import: "importer des ressources",
             export: "exporter des ressources",
             unload: "décharger le fichier",
@@ -1240,7 +1542,13 @@ writeLanguage("fr-FR", {
             alert: {
                 invalidName: "nom de fichier invalide",
                 noDir: "sélectionnez un dossier"
-            }
+            },
+            alreadexists: {
+                title: "Le nom du fichier existe déjà",
+                message: "Voulez-vous le remplacer ?",
+                confirm: "remplacer",
+                cancel: "annuler"
+            },
         },
 
         rename: {
@@ -1265,7 +1573,7 @@ writeLanguage("fr-FR", {
             addons: "extensions",
             overwrite: "écraser toutes les ressources",
             overwritetext: "si coché, ces ressources seront supprimées et les nouvelles seront ajoutées.",
-            addontext: "Le remplacement est désactivé lors de l’importation des addons.",
+            addontext: "Le remplacement est désactivé lors de l’importation des extensions.",
             confirm: "importer",
             cancel: "annuler",
             alert: {
@@ -1297,7 +1605,30 @@ writeLanguage("fr-FR", {
             todo: "À faire",
             lastupdates: "Dernières mises à jour"
         }
-    }
+    },
+    editor: {
+        title: {
+            untitled: "Sans titre",
+
+            run: "exécuter le code",
+            save: "sauvegarder",
+            saveasnew: "sauvegarder comme nouveau fichier",
+            close: "fermer l’éditeur",
+            autosaving: "sauvement automatique",
+            autorun: "exécuter automatiquement",
+            hidefilepath: "masquer le chemin du fichier",
+            unsaved: "non sauvegardé",
+
+            popup: {
+                title: "Il y a des changements non sauvegardés",
+                message: "Il y a des changements non sauvegardés dans le code, voulez-vous les abandonner ?",
+                confirm: "abandonner",
+                cancel: "annuler",
+
+                nofile: "aucun fichier ouvert,  l'enregistrement est désactivé",
+            }
+        }
+    },
 });
 
 startTranslation(isElectron? electronStore : undefined);
@@ -1305,7 +1636,21 @@ startTranslation(isElectron? electronStore : undefined);
 <script src="./scripts/lib/inputManager.js"></script>
 <script src="./scripts/lib/loopManager.js"></script>
 <script src="./scripts/lib/mouseLock.js"></script>
+<script src="./scripts/lib/colors.js"></script>
 <script src="./scripts/lib/logger.js"></script>
+<script> // globalize colors & logger
+    const logger = new Logger(doc.query("#logger .body .list"));
+    const {color} = Color;
+    awaitValue(() => {
+        Color.GlobalizeNames();
+
+        const style = document.createElement("style");
+        
+        style.textContent = `\n${Object.entries(Color.names).map(([key, value]) =>`.spacecad-${key}{ color: ${value} !important; }`).join("\n")}`;
+
+        document.head.appendChild(style);
+    });
+</script>
 
 <script>
     // old not browser page
@@ -1349,6 +1694,8 @@ startTranslation(isElectron? electronStore : undefined);
 
 <script src="/node_modules/acorn/dist/acorn.js"></script>
 <script type="module"> // globalize imports 
+    /* import * as monaco from "monaco"; */
+
     import JSHON from "lib/JSHON.js";
     window.JSHON = JSHON;
 
@@ -1389,14 +1736,34 @@ startTranslation(isElectron? electronStore : undefined);
     loadScript(
         "./scripts/lib/overloadOperator.js",
         "./scripts/lib/SpaceCAD.js", 
-        "./scripts/lib/colors.js",
         "./scripts/engine.js", () => {
+            const setTogleableZ = (query) => {
+                const selected = query instanceof Node ? query : doc.query(`${query} .body`);
+
+                doc.all(".toggleable .body").forEach((el, i, list) => {
+                    const selectedIndex = list.indexOf(selected);
+
+                    const thisIndex = i;
+                    
+                    if(thisIndex < selectedIndex)
+                        el.css.zIndex = thisIndex;
+                    else if(thisIndex > selectedIndex)
+                        el.css.zIndex = thisIndex - 1;
+                    else
+                        el.css.zIndex = list.length;
+
+                    if(el.setTogleableZ == null)
+                        el.setTogleableZ = el.on("click", () => setTogleableZ(el));
+
+                });
+            }
+            
+            
             const input = document.querySelector("#logger .checkBoxButton input");
             const domList = document.querySelector("#logger .list");
             const unread = document.querySelector("#logger .checkBoxButton .unread");
-
             input.checked = electronStore.logListState || false;
-            
+            setTogleableZ("#logger");
             logger.beforePush = (obj, list) => {
                 if(input.checked)
                     obj.read = true;
@@ -1417,19 +1784,25 @@ startTranslation(isElectron? electronStore : undefined);
                 electronStore.logListState = state;
 
                 unread.classList.toggle("hide", true);
+
+                setTogleableZ("#logger");
             });
 
             if(!isElectron) document.querySelector("#resourcesDisplay").style.display = "none";
             const resourcesInput = document.querySelector("#resourcesDisplay .checkBoxButton input");
             resourcesInput.checked = electronStore.resourcesListState || false;
+            setTogleableZ("#resourcesDisplay");
             resourcesInput.addEventListener("input", function(evt){
                 electronStore.resourcesListState = evt.target.checked;
+                setTogleableZ("#resourcesDisplay");
             });
 
             const controllerTogle = document.querySelector("#controllers .checkBoxButton input");
             controllerTogle.checked = electronStore.controllerListState;
+            setTogleableZ("#controllers");
             controllerTogle.addEventListener("input", (evt) => {
                 electronStore.controllerListState = evt.target.checked;
+                setTogleableZ("#controllers");
             });
             document.querySelector("#controllers .title .options").dropdown([
                 createElement("label", e => {
@@ -1551,17 +1924,20 @@ startTranslation(isElectron? electronStore : undefined);
             
             setupDropdown(loggerDom, "contextmenu", [
                 createElement("button", e => {
-                    setTranslate(e, "bottombuttons-logs-clear");
+                    createSvgIcon(e, "./svg/bin.svg", language.bottombuttons.logs.clear);
                     e.addEventListener("click", () => {
                         unread.classList.toggle("hide", true);
+                        logger.clear();
                     });
                 })
             ]);
-        }
+        },
+
+
     );
 </script>
 
-<script> // FILE MANAGMENT
+<script> // FILE MANAGMENT & APP UI
     const fileIndicator = document.querySelector(".fileIndicator");
     const fileList = fileIndicator.querySelector(".fileList");
 
@@ -1787,6 +2163,9 @@ startTranslation(isElectron? electronStore : undefined);
                 clearInterval(interval);
                 SpaceCAD.run(load.text);
                 generateResourcesDOM();
+                awaitValue(() => {
+                    editor.placeInEditor(file, load.text);
+                }, ()=>localEditor)
             }
         });
     }
@@ -1797,7 +2176,7 @@ startTranslation(isElectron? electronStore : undefined);
 
     const addPath = (path, setSelected = true) => {
         if(!path || !path.includes(".spacecad.js"))
-            return console.error(`unsupported file type`);
+            return logger.error(`unsupported file type`);
         
         const fullName = path.split("\\").pop();
         const name = fullName.split(".spacecad")[0];
@@ -1812,8 +2191,9 @@ startTranslation(isElectron? electronStore : undefined);
     }
 
     
-    const fileInput = fileIndicator.querySelector("#options");
 
+    // file menu -> Hamburguer icon
+    const fileInput = fileIndicator.querySelector("#options");
     setupDropdown(fileInput, [
         isElectron?
         createElement("button", e => { 
@@ -1848,6 +2228,16 @@ startTranslation(isElectron? electronStore : undefined);
                }) 
             });
         }),
+       
+        createElement("hr"),
+        createElement("button", e => { 
+            createSvgIcon(e, "./svg/options/file.svg", language.filemenu.options.togleeditor);
+            e.addEventListener("click", () => {
+                doc.byId("windowEditor").toggleSeparateWindow();
+            });
+            e.closeMenu = true;
+        }),
+
 
         ...(isElectron? [
         createElement("hr"),
@@ -1919,18 +2309,10 @@ startTranslation(isElectron? electronStore : undefined);
             });
             e.closeMenu = true;
         }),
-    ]);
+    ], 500);
+    
 
-    fileInput.on(["mouseenter", "mouseleave"], (evt, el) => {
-        const type = evt.type;
-        
-        if(type == "mouseenter")
-            Interval.timeout("hoverOptions", () => {
-                el.dropdownOpen();
-            }, 500)
-        else
-            Interval.clear("hoverOptions");
-    })
+
 
     // import resources
     const importResources = document.querySelector("#importResources");
@@ -2250,23 +2632,56 @@ startTranslation(isElectron? electronStore : undefined);
         let path = await electron.openDirectory();
         newFileModal.query('[name="path"]').value = path;
     });
-    newFileModal.modal.onOpen(() => {
+    newFileModal.modal.onOpen((modal, name = "", path = "", content = "") => {
         newFileModal.reset();
         newFileModal.query('[name="name"]').focus();
+        const inputs = newFileModal.onForm().inputs;
+        inputs.name.value = name;
+        inputs.path.value = path;
+        inputs.content.value = content;
     });
     newFileModal.onForm((evt, form) => {
         evt.preventDefault();
-        const {name, path} = form.get();
+        const {name, path, content} = form.get();
 
         
         if(!isValidFileName(name)) return alert(language.modal.newFile.alert.invalidName);
         if(!path) return alert(language.modal.newFile.alert.noDir);
         
+
         let res = syncFetch("/createFile", {
-            body: JSON.stringify({name, path})
+            body: JSON.stringify({name, path, content})
         });
 
-        if(res.error) return alert(res.error);
+        if(res.error) {
+            if(res.text == "fileExists") {
+                return appPopup(
+                    language.modal.newfile.alreadexists.title,
+                    language.modal.newfile.alreadexists.message,
+                    language.modal.newfile.alreadexists.confirm,
+                    language.modal.newfile.alreadexists.cancel,
+                    (form, modal) => {
+                        const reres = syncFetch("/createFile", {
+                            body: JSON.stringify({name, path, content, overwrite: true})
+                        });
+
+                        if(reres.error) {
+                            return alert("Error while overwriting file: " + reres.error);
+                        }
+                        else {
+                            addPath(reres.json.path);
+                            logger.info("File overwritten", reres.json.fullName);
+
+                            newFileModal.modal.close();
+                            modal.close();
+                        }
+                    },
+                    (form, modal) => modal.close()
+                )
+            } else {
+                return alert(res.error);
+            }
+        }
 
         addPath(res.json.path);
 
@@ -2275,8 +2690,64 @@ startTranslation(isElectron? electronStore : undefined);
         newFileModal.modal.close();
     });
 
+    // rename file
+    const renameModal = document.querySelector("#renameModal");
+    renameModal.modal.onOpen(() => {
+        const {data} = renameModal.modal;
+        renameModal.query("span.name").innerText = data.name;
+        renameModal.query('input[name="name"]').value = data.name;
+        renameModal.query('input[name="name"]').focus();
+        renameModal.query('input[name="path"]').value = data.path;
+    });
+    renameModal.onForm((evt, form) => {
+        evt.preventDefault();
+        const {name, path} = form.get();
 
-    
+        if(name == renameModal.modal.data.name) return alert(lenguage.modal.renameFile.alert.sameName);
+        if(!isValidFileName(name)) return alert(lenguage.modal.renameFile.alert.invalidName);
+        
+        const res = syncFetch("/renameFile", {
+            body: JSON.stringify({name, path})
+        });
+
+        if(res.error) {
+            if(res.text == "fileExists") {
+                return appPopup(
+                    language.modal.newfile.alreadexists.title,
+                    language.modal.newfile.alreadexists.message,
+                    language.modal.newfile.alreadexists.confirm,
+                    language.modal.newfile.alreadexists.cancel,
+                    (form, modal) => {
+                        const reres = syncFetch("/renameFile", {
+                            body: JSON.stringify({name, path, overwrite: true})
+                        });
+
+                        if(reres.error) {
+                            return alert("Error while overwriting file: " + reres.error);
+                        }
+                        else {
+                            addPath(reres.json.path);
+                            logger.info("File overwritten", reres.json.fullName);
+
+                            renameModal.modal.close();
+                            modal.close();
+                        }
+                    },
+                    (form, modal) => modal.close()
+                )
+            }
+            return alert(res.error);
+        }
+
+        renameModal.modal.close();
+    });
+
+
+
+
+
+
+    // toggleable
     document.all(".toggleable .list").forEach(el => {
         el.setMax = () => {
             const {rect} = el;
@@ -2298,6 +2769,7 @@ startTranslation(isElectron? electronStore : undefined);
         document.all(".toggleable .list").forEach(el => el.setMax());
     }
     on("resize", setTogleableMaxHeight);
+    setTogleableMaxHeight();
 
 
     if(isElectron)
@@ -2308,48 +2780,891 @@ startTranslation(isElectron? electronStore : undefined);
             if (window.SpaceCAD) {
                 clearInterval(setPreloadDom);
                 generateResourcesDOM();
+                editor.placeInEditor("", "");
             }
         });
     }
 
-    // rename file
-    const renameModal = document.querySelector("#renameModal");
-    renameModal.modal.onOpen(() => {
-        const {data} = renameModal.modal;
-        renameModal.query("span.name").innerText = data.name;
-        renameModal.query('input[name="name"]').value = data.name;
-        renameModal.query('input[name="name"]').focus();
-        renameModal.query('input[name="path"]').value = data.path;
-    });
-    renameModal.onForm((evt, form) => {
-        evt.preventDefault();
-        const {name, path} = form.get();
 
-        if(name == renameModal.modal.data.name) return alert(lenguage.modal.renameFile.alert.sameName);
-        if(!isValidFileName(name)) return alert(lenguage.modal.renameFile.alert.invalidName);
-        
-        syncFetch("/renameFile", {
-            body: JSON.stringify({name, path})
+
+    // separate window
+    electronStore.separateWindows = electronStore.separateWindows || {};
+    doc.all(".separateWindow").forEach(e => {
+        const size = doc.query(".titlebar").rect.height;
+        const reverse = e.classList.contains("reverseResize");
+        const window = e.query(".window");
+
+        const margin = 5;
+
+        e.css.var.topMargin = `${size + margin}px`;
+
+
+        let val = electronStore.separateWindows[e.id];
+        if(!val)
+            val = electronStore.separateWindows[e.id] = {
+                width: parseFloat(e.css.var.minWidth),
+            }
+
+        e.css.var.width = `${val.width}px`;
+
+        e.separateWindowIsOpen = val.display != "none";
+        e.openSeparateWindow = (onAnimationEnd = () => {}) => {
+            e.separateWindowIsOpen = true;
+            val.display = "flex";
+            electronStore.separateWindows = {
+                ...electronStore.separateWindows,
+                [e.id]: {
+                    ...val,
+                }
+            }
+            e.classList.remove("closed");
+            editor.placeAwaitingToSetValue();
+            editor.layout();
+            const doLayout = setInterval(() => {
+                editor.layout();
+                try {
+                    engineResize();
+                } catch(e) {}
+            });
+            setTimeout(() => {
+                clearInterval(doLayout);
+                onAnimationEnd();
+            }, parseFloat(e.css.var.animSpeed) * 1000)
+        }
+        e.closeSeparateWindow = (onAnimationEnd = () => {}) => {
+            e.separateWindowIsOpen = false;
+            val.display = "none";
+            electronStore.separateWindows = {
+                ...electronStore.separateWindows,
+                [e.id]: {
+                    ...val,
+                }
+            }
+            e.classList.add("closed");            
+            const doLayout = setInterval(() => {
+                try {
+                    engineResize();
+                } catch(e) {}
+            });
+            setTimeout(() => {
+                clearInterval(doLayout);
+                onAnimationEnd();
+            }, parseFloat(e.css.var.animSpeed) * 1000)
+        }
+        e.toggleSeparateWindow = (onAnimationEnd = () => {}) => {
+            if(e.separateWindowIsOpen)
+                e.closeSeparateWindow(onAnimationEnd);
+            else
+                e.openSeparateWindow(onAnimationEnd);
+        }
+
+        const closeBtn = e.query(".window .titleBar .buttons .close");
+        if(closeBtn) {
+            closeBtn.on("click", () => e.closeSeparateWindow())
+        }
+
+        if(!e.query(".window .resize")) {
+            const resize = createElement("div", e => {
+                e.classList.add("resize");
+                if(reverse)
+                    e.classList.add("reverse");
+            });
+            window.append(resize);
+
+            if(val) {
+                e.css.var.width = val.width + "px";
+                if(val.display == "none")
+                e.closeSeparateWindow();
+            } 
+
+            resize.on("mousedown", () => {
+                resize.classList.add("active");
+                let x = window.rect.width
+                resize.requestPointerLock();
+
+                const release = on("mouseup", () => {
+                    resize.classList.remove("active");
+                    doc.exitPointerLock();
+                    e.classList.remove("onMinWidth");
+
+                    if(x<parseFloat(e.css.var.minWidth)) {
+                        val.display = "none";
+                        e.closeSeparateWindow(() => e.css.var.width = `${parseFloat(e.css.var.minWidth)}px`);
+                    }
+
+                    off(release, move);
+                });
+
+                const move = on("mousemove", evt => {
+                    if(resize.classList.contains("active")) {
+                        x += evt.movementX * (reverse? -1: 1);
+
+                        if(x < parseFloat(e.css.var.minWidth))
+                            e.classList.add("onMinWidth");
+                        else
+                            e.classList.remove("onMinWidth");
+
+                        e.css.var.width = `${x}px`;
+                        electronStore.separateWindows = {
+                            ...electronStore.separateWindows,
+                            [e.id]: {
+                                width: x
+                            }
+                        }
+                        engineResize();
+                        editor.layout();
+                    }
+                })
+            });
+        }        
+    })
+
+
+    const browserSaveFile = () => {
+        const blob = new Blob([editor.getValue()], {
+            type: "text/javascript"
         });
 
-        renameModal.modal.close();
-    });
+        const url = URL.createObjectURL(blob);
 
-    const debug = {};
-    debug.serverEval = code => {
-        fetch("/serverScope", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                code
-            })
-        }).then(res => res.text())
-        .then(res => {
-            console.log(res);
-        });
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "unnamed.spacecad.js";
+        a.click();
+
+        URL.revokeObjectURL(url);
     }
+    const runEditorCode = () => {
+        if(!electronStore.selectedFile) {
+            SpaceCAD.setPreloads();
+            generateResourcesDOM();
+        }
+
+        SpaceCAD.run(editor.getValue());
+    }
+    // editor - Hamburger icon
+    const saveFile = (value) => {
+        const file = electronStore.selectedFile;
+
+        if(!file) return
+
+        syncFetch("/updateFile", {
+            body: JSON.stringify({
+                path: file.path,
+                content: value
+            })
+        })
+    }
+    const windowEditor = doc.query("#windowEditor");
+    windowEditor.query(".window .titleBar .buttons .options").dropdown([
+        createElement("button", e => {            
+            createSvgIcon(e, "./svg/editor/play.svg", language.editor.title.run, "minnor");
+            e.on("click", runEditorCode);
+        }),
+        
+        createElement("hr"),
+        createElement("button", e => {
+            createSvgIcon(e, "./svg/editor/save.svg", language.editor.title.save);
+            e.on("click", () => {
+                if(isElectron) {
+                    if(!electronStore.selectedFile) alert(language.editor.title.popup.nofile);
+                    saveFile(editor.getValue());
+                } else {
+                    browserSaveFile();
+                }
+            })
+        }),
+        createElement("button", e => {
+            createSvgIcon(e, "./svg/editor/saveNew.svg", language.editor.title.saveasnew);
+            e.on("click", () => {
+
+                if(isElectron) {
+                    if(!electronStore.selectedFile) alert(language.editor.title.popup.nofile);
+                    newFileModal.modal.open(electronStore.selectedFile.name, "", editor.getValue())
+                } else {
+                    browserSaveFile();
+                }
+            })
+        }),
+        
+
+
+        
+        createElement("hr"),
+
+        isElectron?
+        createElement("label", e => {
+            e.css.width = "100%";
+
+            e.append(
+                createElement("button", e => {
+                    if(electronStore.editorAutosave)
+                        createSvgIcon(e, "./svg/editor/checked.svg", language.editor.title.autosaving);
+                    else
+                        createSvgIcon(e, "./svg/editor/notChecked.svg", language.editor.title.autosaving);
+
+                    e.on("click", () => {
+                        e.parentElement.children.at(-1).click();
+                    })
+                }),
+                createElement("input", e => {
+                    e.id = "editorAutosave";
+                    e.type = "checkbox";
+                    e.css.display = "none";
+                    e.checked = electronStore.editorAutosave; 
+
+                    e.on("change", () => {
+                        if(!electronStore.selectedFile) alert(language.editor.title.popup.nofile);
+                        electronStore.editorAutosave = e.checked;
+
+                        const button = e.parentElement.children[0];
+                        button.innerHTML = "";
+                        if(e.checked)
+                            createSvgIcon(button, "./svg/editor/checked.svg", language.editor.title.autosaving);
+                        else
+                            createSvgIcon(button, "./svg/editor/notChecked.svg", language.editor.title.autosaving);
+
+                    })
+                })
+            )
+        }): null,
+
+        createElement("label", e => {
+            e.css.width = "100%";
+
+            e.append(
+                createElement("button", e => {
+                    if(electronStore.editorAutoRun)
+                        createSvgIcon(e, "./svg/editor/checked.svg", language.editor.title.autorun);
+                    else
+                        createSvgIcon(e, "./svg/editor/notChecked.svg", language.editor.title.autorun);
+
+                    e.on("click", () => {
+                        e.parentElement.children.at(-1).click();
+                    })
+                }),
+                createElement("input", e => {
+                    e.id = "editorAutosave";
+                    e.type = "checkbox";
+                    e.css.display = "none";
+                    e.checked = electronStore.editorAutoRun; 
+
+                    e.on("change", () => {
+                        electronStore.editorAutoRun = e.checked;
+                        const button = e.parentElement.children[0];
+                        button.innerHTML = "";
+                        if(e.checked) {
+                            createSvgIcon(button, "./svg/editor/checked.svg", language.editor.title.autorun);
+                        }
+                        else
+                            createSvgIcon(button, "./svg/editor/notChecked.svg", language.editor.title.autorun);
+
+                    })
+                })
+            )
+        }),
+
+        
+        createElement("hr"),
+        createElement("label", e => {
+            e.css.width = "100%";
+
+            e.append(
+                createElement("button", e => {
+                    if(electronStore.editorHideFilePath)
+                        createSvgIcon(e, "./svg/editor/checked.svg", language.editor.title.hidefilepath);
+                    else
+                        createSvgIcon(e, "./svg/editor/notChecked.svg", language.editor.title.hidefilepath);
+
+                    e.on("click", () => {
+                        e.parentElement.children.at(-1).click();
+                    })
+                }),
+                createElement("input", e => {
+                    e.id = "editorAutosave";
+                    e.type = "checkbox";
+                    e.css.display = "none";
+                    e.checked = electronStore.editorHideFilePath; 
+
+                    if(e.checked)
+                        windowEditor.classList.add("hideFilePath");
+
+                    e.on("change", () => {
+                        electronStore.editorHideFilePath = e.checked;
+                        const button = e.parentElement.children[0];
+                        button.innerHTML = "";
+                        if(e.checked) {
+                            createSvgIcon(button, "./svg/editor/checked.svg", language.editor.title.hidefilepath);
+                            windowEditor.classList.add("hideFilePath");
+                        }
+                        else {
+                            createSvgIcon(button, "./svg/editor/notChecked.svg", language.editor.title.hidefilepath);
+                            windowEditor.classList.remove("hideFilePath");
+                        }
+
+                    })
+                })
+            )
+        }),
+    ], 500)
+
+
+    
+    let localEditor;
+    const editor = new ProxyAccumulator.ObjectTraverser(()=>localEditor);
+    const monacoInterval = setInterval(() => {
+        if(window.monaco) {
+            clearInterval(monacoInterval);
+            const customWords = {
+                spacecad: "SpaceCAD",
+                three: "THREE",
+                logger: "logger"
+            };
+
+            
+
+            function updateCustomHighlight(editor, oldDecorations = []) {
+                const model = editor.getModel();
+
+                const decorations = [];
+
+                
+                let inComment = null;
+                let contexts = [];
+                for (let line = 1; line <= model.getLineCount(); line++) {
+                    const ogText = model.getLineContent(line);
+                    let text = "";
+
+                    
+                    // context management
+                    for (let i = 0; i < ogText.length; i++) {
+                        const c = ogText[i];
+                        const next = ogText[i + 1];
+
+                        const context = contexts.at(-1);
+
+                        if (context?.type === "template") {
+
+                            if (c === "\\") {
+                                text += "  ";
+                                i++;
+                                continue;
+                            }
+
+                            if (c === "$" && next === "{") {
+                                text += "  ";
+                                i++;
+
+                                contexts.push({
+                                    type: "expression",
+                                    depth: 1
+                                });
+
+                                continue;
+                            }
+
+                            if (c === "`") {
+                                text += " ";
+                                contexts.pop();
+                                continue;
+                            }
+
+                            text += " ";
+                            continue;
+                        }
+                        
+                        if (context?.type === "expression") {
+
+                            if (c === '"' || c === "'") {
+                                contexts.push({
+                                    type: "string",
+                                    quote: c
+                                });
+
+                                text += " ";
+                                continue;
+                            }
+
+                            if (c === "`") {
+                                contexts.push({
+                                    type: "template"
+                                });
+
+                                text += " ";
+                                continue;
+                            }
+
+                            if (c === "{") {
+                                context.depth++;
+                                text += c;
+                                continue;
+                            }
+
+                            if (c === "}") {
+                                context.depth--;
+
+                                text += " ";
+
+                                if (context.depth === 0)
+                                    contexts.pop();
+
+                                continue;
+                            }
+
+                            if (c === "/" && next === "/") {
+                                text += " ".repeat(ogText.length - i);
+                                break;
+                            }
+
+                            if (c === "/" && next === "*") {
+                                inComment = "block";
+                                text += "  ";
+                                i++;
+                                continue;
+                            }
+
+                            text += c;
+                            continue;
+                        }
+
+                        
+
+                        if (context?.type === "string") {
+
+                            if (c === "\\") {
+                                text += "  ";
+                                i++;
+                                continue;
+                            }
+
+                            text += " ";
+
+                            if (c === context.quote)
+                                contexts.pop();
+
+                            continue;
+                        }
+
+                        
+
+                        if (inComment === "block") {
+
+                            if (c === "*" && next === "/") {
+                                inComment = null;
+                                text += "  ";
+                                i++;
+                                continue;
+                            }
+
+                            text += " ";
+                            continue;
+                        }
+
+                        
+                        if (c === '"' || c === "'") {
+                            contexts.push({
+                                type: "string",
+                                quote: c
+                            });
+
+                            text += " ";
+                            continue;
+                        }
+
+                        if (c === "`") {
+                            contexts.push({
+                                type: "template"
+                            });
+
+                            text += " ";
+                            continue;
+                        }
+
+                        if (c === "/" && next === "/") {
+                            text += " ".repeat(ogText.length - i);
+                            break;
+                        }
+
+                        if (c === "/" && next === "*") {
+                            inComment = "block";
+                            text += "  ";
+                            i++;
+                            continue;
+                        }
+
+                        text += c;
+                    }
+                
+
+
+                    const keyRegex = /[A-Za-z_$][\w$]*(?:\s*(?:\.\s*[A-Za-z_$][\w$]*|\[[^\]]*\]))*/g;
+
+
+                    const setFromObj = (obj, classes = () => "", beforeInitialize = () =>{}) => {
+                        for (const match of text.matchAll(keyRegex)) {
+                            const key = match[0];
+                            const parts = key.match(
+                                /[A-Za-z_$][\w$]*|(?<=\[)\s*(?:"([^"]*)"|'([^']*)'|(\d+))\s*(?=\])|(?<=\[)\s*(\d+)\s*(?=\])/g
+                            );
+                            beforeInitialize([...parts], key, match);
+
+
+                            
+                            let searchFrom = 0;
+
+                            const setDecoration = (part, classes = "") => {
+                                const index = key.indexOf(part, searchFrom);
+                                decorations.push({
+                                    range: new monaco.Range(
+                                        line,
+                                        match.index + index + 1,
+                                        line,
+                                        match.index + index + part.length + 1
+                                    ),
+                                    options: {
+                                        inlineClassName: classes.replace(/\s+/g, " "),
+                                    }
+                                });
+                                
+                                searchFrom = index + part.length;
+                            }
+
+
+                            let acc = obj[parts[0]];
+
+                            if (acc === undefined)
+                                continue;
+
+                            if(acc.ColorInstance != null) {
+                                setDecoration(parts[0], ".spacecad-"+parts[0]);
+                            }
+
+
+                            for (const part of parts) {
+                                const index = key.indexOf(part, searchFrom);
+
+                                if (index === -1)
+                                    break;
+
+                                if (part !== parts[0]) {
+                                    acc = acc[part];
+
+                                    if (acc === undefined)
+                                        break;
+                                }
+                                
+
+                                decorations.push({
+                                    range: new monaco.Range(
+                                        line,
+                                        match.index + index + 1,
+                                        line,
+                                        match.index + index + part.length + 1
+                                    ),
+                                    options: {
+                                        inlineClassName: `spacecadScope
+                                        ${classes(acc, part)}
+                                        ${acc == window.THREE? "THREE": ""}
+                                        ${acc == window.SpaceCAD? "SpaceCAD": ""}
+                                        ${(Object.values(THREE).includes(acc) && (typeof acc == "function") && isClass(acc))? "THREEClass": "" }
+                                        ${(part != "constructor" && Object.values(SpaceCAD).includes(acc))? "SpaceCADProp": ""}
+                                        ${typeof acc}
+                                        ${((typeof acc == "function") && isClass(acc))? "class": "" }
+                                        ${acc === null? "undefined": ""}
+                                        ${part == parts[0]? "pathStart": ""}
+                                        ${part == parts[0] && part == "controller"? "pathStart": ""}`.replace(/\s+/g, " ")
+                                    }
+                                });
+
+                                searchFrom = index + part.length;
+                            }
+                        }
+                    }
+                    
+                    if(window.SpaceCAD)
+                    setFromObj(SpaceCAD.codeScope);
+
+                    setFromObj(window, undefined, (parts, key, match) => {
+                        parts = [...parts];
+                        const expression = key;
+                        let searchFrom = 0;
+                        const setDecoration = (part, classes = "") => {
+                            const index = key.indexOf(part, searchFrom);
+                            decorations.push({
+                                range: new monaco.Range(
+                                    line,
+                                    match.index + index + 1,
+                                    line,
+                                    match.index + index + part.length + 1
+                                ),
+                                options: {
+                                    inlineClassName: classes.replace(/\s+/g, " "),
+                                }
+                            });
+                            
+                            searchFrom = index + part.length;
+                        }
+
+
+                        const SpaceCADValues = {
+                            controller,
+                        };
+                        const part = parts.shift();
+
+
+                        const entries = Object.entries(SpaceCADValues);
+                        const directValue = entries.find(([k]) => k == part);
+                        if(directValue) {
+                            const [valueKey, val] = directValue;
+
+                            let next = true;
+                            if(val == controller) {
+                                next = false;
+                                setDecoration(valueKey, `
+                                    spacecadScope
+                                    SpaceCAD
+                                    ${typeof val}
+                                    pathStart
+                                `);
+
+                                for (const [i, part] of parts.entries()) {
+                                    setDecoration(part, `
+                                        spacecadScope
+                                        SpaceCADSpecial
+                                        ${typeof val}
+                                        ${i == 0? "pathStart contorllerName": ""}
+                                    `);
+                                }
+                            }
+  
+                        }
+
+
+                        searchFrom = 0;
+                        const keywords = {
+                            "boolean": ["true", "false"],
+                        }
+
+                        const keywordEntries = Object.entries(keywords);
+                        const keyword = keywordEntries.find(([k,v]) => v.includes(part));
+                        if(keyword) {
+                            const [valueKey, val] = keyword;
+
+                            setDecoration(part, `
+                                spacecadScope
+                                ${valueKey}
+                            `);
+                        }
+
+                    });
+                
+
+                }
+                for (const [className, word] of Object.entries(customWords)) {
+                    const regex = typeof word == "string" ? new RegExp(`\\b${word}\\b`, "g"): word;
+
+                    for (let line = 1; line <= model.getLineCount(); line++) {
+                        const text = model.getLineContent(line);
+
+                        let match;
+
+                        while ((match = regex.exec(text))) {
+                            decorations.push({
+                                range: new monaco.Range(
+                                    line,
+                                    match.index + 1,
+                                    line,
+                                    match.index + match[0].length + 1
+                                ),
+                                options: {
+                                    inlineClassName: `${className}`
+                                }
+                            });
+                        }
+                    }
+                }
+
+                return editor.deltaDecorations(oldDecorations, decorations);
+            }
+           
+            
+            const primary = color(cssVar.primary, "string").asHEX.str;
+            const secondary = color(cssVar.secondary, "string").asHEX.str;
+            const tertiary = color(cssVar.tertiary, "string").asHEX.str;
+            const highlight = color(cssVar.highlight, "string").asHEX.str;
+            const typeString = color(cssVar.typeString, "string").asHEX.noSharp();
+            const typeNumber = color(cssVar.typeNumber, "string").asHEX.noSharp();
+            const typeBoolean = color(cssVar.typeBoolean, "string").asHEX.noSharp();
+            const typeFunction = color(cssVar.typeFunction, "string").asHEX.noSharp();
+            const typeUnrecognized = color(cssVar.typeUnrecognized, "string").asHEX.noSharp();
+            const typeUndefined = color(cssVar.typeUndefined, "string").asHEX.noSharp();
+            const typeReference = color(cssVar.typeReference, "string").asHEX.noSharp();
+            const typeObjectKey = color(cssVar.typeObjectKey, "string").asHEX.noSharp();
+            const typeClass = color(cssVar.typeClass, "string").asHEX.noSharp();
+            const typeObjectConstructor = color(cssVar.typeObjectConstructor, "string").asHEX.noSharp();
+
+
+            monaco.editor.defineTheme("spacecad", {
+                base: "vs-dark",
+                inherit: true,
+
+                colors: {
+                    "editor.background": primary,
+                    "editor.foreground": "#D6D7DE",
+                    "editorCursor.foreground": highlight,
+                    "editor.selectionBackground": "#F2820240",
+                    "editorLineNumber.background": tertiary,
+                    "editorLineNumber.foreground": "#555866",
+                    "editorLineNumber.activeForeground": highlight
+                },
+
+                rules: [
+                    {
+                        token: "logger",
+                        foreground: typeClass
+                    },
+                    {
+                        token: "comment",
+                        foreground: "666B78",
+                        fontStyle: "italic"
+                    },
+                    {
+                        token: "number",
+                        foreground: typeNumber
+                    },
+                    {
+                        token: "string",
+                        foreground: typeString
+                    },
+                ]
+            });
+
+            localEditor = monaco.editor.create(doc.query("#localEditor .body .monaco"), {
+                    mouseWheelZoom: true,
+                    value: "",
+                    language: "javascript",
+                    theme: "spacecad",
+                    lineNumbersMinChars: 1,
+                    lineDecorationsWidth: 0,
+                    minimap: {
+                        autohide: "mouseover"
+                    }
+                }
+            );
+
+            localEditor.layout();
+
+            localEditor.onDidFocusEditorText(() => {
+                inputManager.disable();
+            });
+
+            localEditor.onDidBlurEditorText(() => {
+                inputManager.enable();
+            });
+
+            windowEditor.query(".fileName").innerHTML = language.editor.title.untitled;
+            
+            editor.awaitingToSetValue = null;
+            editor.placeAwaitingToSetValue = () => {
+                if(editor.awaitingToSetValue !== null) {
+                    editor.setValue(editor.awaitingToSetValue);
+                    editor.awaitingToSetValue = null;
+                }
+            }
+            editor.fileText = null;
+            editor.placeInEditor = (file, value) => {
+                if(doc.query("#windowEditor").separateWindowIsOpen) {
+                    if(editor.getValue() != value)
+                        editor.setValue(value);
+                    editor.fileText = value;
+                } else {
+                    editor.awaitingToSetValue = value;
+                }
+
+                const nameOutput = doc.query("#windowEditor .titleBar");
+                if(file !== null && typeof file == "object") {
+                    windowEditor.classList.remove("unsaved");
+                    nameOutput.query(".fileName").innerHTML = file.name;
+                    nameOutput.query(".filePath").innerHTML = 
+                    nameOutput.query(".filePath").title = file.path;
+                }
+                else if(file !== null) {
+                    windowEditor.classList.remove("unsaved");
+                    nameOutput.query(".fileName").innerHTML = language.editor.title.untitled;
+                    nameOutput.query(".filePath").innerHTML = 
+                    nameOutput.query(".filePath").title = "";
+                }
+            }
+
+
+
+            let inputTimeout;
+            editor.changeFileText = () => {
+                if(editor.getValue() !== editor.fileText) {
+                    windowEditor.classList.add("unsaved");
+                    if(isElectron) return;
+                        
+                    close.preventClosing.unsavedCode = (doClose) => {
+                        appPopup(
+                            language.editor.title.popup.title,
+                            language.editor.title.popup.message,
+                            language.editor.title.popup.cancel,
+                            language.editor.title.popup.confirm,
+                            (form, modal) => {
+                                modal.close();
+                            },
+                            () => {
+                                doClose();
+                            },
+                        )
+                    };
+
+                    clearTimeout(inputTimeout);
+                    if(windowEditor.query("#editorAutosave").checked && electronStore.selectedFile != null)
+                        inputTimeout = setTimeout(() => {
+                            windowEditor.classList.remove("unsaved");
+                            saveFile(editor.getValue());
+                        }, 1000);
+                    else if (electronStore.editorAutoRun ?? false)
+                        inputTimeout = setTimeout(runEditorCode, 1000);
+                }
+                else {
+                    windowEditor.classList.remove("unsaved");
+                    clearTimeout(inputTimeout);
+                    close.preventClosing.unsavedCode = null;
+                }
+            }
+
+            let customDecorations = updateCustomHighlight(editor);
+            editor.onDidChangeModelContent((evt) => {
+                customDecorations = updateCustomHighlight(editor, customDecorations);
+
+                if(!evt.isFlush) {
+                    editor.changeFileText();
+                }
+            });
+        }
+    });
+
+
+
+
+    const debug = {
+        serverScope: code => {
+            fetch("/serverScope", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    code
+                })
+            }).then(res => res.text())
+            .then(res => {
+                console.log(res);
+            });
+        }
+    };
 </script>
 
 
@@ -2390,6 +3705,7 @@ startTranslation(isElectron? electronStore : undefined);
     });
     socket.on("fileChanged", (data) => {
         SpaceCAD.run(data.content);
+        editor.placeInEditor(null, data.content);
         generateResourcesDOM();
     });
     socket.on("fileRename", data => {
@@ -2428,5 +3744,18 @@ startTranslation(isElectron? electronStore : undefined);
     });
 </script>
 
+<!-- monaco -->
+<script src="/node_modules/monaco-editor/min/vs/loader.js"></script>
+<script>
+    require.config({
+        paths: {
+            vs: "/node_modules/monaco-editor/min/vs"
+        }
+    });
+
+    require(["vs/editor/editor.main"], () => {
+        window.monaco = monaco;
+    });
+</script>
 
 </html>

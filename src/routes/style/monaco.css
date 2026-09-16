@@ -1,0 +1,56 @@
+.monaco {
+    .spacecadScope {
+
+        &.object {
+            color: var(--typeObject)
+        }
+
+        &.number {
+            color: var(--typeNumber)
+        }
+
+        &.string {
+            color: var(--typeString)
+        }
+
+        &.boolean {
+            color: var(--typeBoolean)
+        }
+
+        &.function {
+            color: var(--typeFunction)
+        }
+        &.class {
+            color: var(--typeClass)
+        }
+
+        &.undefined {
+            color: var(--typeUndefined)
+        }
+
+        &.SpaceCAD {
+            color: var(--highlight);
+        }
+        &.SpaceCADProp {
+            color: var(--highlight2);
+
+        }
+        &.THREE {
+            color: var(--THREE);
+        }
+        &.THREEClass {
+            color: var(--THREEClass);
+        }
+
+        &.SpaceCADSpecial {
+            color: var(--highlight2);
+        }
+
+        &.pathStart {
+            filter: saturate(2.5);
+        }
+
+
+    }
+    
+}

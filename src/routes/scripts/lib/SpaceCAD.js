@@ -395,35 +395,106 @@ const SpaceCAD = class SpaceCAD {
         SpaceCAD.windowProperties = {};
         console.clear();
     }
-    static lastCode = "";
-    static runLastCode = () => SpaceCAD.run(SpaceCAD.lastCode, true, false);
-    static run = (code, restore = true, setPreloads = true) => {
+    
+    static codeDeclarations = new Set();
+    static codeScope = {};
+    static overloader = new Overloader()
+        .onError(error => console.error(error))
+        .addAddon((node, parent, key, ast) => {
+            if (
+                node.type === "AssignmentExpression" &&
+                node.left.type === "Identifier" &&
+                node.parent.parent.parent == ast
+            ) {
+                return SpaceCAD.codeDeclarations.add(node.left.name);
+            }
+
+            if (node.type !== "VariableDeclaration")
+                return;
+
+            if (node.parent.parent !== ast)
+                return;
+
+            const getNames = node => {
+                if (node.type === "Identifier")
+                    return [node.name];
+
+                if (node.type === "ObjectPattern")
+                    return node.properties.flatMap(property => {
+                        if (property.type === "Property")
+                            return getNames(property.value);
+
+                        if (property.type === "RestElement")
+                            return getNames(property.argument);
+
+                        return [];
+                    });
+
+                if (node.type === "ArrayPattern")
+                    return node.elements.flatMap(element =>
+                        element ? getNames(element) : []
+                    );
+
+                if (node.type === "AssignmentPattern")
+                    return getNames(node.left);
+
+                if (node.type === "RestElement")
+                    return getNames(node.argument);
+
+                return [];
+            };
+            
+            for (const declaration of node.declarations) {
+                for (const name of getNames(declaration.id)) {
+                    SpaceCAD.codeDeclarations.add(name);
+                }
+            }
+        },
+        (callback) => {
+            const list = [...SpaceCAD.codeDeclarations];
+            return `${callback}; SpaceCAD.codeScope = {${list.map(k=>`"${k}": ${k}`).join(", ")}};`;
+        });
+
+    static runLastCode = () => SpaceCAD.run(SpaceCAD.lastCode, true, true, false);
+    static run = (code, restore = true, runSame = false, setPreloads = true) => {
         SpaceCAD.runLoop = () => {};
 
-        const regex = /\bexpose\b/g;
-        const hasExpose = regex.test(code);
-        const rawCode = code;
-        if (hasExpose) {
-            code = `
-                let __ExposeObject = {};
-                ${code.replace(regex, "__ExposeObject")}
-                return __ExposeObject;
-            `;
-        }
-
+        let run;
         if(restore) {
             SpaceCAD.deleteAll();
             SpaceCAD.restoreDefaultState();
             sceneObjectsEmpty();
             SpaceCAD.Classes.forEach(cls => cls.instances = []);
-            SpaceCAD.lastCode = rawCode;
             logger.noOg.clear();
         }
-        const fn = new Function(code);
 
-        const run = Overloader.eval(fn, error => console.error(error));
+        SpaceCAD.codeDeclarations = new Set();
 
-        if(hasExpose && typeof run.loop === "function" && SpaceCAD.runLoop+"" != run.loop+"")
+        if(!runSame) {
+            const regex = /\bexpose\b/g;
+            const hasExpose = regex.test(code);
+            const fnNotatione = e => `() => {${e}}`
+            let postCode = fnNotatione;
+
+            if (hasExpose) {
+                postCode = e => `${fnNotatione(`
+                    let __ExposeObject = {};
+                    ${e.replace(regex, "__ExposeObject")}
+                    return __ExposeObject
+                    `)};`;
+            }
+
+            if(new Function(code).toString() !== SpaceCAD.overloader.code) {
+                run = SpaceCAD.overloader.setPostCode(postCode).setCallback(code).execute();
+            } else {
+                console.log("é o mesmo")
+                run = SpaceCAD.overloader.execute();
+            }
+        } else {
+            run = SpaceCAD.overloader.execute();
+        }
+
+        if(run != null && typeof run.loop === "function" && SpaceCAD.runLoop+"" != run.loop+"")
             SpaceCAD.runLoop = run.loop;
 
         if(setPreloads)
@@ -578,6 +649,34 @@ const SpaceCAD = class SpaceCAD {
 
             this.calculateBoxSize();
 
+            this.listeners = {};
+            const defaultMethods = {
+                position: Object.getOwnPropertyDescriptor(this, "position"),
+                rotation: Object.getOwnPropertyDescriptor(this, "rotation"),
+                scale: Object.getOwnPropertyDescriptor(this, "scale"),
+                quaternion: Object.getOwnPropertyDescriptor(this, "quaternion"),                
+            }
+
+            for (const [name, descriptor] of Object.entries(defaultMethods)) {
+                const value = descriptor.value;
+
+                Object.defineProperty(this, name, {
+                    configurable: descriptor.configurable,
+                    enumerable: descriptor.enumerable,
+
+                    get() {
+                        return value;
+                    },
+
+                    set(newValue) {
+                        if (newValue instanceof value.constructor)
+                            value.copy(newValue);
+                        else
+                            Object.assign(value, newValue);
+                    }
+                });
+            }
+
             Object.defineProperties(this, {
                 name: {
                     get: () => this._name,
@@ -704,8 +803,6 @@ const SpaceCAD = class SpaceCAD {
         }
         
         store = SpaceCAD.store;
-
-
         
 
         toggleEdgeHilighting (togle, color = "#f27a02", width = 1, opacity = 1) {

@@ -280,6 +280,15 @@ app.get("/version", (req, res) => {
     res.json(v);
 });
 
+app.post("/updateFile", (req, res) => {
+    const path = req.body.path;
+    const content = req.body.content;
+    
+    fs.writeFileSync(path, content);
+
+    res.send("ok");
+});
+
 
 const candidates = [
     path.join(process.env.LOCALAPPDATA, "Programs", "Microsoft VS Code", "Code.exe"),
@@ -312,6 +321,7 @@ app.post("/openPath", (req, res) => {
 app.post("/renameFile", (req, res) => {
     let name = req.body.name;
     const filePath = req.body.path;
+    const overwrite = req.body.overwrite;
 
     if(!name || !filePath) {
         io.emit("warn", `File does not exist or name not provided: name: "${name}", path: "${filePath}"`);
@@ -323,9 +333,9 @@ app.post("/renameFile", (req, res) => {
 
     const newPath = path.dirname(filePath) + "/" + name;
 
-    if(fs.existsSync(newPath)){
+    if(fs.existsSync(newPath) && !overwrite){
         io.emit("warn", `File already exists: "${newPath}"`);
-        res.status(400).send("error");
+        res.status(400).send("fileExists");
         return;
     }
 
@@ -344,14 +354,16 @@ app.post("/renameFile", (req, res) => {
     }
 
 
-    res.send("ok")
-
-        
+    res.send("ok");     
 });
+
+
 
 app.post("/createFile", (req, res) => {
     const name = req.body.name;
     const dirPath = req.body.path;
+    const content = req.body.content || "";
+    const overwrite = req.body.overwrite;
 
     if(!fs.existsSync(dirPath)) {
         io.emit("warn", `Directory does not exist: "${dirPath}"`);
@@ -361,21 +373,19 @@ app.post("/createFile", (req, res) => {
 
     const fullPath = path.join(dirPath, name + ".spacecad.js");
 
-    if(fs.existsSync(fullPath)){
+    if(fs.existsSync(fullPath) && !overwrite){
         io.emit("warn", `File already exists: "${fullPath}"`);
-        res.status(400).send("error");
+        res.status(400).send("fileExists");
         return;
     }
 
-    fs.writeFileSync(fullPath, "");
+    fs.writeFileSync(fullPath, content);
     res.json({
         path: fullPath,
         fullName: path.basename(fullPath),
         name: path.basename(fullPath, ".spacecad.js")
     });
 });
-
-
 
 
 const setupStorage = () => {
@@ -577,8 +587,7 @@ app.post("/use", (req, res) => {
         filePath
     );
 
-        console.log(watchFile, filePath);
-
+    
     if(!fs.existsSync(filePath))
         return res.status(404).send(`File not found: "${filePath}"`);
 

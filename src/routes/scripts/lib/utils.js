@@ -245,6 +245,18 @@ Object.defineProperties(Object.prototype, {
             return JSHON.stringify(this);
         },
         set: () => {}
+    },
+    extender: {
+        get: function () {
+            return Object.getPrototypeOf(this);
+        },
+        set: () => {}
+    },
+    isDescendentOf: {
+        get: function () {
+            return (value) => this.prototype !== value;
+        },
+        set: () => {}
     }
 });
 Object.defineProperties(String.prototype, {
@@ -365,7 +377,6 @@ const callbacsOnInnerHTML = [];
                     return html.set.call(this, value);
                 }
             },
-
             innerText: {
                 get: function () {
                     return text.get.call(this);
@@ -375,6 +386,13 @@ const callbacsOnInnerHTML = [];
                     this.innerListeners.forEach(c => c(this, value));
                     return text.set.call(this, value);
                 }
+            },
+
+            getElementById: {
+                get: function () {
+                    return (id) => this.querySelector(`#${id}`);
+                },
+                set: () => {}
             },
             
             rect: {
@@ -477,7 +495,7 @@ const callbacsOnInnerHTML = [];
         },
         byId: {
             get: function () {
-                return (value) => this.getElementById(value);
+                return (value) => this.getElementById(value)
             },
             set: () => {}
         },
@@ -529,106 +547,125 @@ const callbacsOnInnerHTML = [];
     });
 });
 
-[NodeList.prototype, HTMLCollection.prototype].forEach(collection => {
+[NodeList.prototype, HTMLCollection.prototype, Array.prototype].forEach(collection => {
+    if([NodeList.prototype, HTMLCollection.prototype].includes(collection)) {
+        Object.defineProperties(collection, {
+            forEach: {
+                get: function () {
+                    return (...args) => Array.from(this).forEach(...args);
+                },
+                set: () => {}
+            },
+            find: {
+                get: function () {
+                    return (...args) => Array.from(this).find(...args);
+                },
+                set: () => {}
+            },
+            filter: {
+                get: function () {
+                    return (...args) => Array.from(this).filter(...args);
+                },
+                set: () => {}
+            },
+            reduce: {
+                get: function () {
+                    return (...args) => Array.from(this).reduce(...args);
+                },
+                set: () => {}
+            },
+            some: {
+                get: function () {
+                    return (...args) => Array.from(this).some(...args);
+                },
+                set: () => {}
+            },
+            every: {
+                get: function () {
+                    return (...args) => Array.from(this).every(...args);
+                },
+                set: () => {}
+            },
+            indexOf: {
+                get: function () {
+                    return (...args) => Array.from(this).indexOf(...args);
+                },
+                set: () => {}
+            },
+            map: {
+                get: function () {
+                    return (...args) => Array.from(this).map(...args);
+                },
+                set: () => {}
+            },
+            array: {
+                get: function () {
+                    return Array.from(this);
+                },
+                set: () => {}
+            },
+            at: {
+                get: function () {
+                    return (...args) => Array.from(this).at(...args);
+                },
+                set: () => {}
+            },
+        })
+    }
+
     Object.defineProperties(collection, {
-        forEach: {
-            get: function () {
-                return (...args) => Array.from(this).forEach(...args);
-            },
-            set: () => {}
-        },
-        find: {
-            get: function () {
-                return (...args) => Array.from(this).find(...args);
-            },
-            set: () => {}
-        },
-        filter: {
-            get: function () {
-                return (...args) => Array.from(this).filter(...args);
-            },
-            set: () => {}
-        },
-        reduce: {
-            get: function () {
-                return (...args) => Array.from(this).reduce(...args);
-            },
-            set: () => {}
-        },
-        some: {
-            get: function () {
-                return (...args) => Array.from(this).some(...args);
-            },
-            set: () => {}
-        },
-        every: {
-            get: function () {
-                return (...args) => Array.from(this).every(...args);
-            },
-            set: () => {}
-        },
-        indexOf: {
-            get: function () {
-                return (...args) => Array.from(this).indexOf(...args);
-            },
-            set: () => {}
-        },
-        map: {
-            get: function () {
-                return (...args) => Array.from(this).map(...args);
-            },
-            set: () => {}
-        },
-        array: {
-            get: function () {
-                return Array.from(this);
-            },
-            set: () => {}
-        },
-        at: {
-            get: function () {
-                return (...args) => Array.from(this).at(...args);
-            },
-            set: () => {}
-        },
         on: {
             get: () => function (...args) {
-                for (const element of this) {
-                    element.on(...args);
+                const arr = Array.from(this).filter(e => e instanceof HTMLElement);
+                const events = [];
+                for (const element of arr) {
+                    events.push(element.on(...args));
                 }
+                return events;
             },
             set: () => {}
         },
         off: {
             get: () => function (...args) {
-                for (const element of this) {
-                    element.off(...args);
+                const arr = Array.from(this).filter(e => e instanceof HTMLElement);
+                const events = [];
+                for (const element of arr) {
+                    events.push(element.off(...args));
                 }
+                return events;
             },
             set: () => {}
         },
         query: {
             get: function () {
-                // returns the first instance
-                return (...args) => Array.from(this).find(element => element.query(...args));
+                return (...args) => {
+                    const arr = Array.from(this).filter(e => e instanceof HTMLElement);
+                    return arr.find(element => element.query(...args));
+                }
             },
             set: () => {}
         },
         queryMap: {
             get: function () {
-                return (...args) => Array.from(this).map(element => element.query(...args));
+                return (...args) => {
+                    const arr = Array.from(this).filter(e => e instanceof HTMLElement);
+                    return arr.map(element => element.query(...args));
+                }
             },
             set: () => {}
         },
         all: {
             get: function () {
-                return (...args) => Array.from(this).map(element => element.queryAll(...args));
+                return (...args) => {
+                    const arr = Array.from(this).filter(e => e instanceof HTMLElement);
+                    return arr.map(element => element.queryAll(...args))
+                };
             },
             set: () => {}
         },
         css: {
             get() {
-                const elements = Array.from(this);
+                const elements = Array.from(this).filter(e => e instanceof HTMLElement);
                 const computed = elements.map(element => getComputedStyle(element));
 
                 return new Proxy(computed, {
@@ -644,8 +681,10 @@ const callbacsOnInnerHTML = [];
             },
             set(value) {
                 if (typeof value != "object") return;
-
-                Array.from(this).forEach(element => {
+                
+                Array.from(this)
+                .filter(e => e instanceof HTMLElement)
+                .forEach(element => {
                     element.css = value;
                 });
             }
@@ -737,6 +776,54 @@ const recursiveProxy = (config, defaults) => {
     recursiveProxies.add(proxy);
     return proxy;
 };
+class ProxyAccumulator {
+    constructor(callback = () => {}, path = []) {
+        const origin = this;
+
+        return new Proxy(() => {}, {
+            get(target, key) {
+                const result = callback.call(origin, key, undefined, [...path], origin);
+
+                if(result !== undefined) 
+                    return result;
+                
+                const newPath = [...path, key];
+                return new ProxyAccumulator(callback, newPath);
+            },
+            set(target, key, value) {
+                callback.call(origin, key, value, [...path], origin);
+
+                return true;                
+            }
+        })
+    }
+
+    static ObjectTraverser = class ObjectAccumulator extends ProxyAccumulator {
+        static traverse(object, path = []) {
+            let accumulator = object;
+            for(let key of path)
+                accumulator = accumulator[key];
+
+            return accumulator;
+        }
+        constructor(toObject = () => null) {
+            return super((key, value, path) => {
+                const object = toObject();
+                if(object == null) return;
+
+                const target = ProxyAccumulator.ObjectTraverser.traverse(object, path);
+
+                if(value !== undefined)
+                    return target[key] = value;
+                
+                return target[key];
+            });
+        }
+    };
+}
+
+const normalizePath = path => path.replaceAll("\\", "/");
+
 function isClass(value) {
     return typeof value === "function" &&
         /^class\s/.test(Function.prototype.toString.call(value));
@@ -917,8 +1004,9 @@ const createElement = (...args) => {
     callback.call(element, element);
     return element;
 }
-const createSvgIcon = (element, src, text) => {
-    element.append(createElement("img", "svgIcon", {
+const createSvgIcon = (element, src, text, className = []) => {
+    className = Array.isArray(className) ? className : [className];
+    element.append(createElement("img", ["svgIcon", ...className], {
         paddingRight: text? "10px" : null,
     }, {
         src,
@@ -1025,10 +1113,12 @@ const setupDropdown = (...args) => {
             dom.on(["mouseenter", "mouseleave"], (evt, el) => {
                 const type = evt.type;
                 
-                if(type == "mouseenter")
+                if(type == "mouseenter") {
                     timeout = setTimeout(() => {
                         el.dropdownOpen();
                     }, 500)
+
+                }
                 else
                     clearTimeout(timeout);
             });
@@ -1050,11 +1140,8 @@ const setupDropdown = (...args) => {
     dom.dropdownClose = closeDropdown;
 }
 
-const formData = (form) => {
-    const data = {};
-
-    form.querySelectorAll("[name]")
-    .forEach(input => {
+const formData = (font) => {
+    const getValue = input => {
         let value;
         
         if(input.type == "color")
@@ -1063,8 +1150,27 @@ const formData = (form) => {
             if(!input.checked) return;
             else value = input.value;
         } else
-            value = input.value;            
+            value = input.value;
+            
+            
+            return value;
+        }
+        
+    if(font instanceof HTMLElement && ["INPUT", "SELECT", "TEXTAREA"].includes(font.tagName))
+        return getValue(font);
+    
 
+    if(!font || !(font instanceof HTMLFormElement))
+        return {};
+    
+    const data = {};
+
+    const form = font;
+
+    form.querySelectorAll("[name]")
+    .forEach(input => {
+        let value = getValue(input);
+        
         if(form.querySelectorAll(`[name="${input.name}"]`).length > 1) {
             if(data[input.name] == undefined) data[input.name] = [];
 
@@ -1179,6 +1285,7 @@ class Modal {
 
         this.modal = createElement("div", e => {
             e.classList.add("modal");
+            if(this.isOpen) e.classList.add("open");
 
             e.appendChild(this.element);
 
@@ -1197,15 +1304,33 @@ class Modal {
         Modal.instances.push(this);    
     }
 
-    onOpen(callback = (modal) => {}) {
-        this.onOpenCallback = callback;
+    remove() {
+        this.modal.remove();
+        this.hiddenContainer.remove();
+        Modal.instances.splice(Modal.instances.indexOf(this), 1);
     }
-    onClose(callback = () => {}) {
-        this.onCloseCallback = callback;
+
+    onOpen(...callbacks) {
+        this.onOpenCallback = this.onOpenCallback || [];
+        this.onOpenCallback.push(...callbacks);
+
+        return this;
     }
-    open() {
-        if(typeof this.onOpenCallback === "function") this.onOpenCallback(this);
+    onClose(...callbacks) {
+        this.onCloseCallback = this.onCloseCallback || [];
+        this.onCloseCallback.push(...callbacks);
+
+        return this;
+    }
+    open(...args) {
+        if(Array.isArray(this.onOpenCallback)) {
+            this.onOpenCallback.forEach(callback => {
+                if(typeof callback == "function")
+                callback(this, ...args);
+            });
+        }
         if(!this.isOpen) {
+            this.modal.classList.add("open");
             document.body.appendChild(this.modal);
             this.isOpen = true;
 
@@ -1218,21 +1343,34 @@ class Modal {
         this.openList.forEach((instance, index) => {
             instance.modal.style.zIndex = 1000 + index;
         });
+
+        return this;
     }
-    close() {
-        if(typeof this.onCloseCallback === "function") this.onCloseCallback(this);
+    close(...args) {
+        if(Array.isArray(this.onCloseCallback)) {
+            this.onCloseCallback.forEach(callback => {
+                if(typeof callback == "function")
+                callback(this, ...args);
+            });
+        }
         if(!this.isOpen) return;
 
-        this.hiddenContainer.appendChild(this.modal);
+        this.modal.classList.remove("open");
+        const animSpeed = parseFloat(this.modal.css.var.animSpeed);
+        setTimeout(() => this.hiddenContainer.appendChild(this.modal), animSpeed * 1000);
         this.isOpen = false;
 
         this.openList.splice(this.openList.indexOf(this), 1);
         this.openList.forEach((instance, index) => {
             instance.modal.style.zIndex = 1000 + index;
         });
+
+        return this;
     }
     toggle(state) {
         (state ?? !this.isOpen) ? this.open() : this.close();
+
+        return this;
     }
 }
 
@@ -1245,7 +1383,7 @@ class ObjectForm {
         })
     }
     static on = (...args) => new ObjectForm(...args);
-    constructor (query, callback) {
+    constructor (query, ...callback) {
         const form = query instanceof HTMLElement ? query : document.querySelector(query);
         if(!form) throw new Error("No element found");
 
@@ -1258,16 +1396,56 @@ class ObjectForm {
         }
 
         this.element = form;
-        this.callback = callback;
+        this.callback =  callback;
         
         if(callback != null)
             form.addEventListener("submit", (evt) => {
-                this.callback?.(evt, this);
+                this.callback.forEach(fn => {
+                    if(typeof fn == "function")
+                    fn(this.get());
+                });
             });
+
+        
+
+        Object.defineProperties(this, {
+            inputs: {
+                get: () => this.elementsObject()
+            }
+        })
 
         ObjectForm.instances.push(this);
     }
 
+    remove() {
+        this.element.remove();
+        ObjectForm.instances.splice(ObjectForm.instances.indexOf(this), 1);
+    }
+
+    elements() {
+        return this.element.all(`[name], [type="submit"]`);
+    }
+    elementsObject() {
+        const obj = {};
+
+        this.elements().forEach(input => {
+            const name = input.name || input.type;
+            
+            obj[name] = new Proxy({}, {
+                get(_, key) {
+                    if(key == "processValue") return formData(input);
+                    return input[key];
+                },
+
+                set(_, key, value) {
+                    input[key] = value;
+                    return true;
+                }
+            });
+        });
+
+        return obj;
+    }
     get() {
         return formData(this.element);
     }

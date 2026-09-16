@@ -573,105 +573,142 @@ class Overloader {
 
     constructor(callback, pushInstance = true) {
         this.addonsAST = [];
+        this.postCode = c => c;
 
-        const transform = (node, parent, key, ogAst, captureAST) => {
-            ogAst = ogAst || node;
-            
-            if(!node || typeof node !== "object") return;
+        if(typeof callback == "function")
+            this.setCallback(callback);
+        
+        if(pushInstance)
+        Overloader.instances.push(this);
+    }
 
-            const err = m => {
-                logger.error(m);
-                throw new Error(m);
-            }
+    transform (node, parent, key, ogAst, captureAST) {
+        ogAst = ogAst || node;
+        
+        if(!node || typeof node !== "object") return;
 
-            if (
-                node.type === "CallExpression" &&
-                node.callee.type === "Identifier" &&
-                node.callee.name === "captureAST"
-            ) {
-                
-                const callback = node.arguments[0];
-
-                if (
-                    (
-                        callback?.type === "ArrowFunctionExpression" ||
-                        callback?.type === "FunctionExpression"
-                    ) &&
-                    callback.body?.type === "BlockStatement"
-                ) {
-                    parent[key] =  {
-                        type: "Literal",
-                        value: null,
-                        raw: "null"
-                    };
-
-                    return new Function(`
-                        return ${window.astring.generate(callback)}
-                    `)()
-                } else {
-                    err(`"captureAST" must take a function as argument`);
-                }
-            } else if(node.name === "captureAST") {
-                err(`"captureAST" should be a function call`);
-            }
-
-
-            let breakCicle;
-            for(let k in node) {
-                const child = node[k];
-
-                if (child && typeof child === "object") {
-                    Object.defineProperty(child, "parent", {
-                        value: node,
-                        enumerable: false,
-                        configurable: true
-                    });
-                }
-                const brk = transform(child, node, k, ogAst, captureAST);
-
-                if(brk) {
-                    breakCicle = brk;
-                    break;
-                }
-            }
-            
-            if(typeof breakCicle == "function") return transform(ogAst, null, null, null, breakCicle);
-            
-            if(typeof captureAST == "function")
-            if(captureAST(node, parent, key)) return;
-
-            let addonRet = false;
-            for(let addon of this.addonsAST) {
-                if(addon(node, parent, key)) addonRet = true;
-            }
-            if(addonRet) return;
-            
-            if(node.type in Overloader.keys) {
-
-                if(!(node.operator in Overloader.keys[node.type])) return;
-
-                const name =  `Overloader.handlers.${Overloader.keys[node.type][node.operator]}`;
-                const transformHandler = Overloader.transformHandlers[node.type];
-
-                parent[key] = transformHandler(name, node);
-
-                return;
-            }
-            
+        const err = m => {
+            logger.error(m);
+            throw new Error(m);
         }
 
-        this.code = callback.toString();
+        if (
+            node.type === "CallExpression" &&
+            node.callee.type === "Identifier" &&
+            node.callee.name === "captureAST"
+        ) {
+            
+            const callback = node.arguments[0];
 
+            if (
+                (
+                    callback?.type === "ArrowFunctionExpression" ||
+                    callback?.type === "FunctionExpression"
+                ) &&
+                callback.body?.type === "BlockStatement"
+            ) {
+                parent[key] =  {
+                    type: "Literal",
+                    value: null,
+                    raw: "null"
+                };
+
+                return new Function(`
+                    return ${window.astring.generate(callback)}
+                `)()
+            } else {
+                err(`"captureAST" must take a function as argument`);
+            }
+        } else if(node.name === "captureAST") {
+            err(`"captureAST" should be a function call`);
+        }
+
+
+        let breakCicle;
+        for(let k in node) {
+            const child = node[k];
+
+            if (child && typeof child === "object") {
+                Object.defineProperty(child, "parent", {
+                    value: node,
+                    enumerable: false,
+                    configurable: true
+                });
+            }
+            const brk = this.transform(child, node, k, ogAst, captureAST);
+
+            if(brk) {
+                breakCicle = brk;
+                break;
+            }
+        }
+        
+        if(typeof breakCicle == "function") return transform(ogAst, null, null, null, breakCicle);
+        
+        if(typeof captureAST == "function")
+        if(captureAST(node, parent, key, ogAst)) return;
+
+        let addonRet = false;
+        for(let addon of this.addonsAST) {
+            if(addon.callback(node, parent, key, ogAst)) addonRet = true;
+        }
+        if(addonRet) return;
+        
+        if(node.type in Overloader.keys) {
+
+            if(!(node.operator in Overloader.keys[node.type])) return;
+
+            const name =  `Overloader.handlers.${Overloader.keys[node.type][node.operator]}`;
+            const transformHandler = Overloader.transformHandlers[node.type];
+
+            parent[key] = transformHandler(name, node);
+
+            return;
+        }
+        
+    }
+    setPostCode(callback = () => {}) {
+        if(typeof callback != "function") throw new Error("The callback must be a function.");
+        this.postCode = callback;
+        return this;
+    }
+    setCallback(callback) {
+        callback = typeof callback == "string" ? callback :
+            typeof callback == "function" ? callback.toString() : null;
+            
+        if(!["function", "string"].includes(typeof callback))
+            throw new Error("Callback must be a function or a string.");
+
+        this.code = callback;
         this.ast = acorn.parse(this.code, {
             ecmaVersion: "latest"
         });
+        this.transform(this.ast, null, null);
 
-        transform(this.ast, null, null);
+        let generated = window.astring.generate(this.ast);
+        this.addonsAST.forEach(addon => {
+            if(addon.onGeneration) {
+                generated = addon.onGeneration(generated) || generated;
+            }
+        })
+        generated = this.postCode(generated) || generated;
 
-        this.generated = window.astring.generate(this.ast);
+        this.generated = generated;
 
-        if(pushInstance)
-        Overloader.instances.push(this);
+        this.parsed = new Function(`return ${this.generated}`)();
+
+        return this;
+    }
+
+    addAddon(callback, onGeneration) {
+        if(typeof callback != "function") throw new Error("The addon must be a function.");
+        if(onGeneration != null && typeof onGeneration != "function") throw new Error("The onGeneration is optional and must be a function.");
+        this.addonsAST.push({
+            callback: callback,
+            onGeneration
+        });
+
+        return this;
     }
 
     /**
@@ -692,11 +729,6 @@ class Overloader {
         this.addTransformHandler(...type);
     }
 
-    addAddon(fn) {
-        if(typeof fn != "function") throw new Error("The addon must be a function.");
-        this.addonsAST.push(fn);
-    }
-
     addTransformHandler(type, handler) {
         if(handler == undefined && Overloader.transformHandlers[type] != undefined) throw new Error("You must provide a handler for the type if there is none.");
         if(handler == undefined) return;
@@ -706,18 +738,16 @@ class Overloader {
 
     onError(callback) {
         if(typeof callback != "function") return this;
-        this.__errorCallback = callback;
+        this.onErrorCallback = callback;
         return this;
 
     }
     execute = (...args) => {
         let execute;
         try {
-            execute = new Function(`
-                return ${this.generated}
-            `)()(...args);
+            execute = this.parsed(...args);
         } catch(e) {
-            if(this.__errorCallback) this.__errorCallback(e);
+            if(this.onErrorCallback) this.onErrorCallback(e);
         }
         
         return execute;

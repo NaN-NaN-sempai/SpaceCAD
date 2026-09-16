@@ -39,8 +39,10 @@ function isAboveMouse (camera) {
 
     const mouse = new THREE.Vector2();
 
-    mouse.x = (mousePosition.x / window.innerWidth) * 2 - 1;
-    mouse.y = -(mousePosition.y / window.innerHeight) * 2 + 1;
+    const {width, height} = doc.byId("mainEngine").rect;
+
+    mouse.x = (mousePosition.x / width) * 2 - 1;
+    mouse.y = -(mousePosition.y / height) * 2 + 1;
 
     raycaster.setFromCamera(mouse, camera);
 
@@ -132,7 +134,6 @@ function isAboveMouseGroup (camera) {
         list,
     }
 }
-
 Object.defineProperties(THREE.Object3D.prototype, {
     directions: {
         get: getDirection,
@@ -430,7 +431,6 @@ class Arrow3D extends THREE.Group {
     }
 }
 
-const logger = new Logger(document.querySelector("#logger .body .list"));
 
 
 
@@ -452,9 +452,10 @@ class PivotCamera extends THREE.Object3D {
         
         this.originScene = scene;
         this.perspective = perspective;
-
+ 
+        const {width, height} = doc.byId("mainEngine").rect;
         
-        const aspect = window.innerWidth / window.innerHeight;
+        const aspect = width / height;
         const size = 2;
 
         this.translateObject = new THREE.Object3D();
@@ -469,7 +470,7 @@ class PivotCamera extends THREE.Object3D {
         );
         this.perspectiveCamera = new THREE.PerspectiveCamera(
             75,
-            window.innerWidth / window.innerHeight,
+            aspect,
             0.1,
             1000000
         );
@@ -506,7 +507,8 @@ class PivotCamera extends THREE.Object3D {
     }
 
     update() {
-        const aspect = window.innerWidth / window.innerHeight;
+        const { width, height } = doc.byId("mainEngine").rect;
+        const aspect = width / height;
 
         if (this.perspective == "perspective") {
             this.selectedCamera = this.perspectiveCamera;
@@ -576,9 +578,6 @@ Object.keys(SpaceCAD).filter(e=>!["Object", "run", "instancesUpdate", "deleteAll
 
 window.iframeRun = SpaceCAD.run;
 
-Color.GlobalizeNames();
-const {color} = Color;
-
 
 
 
@@ -586,8 +585,10 @@ const {color} = Color;
 // RENDERER
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 const canvas = renderer.domElement;
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+
+const {width, height} = doc.byId("mainEngine").rect;
+renderer.setSize(width, innerHeight);
+doc.byId("appDisplay").byId("mainEngine").appendChild(renderer.domElement);
 
 
 const pmremGenerator = new THREE.PMREMGenerator(renderer);
@@ -1340,9 +1341,10 @@ const createController = (name, prop) => {
                             createElement("div", e => {
                                 const margin = 10;
                                 const setBG = ({x, y}) => {
+                                    const crossColor = color(cssVar.highlight).darken(0.6).asHEX.str;
                                     e.css.background = `
-                                        linear-gradient(var(--primary), var(--primary)) center / 2px 20px no-repeat,
-                                        linear-gradient(var(--primary), var(--primary)) center / 20px 2px no-repeat,
+                                        linear-gradient(${crossColor}, ${crossColor}) center / 2px 20px no-repeat,
+                                        linear-gradient(${crossColor}, ${crossColor}) center / 20px 2px no-repeat,
                                         linear-gradient(var(--primary), var(--primary)) ${x*100}% ${y*100}% / 2px 100% no-repeat,
                                         linear-gradient(var(--primary), var(--primary)) ${x*100}% ${y*100}% / 100% 2px no-repeat,
                                         ${cssVar.tertiary}
@@ -1519,6 +1521,7 @@ const createController = (name, prop) => {
 
                                 const margin = 10;
                                 const percent = (n, min, max) => min + parseFloat(n) * (max - min);
+                                const crossColor = color(cssVar.highlight).darken(0.6).asHEX.str;
                                 e.css = {
                                     width: `calc(100% - ${margin * 2}px)`,
                                     height: "30px",
@@ -1529,7 +1532,7 @@ const createController = (name, prop) => {
                                     position: "relative",
                                     cursor: "pointer",
                                     background: `
-                                        linear-gradient(var(--primary), var(--primary)) center / 2px 20px no-repeat,
+                                        linear-gradient(${crossColor}, ${crossColor}) center / 2px 20px no-repeat,
                                         linear-gradient(var(--primary), var(--primary)) 50% 50% / 100% 2px no-repeat,
                                         ${cssVar.tertiary}`
                                 };
@@ -2028,15 +2031,52 @@ document.query(".bottomItens").all(".cameraLook").on("click", (evt, e) => {
             break;
 
         case "top":
-            camera.rotation.set(Math.PI / 2, 0, 0);
-            break;
-
-        case "bottom":
             camera.rotation.set((Math.PI / 2) * 3, 0, 0);
             break;
 
+        case "bottom":
+            camera.rotation.set((Math.PI / 2), 0, 0);
+            break;
+
     }
-})
+});
+electronStore.minimizedCameraLook = electronStore.minimizedCameraLook ?? false;
+const minimizeCameraLook = (ignList = ["front", "left", "top"]) => {
+    const minimize = electronStore.minimizedCameraLook;
+    if(minimize == "all") ignList = [];
+
+    document.query(".bottomItens").all(".cameraLook").forEach(e => {
+        if(ignList.includes(e.query("img").alt)) return e.classList.remove("minimized");
+
+        e.classList[minimize ? "add" : "remove"]("minimized");
+    });
+}
+const setMinimizeCameraLookButtomTitle = (el) => {
+    const minimize = electronStore.minimizedCameraLook;
+
+    el.title = minimize? language.bottombuttons.setlook.minimizecamera: language.bottombuttons.setlook.maximizecamera;
+
+    el.classList[minimize ? "add" : "remove"]("minimized");
+}
+minimizeCameraLook();
+const minimizeCameraLookButton = doc.query(".bottomItens .minimizeCameraLook");
+minimizeCameraLookButton.classList[electronStore.minimizedCameraLook ? "add" : "remove"]("minimized");
+minimizeCameraLookButton.title = electronStore.minimizedCameraLook? language.bottombuttons.setlook.maximizecamera: language.bottombuttons.setlook.minimizecamera;
+minimizeCameraLookButton.on("click", (evt, el) => {
+    electronStore.minimizedCameraLook = !electronStore.minimizedCameraLook;
+
+    setMinimizeCameraLookButtomTitle(el);
+
+    minimizeCameraLook();
+});
+minimizeCameraLookButton.on("contextmenu", (evt, el) => {
+    evt.preventDefault();
+    electronStore.minimizedCameraLook = "all";
+
+    setMinimizeCameraLookButtomTitle(el);
+
+    minimizeCameraLook();
+});
 
 
 
@@ -2051,8 +2091,8 @@ const mouseLock = new MouseLock(canvas);
 const lockMouse = (tempCursor = false) => {
     if(tempCursor) {
         cursor.display = 'block';
-        cursor.left = `${mousePosition.x}px`;
-        cursor.top = `${mousePosition.y}px`;
+        cursor.left = `${mousePosition.window.x}px`;
+        cursor.top = `${mousePosition.window.y}px`;
     }
 
     mouseLock.lock();
@@ -2064,18 +2104,36 @@ const unlockMouse = () => {
 }
 
 const raycaster = new THREE.Raycaster();
-const cameraMoveToMouse = () => {
+const vectorMouse = () => {
     const mouse = new THREE.Vector2();
 
-    mouse.x = (mousePosition.x / window.innerWidth) * 2 - 1;
-    mouse.y = -(mousePosition.y / window.innerHeight) * 2 + 1;
+
+    const {width, height} = doc.byId("mainEngine").rect;
+
+    mouse.x = (mousePosition.x / width) * 2 - 1;
+    mouse.y = -(mousePosition.y / height) * 2 + 1;
+
+    return mouse
+}
+const mousePositionInWorld = () => {
+    
+    const mouse = vectorMouse();
 
     raycaster.setFromCamera(mouse, camera.selectedCamera);
 
     const intersects = raycaster.intersectObjects(scene.children, true);
 
     if (intersects.length) {
-        camera.position.copy(intersects[0].point)
+        return intersects[0].point
+    } else {
+        return null;
+    }
+}
+const cameraMoveToMouse = () => {
+    const position = mousePositionInWorld();
+
+    if (position) {
+        camera.position.copy(position)
     }
 };
 
@@ -2608,13 +2666,21 @@ myObject.position.x = vwLeft(50); // places the object close to 50% of the scree
 myObject.position.y = vwTop(50); // places the object close to 50% of the screen from the top
 */
 class ScreenToScene {
+    static instances = [];
+    static update = () => {
+        ScreenToScene.instances.forEach(instance => instance.setSize());
+    }
     constructor(sceneSize) {
         this.setSize(sceneSize);
-        window.addEventListener("resize", () => this.setSize(sceneSize));
+        this.constructor.instances.push(this);
     }
     setSize(sceneSize) {
-        this.sceneHeight = sceneSize;
-        this.sceneWidth = sceneSize * (window.innerWidth / window.innerHeight);
+        if(sceneSize != undefined)
+            this.sceneSize = sceneSize;
+
+        this.sceneHeight = this.sceneSize;
+        const {width, height} = doc.byId("mainEngine").rect;
+        this.sceneWidth = this.sceneSize * (width / height);
     }
     height() {
         if(camera.perspective == "orthographic")
@@ -2629,33 +2695,41 @@ class ScreenToScene {
     }
 
     vwLeft(vw) {
-        return this.left((vw/100) * window.innerWidth);
+        const {width} = doc.byId("mainEngine").rect;
+        return this.left((vw/100) * width);
     }
     vwRight(vw) {
-        return this.right((vw/100) * window.innerWidth);
+        const {width} = doc.byId("mainEngine").rect;
+        return this.right((vw/100) * width);
     }
     vwTop(vw) {
-        return this.top((vw/100) * window.innerHeight);
+        const {height} = doc.byId("mainEngine").rect;
+        return this.top((vw/100) * height);
     }
     vwBottom(vw) {
-        return this.bottom((vw/100) * window.innerHeight);
+        const {height} = doc.byId("mainEngine").rect;
+        return this.bottom((vw/100) * height);
     }
 
     left(offset) {
-        const porc = offset / window.innerWidth;
+        const {width} = doc.byId("mainEngine").rect;
+        const porc = offset / width;
         const endPos = ((this.width() * 2) * porc) - this.width();
         return endPos;
     }
     right(offset) {
-        return this.left(window.innerWidth - offset);
+        const {width} = doc.byId("mainEngine").rect;
+        return this.left(width - offset);
     }
     top(offset) {
-        const porc = offset / window.innerHeight;
+        const {height} = doc.byId("mainEngine").rect;
+        const porc = offset / height;
         const endPos = ((this.height() * 2) * porc) - this.height();
         return -endPos;
     }
     bottom(offset) {
-        return this.top(window.innerHeight - offset);
+        const {height} = doc.byId("mainEngine").rect;
+        return this.top(height - offset);
     }
 }
 const screenToScene = new ScreenToScene(7.2);
@@ -2750,7 +2824,7 @@ scene.add(selection3DGizmo);
 
 
 // INPUT MANAGING
-const inputManager = new InputManager(canvas);
+const inputManager = new InputManager(doc.byId("mainEngine"));
 const {InputAction} = inputManager;
 
 inputManager.preventDefault = false;
@@ -2794,6 +2868,7 @@ const sceneObjectsEmpty = () => {
 };
 
 
+let debugMousePos;
 
 let lockSelectionmovement = false; // REMOVER
 const overloader = new Overloader((frame, loop) => {
@@ -2839,8 +2914,22 @@ const overloader = new Overloader((frame, loop) => {
 
     
 
+    if(debugMousePos)
+    if(mouseLeft.is("down")) {
+        const position = mousePositionInWorld();
+        if(position) {
+            const size = 20;
+            debugMousePos = new Construct(
+                {},
+                new THREE.BoxGeometry(size, size, size),
+                new THREE.MeshNormalMaterial()
+            );
+            debugMousePos.position = position;
 
-
+            const local = debugMousePos;
+            setTimeout(()=>local.erase(), 2000);
+        }
+    }
 
 
 
@@ -3162,8 +3251,14 @@ const POST_LOOP = new LOOP.post(() => {
 
 renderer.setAnimationLoop(LOOP.updateAll);
 
-window.addEventListener("resize", () => {
+const engineResize = () => {
     UICamera.selectedCamera.updateProjectionMatrix();
     camera.selectedCamera.updateProjectionMatrix();
-    renderer.setSize(innerWidth, innerHeight);
-});
+
+    const { width, height } = doc.byId("mainEngine").rect;
+
+    renderer.setSize(width, height);
+
+    ScreenToScene.update(width, height);
+}
+on("resize", engineResize);

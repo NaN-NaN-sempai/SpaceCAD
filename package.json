@@ -6,6 +6,7 @@
         "astring": "^1.9.0",
         "electron-store": "^11.0.2",
         "express": "^5.2.1",
+        "monaco-editor": "^0.56.0",
         "nodemon": "^3.1.14",
         "open": "^11.0.1",
         "socket.io": "^4.8.3",
@@ -29,7 +30,7 @@
             "node_modules/three/examples/jsm/**/*"
         ],
         "win": {
-            "icon": "assets/icon.ico",
+            "icon": "assets/app.ico",
             "target": "nsis"
         },
         "fileAssociations": [
@@ -37,7 +38,7 @@
                 "ext": "spacecad.js",
                 "name": "SpaceCAD File",
                 "description": "SpaceCAD project",
-                "icon": "assets/icon.ico"
+                "icon": "assets/app.ico"
             }
         ]
     },

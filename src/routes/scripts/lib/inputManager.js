@@ -103,6 +103,7 @@ inputManager.addManager(new myManager(inputManager));
 
 class InputManager {
     constructor(DOMOrigin) {
+        this.disabled = false;
         this.preventDefault = false;
         this.preventMouseWheelDefault = false;
         this.preventMousePinchDefault = false;
@@ -364,13 +365,26 @@ class InputManager {
     update() {
         this.managers.forEach(m => m.update?.());
     }
+
+    disable() {
+        this.disabled = true;
+    }
+    enable() {
+        this.disabled = false;
+    }
+    toggle() {
+        this.disabled = !this.disabled;
+    }
 }
 class MouseManager {
     constructor(parent = {}) {
         this.parent = parent;
         this.managerName = "mouse";
 
-        this.position = { x: 0, y: 0 };
+        this.position = { 
+            x: 0, y: 0,
+            window: { x: 0, y: 0 }
+        };
         this.delta = { x: 0, y: 0 };
 
         this.wheel = {
@@ -435,8 +449,13 @@ class MouseManager {
         }
 
         DOMOrigin.addEventListener("mousemove", (event) => {
-            this.position.x = event.clientX;
-            this.position.y = event.clientY;
+            const {width, height} = DOMOrigin.rect;
+
+            this.position.x = event.clientX - (innerWidth - width);
+            this.position.y = event.clientY - (innerHeight - height);
+
+            this.position.window.x = event.clientX;
+            this.position.window.y = event.clientY;
 
             this.delta.x = event.movementX;
             this.delta.y = -event.movementY;
@@ -510,12 +529,12 @@ class ButtonManager {
             if (
                 target instanceof HTMLInputElement ||
                 target instanceof HTMLTextAreaElement ||
-                target.isContentEditable
+                target.isContentEditable ||
+                this.parent.disabled ||
+                this.disabled
             ) {
                 return;
             }
-            
-            if(this.disabled) return;
 
             let button = typeof event.code == "string" ? event.code : event;
             button = button.replace("Key", "").replace("Digit", "");

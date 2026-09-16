@@ -2,6 +2,25 @@
     --primary: rgb(35, 40, 44);
     --secondary: rgb(75, 86, 95);
     --tertiary: rgb(24, 26, 28);
+
+    --highlight: #f28202;
+    --highlight2: #F04C9B;
+
+    --THREE: #049EF4;
+    --THREEClass: #2bc7ba;
+
+
+    --typeString: rgb(208, 142, 108);
+    --typeNumber: rgb(41, 134, 221);
+    --typeBoolean: rgb(182, 15, 203);
+    --typeFunction: rgb(215, 108, 108);
+    --typeUnrecognized: rgb(231, 80, 80);
+    --typeUndefined: rgb(231, 80, 80);
+    --typeReference: rgb(255, 255, 0, 0.42);
+    --typeObjectKey: rgb(255, 255, 255, 0.5);
+    --typeObject: rgb(161, 184, 255);
+    --typeClass: rgb(109, 203, 65);
+    --typeObjectConstructor: rgba(109, 203, 65, .7);
 }
 
 * {
@@ -46,6 +65,11 @@ button, .buttonLike, input[type="button"], input[type="submit"] {
     color: white;
     transition: all 0.1s ;
     border-radius: 5px;
+
+    &:not(.window-buttons button) {
+        box-shadow: 0 0 3px rgba(0, 0, 0, .4);
+    }
+
     &:hover {
         background: var(--secondary);
     }
@@ -187,6 +211,7 @@ hr {
     width: 100%;
     background: var(--primary);
 }
+
 
 
 #renameModal {
@@ -353,7 +378,7 @@ hr {
         gap: 5px;
         border: 1px solid var(--secondary);
         border-radius: 5px;
-        z-index: 1;
+        z-index: 9999;
 
         &.hidden {
             display: none;
@@ -378,8 +403,32 @@ hr {
     align-items: center;
     justify-content: center;
     z-index: 9999;
-}
+    pointer-events: none;
 
+    --animSpeed: .2s;
+    animation: closeModal var(--animSpeed) ease-in-out forwards;
+
+    &.open {
+        pointer-events: all;
+        animation: openModal var(--animSpeed) ease-in-out forwards;
+    }
+}
+@keyframes openModal {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+@keyframes closeModal {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
 
 #importResources {
     & .hideIfAddon {
@@ -540,7 +589,7 @@ hr {
                 & .fileName {
                     float: right;
                     font-size: .75rem;
-                    color: rgb(255, 255, 255, 0.5);
+                    color: var(--typeObjectKey);
                     user-select: none;
                 }
 
@@ -581,6 +630,14 @@ hr {
                     }
                 }
 
+                &.warn, &.error {
+                    .stringified {
+                        &.string {
+                            color: white;
+                        }
+                    }
+                }
+
                 & * {
                     margin-right: 5px;
                 }
@@ -588,40 +645,37 @@ hr {
                     display: inline;
 
                     &.string {
-                        color: rgb(253, 135, 0);
+                        color: var(--typeString);
                     }
                     &.number {
-                        color: rgb(41, 134, 221);
+                        color: var(--typeNumber);
                     }
                     &.boolean {
-                        color: rgb(182, 15, 203);
+                        color: var(--typeBoolean);
                     }
                     &.function {
-                        color: rgb(215, 108, 108);
+                        color: var(--typeFunction);
                     }
                     &.unrecognized {
-                        color: rgb(231, 80, 80);
-                    }
-                    &.unrecognized {
-                        color: rgb(231, 80, 80);
+                        color: var(--typeUnrecognized);
                     }
 
                     &.undefined {
-                        color: rgba(0, 187, 255, 0.5);
+                        color: var(--typeUndefined);
                     }
 
                     &.reference {
-                        color: rgba(255, 255, 0, 0.42);
+                        color: var(--typeReference);
                     }
                     &.objectKey {
-                        color: rgb(255, 255, 255, 0.5);
+                        color: var(--typeObjectKey);
                     }
                     &.objectChar {
                         color: rgb(255, 255, 255);
                         font-style: normal;
                     }
                     &.class {
-                        color: rgb(109, 203, 65);
+                        color: var(--typeClass);
                     }
                     &.objectConstructor {
                         font-style: normal;
@@ -629,7 +683,7 @@ hr {
 
                         font-size: .85em;
                         
-                        color: rgba(109, 203, 65, .7);
+                        color: var(--typeObjectConstructor);
                     }
                     &.inspectable {
                         padding-inline-start: 8px;
@@ -872,7 +926,269 @@ hr {
 
 
 
+#appDisplay {
+    display: flex;
+    flex-direction: row;
+    height: 100vh;
+    max-height: 100vh;
+    width: 100%;
+    flex-wrap: nowrap;
 
+    & > * {
+        width: 100%;
+        overflow: hidden;
+    }
+}
+.separateWindow {
+    --topMargin: 52px;
+    padding-top: var(--topMargin, 0px);
+    background: linear-gradient(to left, rgba(0, 0, 0, 0.3), transparent 30%);
+    width: fit-content;
+    flex-shrink: 0;
+    max-width: 95%;
+    --minWidth: 130px;
+
+    --resizeWidth: 7px;
+
+    &:has(.resize:hover), & .resize.active {
+        --resizeWidth: 15px;
+    }
+
+    .window {
+        max-width: 100%;
+        width: var(--width, 100%);
+    }
+
+    .body {
+        width: 100%;
+        margin-right: var(--resizeWidth);
+
+        .buttons {
+            display: flex;
+            gap: 5px;
+            justify-content: flex-end;
+            & > * {
+                padding: 6px;   
+            }
+        }
+    }
+
+    &.onMinWidth .resize {
+        background: var(--secondary);
+        color: var(--tertiary);
+
+        &::after {
+            content: "⟨";
+            transform: translate(-50%, -50%);
+        }
+
+        &.reverse::after {
+            content: "〈";
+        }
+    }
+
+    & .resize {
+        width: var(--resizeWidth);
+        cursor: ew-resize;
+        height: 100%;
+        background: var(--tertiary);
+        color: var(--secondary);
+        transition: all .05s linear;
+
+        &:not(.reverse) {
+            right: 0;
+        }
+        &.reverse {
+            left: 0;
+        }
+
+        position: absolute;
+        right: 0;
+
+        &::after {
+            content: "⋯";
+            font-weight: bolder;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(90deg);
+        }
+    }
+}
+
+#windowEditor {
+    --minWidth: 70px;
+    --animSpeed: .5s;
+    animation: openWindowEditor var(--animSpeed) ease forwards;
+    &.closed {
+        animation: closeWidowEditor var(--animSpeed) ease forwards;
+    }
+
+    &.unsaved .unsaved {
+        display: inline-block !important;
+        white-space: nowrap;
+    }
+
+    &.hideFilePath .filePath {
+        display: none !important;
+    }
+
+    #localEditor {
+        background: var(--primary);
+        height: 100%;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        position: relative;
+    
+        & .titleBar {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-end;
+            align-items: center;
+            background: var(--tertiary);
+            border-bottom: 1px solid var(--secondary);
+            padding-inline: 10px;
+            padding-block: 5px;
+            position: relative;
+            z-index: 6;
+    
+            & .title {
+                width: 100%;
+                color: white;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 5px;
+                min-width: 0;
+    
+                .fileName {
+                    flex-shrink: 0;
+                }
+    
+                .filePath {
+                    display: inline-block;
+                    flex-shrink: 1;
+                    opacity: .3;
+                    font-size: .7rem;
+                    max-width: 100%;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .unsaved {
+                    display: none;
+                    color: yellow;
+                    font-weight: bolder;
+                    font-size: .7rem;
+
+                    &::before {
+                        content: '✱ ';
+                        font-size: .5rem;
+                    }
+                }
+            }
+            & .buttons {
+                z-index: 1;
+    
+                .close:hover {
+                    background: red;
+                }
+            }
+        }
+        & .monaco {
+            height: 100%;
+            width: 100%;
+        }
+    }
+}
+
+@keyframes closeWidowEditor {
+    0% {
+        width: var(--width);
+        display: flex;
+    }
+    100% {
+        width: 0;
+        display: none;
+    }
+}
+
+@keyframes openWindowEditor {
+    0% {
+        width: 0;
+        display: flex;
+    }
+    100% {
+        width: var(--width);
+    }
+}
+
+
+
+.iconButton.minimizeCameraLook {
+    border-radius: 50px;
+    display: block;
+    position: relative;
+    box-sizing: border-box;
+
+    &::before {
+        font-size: .6rem;
+        content: '-';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    &.minimized::before {
+        content: '+';
+    }
+}
+.cameraLook {
+    --width: 31.38px;
+    transition: all .2s linear;
+    width: var(--width);
+    animation: cameraLookExpand .25s;
+}
+.cameraLook.minimized {
+    animation: cameraLookMinimize .25s forwards;
+}
+@keyframes cameraLookMinimize {
+    0% {
+        padding: 7px;
+        margin-left: 0;
+        width: var(--width);
+        opacity: 1;
+        display: flex;
+    }
+    100% {
+        padding: 0;
+        margin-left: -5px;
+        width: 0;
+        opacity: 0;
+        display: none; 
+    }
+}
+@keyframes cameraLookExpand {
+    0% {
+       display: flex;
+       width: 0;
+       padding: 0;
+       opacity: 0;
+       margin-left: -5px;
+    }
+    100% {
+        width: var(--width);
+        padding: 7px;
+        opacity: 1;
+        margin-left: 0;
+    }
+}
 
 i {
     &.hamburger {

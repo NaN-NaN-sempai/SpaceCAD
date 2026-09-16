@@ -49,10 +49,10 @@ const selectLanguage = (lang, electronStore) => {
 
     doDocumentTranslation();
 }
-const langFromPath = path => {
+const langFromPath = (path, divisor = "-") => {
     let value = language;
 
-    path = path.split("-");
+    path = path.split(divisor);
 
     for (let i = 0; i < path.length; i++) {
         let v = value[path[i]] != undefined ? value[path[i]] : language.translationnotfound;
@@ -72,13 +72,16 @@ const doDocumentTranslation = (el) => {
     
         for (const attr of e.attributes) {
             if (attr.name.startsWith("language")) {
-    
-                const {name} = attr;
-                const first = name.split("-")[1];
-                const type = types.includes(first)? first : "innerHTML";
-                const path = types.includes(first)? name.split("-").slice(2).join("-") : name.split("-").slice(1).join("-");
                 
-                const value = langFromPath(path);
+                const {name} = attr;
+                const divisor = name.includes("-")? "-" : ".";
+                const first = name.split(divisor)[1];
+                const type = types.includes(first)? first : "innerHTML";
+                const path = types.includes(first)?
+                    name.split(divisor).slice(2).join(divisor) : 
+                    name.split(divisor).slice(1).join(divisor);
+                
+                const value = langFromPath(path, divisor);
 
                 if(type == "value")
                     e.value = value;
@@ -122,7 +125,7 @@ if(typeof window != "undefined")
 Object.defineProperties(HTMLElement.prototype, {
     setlang: {
         get() {
-            return propToString("language", "-", this);
+            return propToString("language", ".", this);
         }
     },
 })

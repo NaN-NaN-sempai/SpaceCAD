@@ -626,10 +626,18 @@ class Logger {
             stack = stack.slice(6).replaceAll(location.href, "")
             .split("\n").slice(2).join("\n");
 
-            let fileName = (stack.indexOf(" (") != -1 ?
+            let fileName;
+            try {
+                fileName = (stack.indexOf(" (") != -1 ?
                 stack.split("\n")[0].split(" (")[1] : 
                 "<" +stack.split("\n")[0].split(" <")[1] )
                 .replace(":","REPLACEHERE").split(":")[0].replace("REPLACEHERE",":");
+            } catch (error) {
+                fileName = "<anonymous>";
+                error.name = "Logger Warning";
+                error.message = "Error parsing stack trace\n" + error.message;
+                console.warn(error);
+            }
             fileName = fileName.startsWith(":")? "<anonymous>"+fileName : fileName;
 
             const fileNameDom = document.createElement("div");
