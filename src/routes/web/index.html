@@ -1728,14 +1728,14 @@ startTranslation(isElectron? electronStore : undefined);
     }
 </script>
 
-<script src="../../../node_modules/acorn/dist/acorn.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/acorn@8.15.0/dist/acorn.js"></script>
 <script type="module"> // globalize imports 
     /* import * as monaco from "monaco"; */
 
     import JSHON from "lib/JSHON.js";
     window.JSHON = JSHON;
 
-    import * as astring from "astring";
+    import * as astring from "https://cdn.jsdelivr.net/npm/astring/dist/astring.mjs";
     window.astring = astring;
 
     import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
