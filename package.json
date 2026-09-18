@@ -15,6 +15,7 @@
     "main": "electron.js",
     "type": "module",
     "scripts": {
+        "schema": "node ./generateSchema.js",
         "start": ".\\node_modules\\electron\\dist\\electron.exe .",
         "dev": ".\\node_modules\\electron\\dist\\electron.exe electron.cjs",
         "build": "electron-builder"

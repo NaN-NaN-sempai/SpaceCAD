@@ -487,7 +487,6 @@ const SpaceCAD = class SpaceCAD {
             if(new Function(code).toString() !== SpaceCAD.overloader.code) {
                 run = SpaceCAD.overloader.setPostCode(postCode).setCallback(code).execute();
             } else {
-                console.log("é o mesmo")
                 run = SpaceCAD.overloader.execute();
             }
         } else {

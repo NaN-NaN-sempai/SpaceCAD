@@ -1,3 +1,7 @@
+<!-- 
+File Description: HAHAHAH
+ -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -373,6 +377,13 @@
 
         <div class="title" language-modal-changelog-lastupdates></div>
 
+        
+        <span style="background: var(--primary);">scheme, alert</span>
+        (18/09/2026 - 05:53) SpaceCAD -> alert agora é um popup, use ogAlert para alertas antigos
+        <br><br>
+        (18/09/2026 - 04:53) projeto -> generateSchema para gerar o esquema da API do projeto inteiro, gera usando JSDoc já existente no codigo, então agora é só ir pelos arquivos escrevendo os JSDoc. Execute npm run shcema para criar o arquivo do esquema
+        <br><br>
+
         <span style="background: var(--primary);">appPopup bugfix</span>
         (16/09/2026 - 10:51) UI -> appPopup bugfix q estava fazendo o form reiniciar a pagina
         <br><br>
@@ -722,8 +733,6 @@
 
                 const submitter = evt.submitter.className;
 
-                console.log(onConfirm, onCancel, submitter);
-
                 if(submitter == "cancel" && typeof onCancel == "function")
                     onCancel(form, modal, evt);
                 else if(submitter == "confirm" && typeof onConfirm == "function")
@@ -789,7 +798,7 @@
                                 }
                                 e.value = html;
 
-                                e.addEventListener("click", (evt, form) => {
+                                e.on("click", (evt) => {
                                     func(evt, form);
                                 });
                             })
@@ -801,9 +810,6 @@
             
         }).onForm(onSubmit);
 
-        console.log(form);
-
-
         const modal = form.element.modal;
         return modal
             .onClose(onModalClose, ()=>{
@@ -811,6 +817,11 @@
                 modal.remove();
             })
             .onOpen(onModalOpen).open();
+    }
+
+    const ogAlert = alert;
+    alert = (message, title = language.modal.alert.title, buttons = [[language.modal.alert.close, (evt, form) => {evt.preventDefault(); form.element.modal.close()}, "cancel"]]) => {
+        popup(title, message, buttons);
     }
 
     let version = "";
@@ -1104,6 +1115,10 @@ writeLanguage("en-US", { // default
             todo: "To Do",
             lastupdates: "Last Updates",
         },
+        alert: {
+            title: "Alert",
+            close: "close",
+        },
     },
     editor: {
         title: {
@@ -1356,7 +1371,11 @@ writeLanguage("pt-BR", {
         changelog: {
             todo: "A Fazer",
             lastupdates: "Últimas Atualizações",
-        }
+        },
+        alert: {
+            title: "Alerta",
+            close: "fechar",
+        },
     },
     editor: {
         title: {
@@ -1615,7 +1634,11 @@ writeLanguage("fr-FR", {
         changelog: {
             todo: "À faire",
             lastupdates: "Dernières mises à jour"
-        }
+        },
+        alert: {
+            title: "Alert",
+            close: "close",
+        },
     },
     editor: {
         title: {
@@ -2539,8 +2562,6 @@ startTranslation(isElectron? electronStore : undefined);
         evt.preventDefault();
         const data = form.get();
 
-        console.log(data)
-
         const aux = {
             isAddon: false,
         };
@@ -2586,8 +2607,6 @@ startTranslation(isElectron? electronStore : undefined);
 
         if(!data.libs && !data.modules && isEmptyObj(aux.libs) && isEmptyObj(aux.modules))
             return alert(language.modal.shareresources.alert.noType);
-
-        console.log(aux )
 
             
         const str = JSON.stringify(aux, null, 4);

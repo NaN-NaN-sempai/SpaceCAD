@@ -7,6 +7,10 @@ import path from 'path';
 import Store from 'electron-store';
 import { fileURLToPath } from 'url';
 
+
+/**
+ * hello
+ */
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 

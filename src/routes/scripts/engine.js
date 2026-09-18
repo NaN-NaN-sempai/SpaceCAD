@@ -3179,8 +3179,6 @@ const overloader = new Overloader((frame, loop) => {
 
     camera.setZoom(zoom);
 
-    //console.log(pinch);
-
     
 
     if(mouseLeft.get() && doMouseRotate) {
