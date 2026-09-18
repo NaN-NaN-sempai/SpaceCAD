@@ -1738,12 +1738,12 @@ startTranslation(isElectron? electronStore : undefined);
     import * as astring from "astring";
     window.astring = astring;
 
-    import * as THREE from "three";
-    import { Line2 } from 'three/addons/lines/Line2.js';
-    import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
-    import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
-    import { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
-    import {RoomEnvironment} from "three/addons/environments/RoomEnvironment.js";
+    import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
+    import { Line2 } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/lines/Line2.js';
+    import { LineGeometry } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/lines/LineGeometry.js';
+    import { LineMaterial } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/lines/LineMaterial.js';
+    import { SVGLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/SVGLoader.js';
+    import {RoomEnvironment} from "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/environments/RoomEnvironment.js";
     window.THREE = {
         ...THREE,
         Line2,
@@ -3781,11 +3781,12 @@ startTranslation(isElectron? electronStore : undefined);
 </script>
 
 <!-- monaco -->
-<script src="../../../node_modules/monaco-editor/min/vs/loader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js"></script>
+
 <script>
     require.config({
         paths: {
-            vs: "../../../node_modules/monaco-editor/min/vs"
+            vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs"
         }
     });
 
