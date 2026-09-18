@@ -1,31 +1,31 @@
-<!-- 
-File Description: HAHAHAH
- -->
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- 
+        File Description: HAHAHAH
+        -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title> SpaceCAD </title>
  
-    <link rel="stylesheet" href="style/style.css">
-    <link rel="stylesheet" href="style/titlebar.css">
-    <link rel="stylesheet" href="style/monaco.css">
+    <link rel="stylesheet" href="../style/style.css">
+    <link rel="stylesheet" href="../style/titlebar.css">
+    <link rel="stylesheet" href="../style/monaco.css">
 </head>
 <body>
     <div class="titlebar">
         <div class="title">
             <div class="center">
                 
-                <img class="logoIcon bg" src="assets/logo/logoBg.svg" alt="SpaceCAD">
-                <img class="logoIcon animated" src="assets/logo/logo.gif" alt="SpaceCAD">
-                <img class="logoIcon overlay" src="assets/logo/logoOverlay.svg" alt="SpaceCAD">
+                <img class="logoIcon bg" src="../../../assets/logo/logoBg.svg" alt="SpaceCAD">
+                <img class="logoIcon animated" src="../../../assets/logo/logo.gif" alt="SpaceCAD">
+                <img class="logoIcon overlay" src="../../../assets/logo/logoOverlay.svg" alt="SpaceCAD">
                 
             </div>
 
             <div class="logotype">
-                <img class="projectName" src="assets/logo/logotype.svg" alt="SpaceCAD">
+                <img class="projectName" src="../../../assets/logo/logotype.svg" alt="SpaceCAD">
                 <span>v. 26.8.1 - pA</span>
             </div>
 
@@ -75,23 +75,23 @@ File Description: HAHAHAH
 
     <div class="bottomItens">
         <button class="cameraLook iconButton" language-title-bottombuttons-setlook-top>
-            <img class="svgIcon" src="./svg/lookTop.svg" alt="top">
+            <img class="svgIcon" src="../svg/lookTop.svg" alt="top">
         </button>
         <button class="cameraLook iconButton" language-title-bottombuttons-setlook-bottom>
-            <img class="svgIcon" src="./svg/lookBottom.svg" alt="bottom">
+            <img class="svgIcon" src="../svg/lookBottom.svg" alt="bottom">
         </button>
         <button class="cameraLook iconButton" language-title-bottombuttons-setlook-left>
-            <img class="svgIcon" src="./svg/lookLeft.svg" alt="left">
+            <img class="svgIcon" src="../svg/lookLeft.svg" alt="left">
         </button>
         </button>
         <button class="cameraLook iconButton" language-title-bottombuttons-setlook-right>
-            <img class="svgIcon" src="./svg/lookRight.svg" alt="right">
+            <img class="svgIcon" src="../svg/lookRight.svg" alt="right">
         </button>
         <button class="cameraLook iconButton" language-title-bottombuttons-setlook-front>
-            <img class="svgIcon" src="./svg/lookFront.svg" alt="front">
+            <img class="svgIcon" src="../svg/lookFront.svg" alt="front">
         </button>
         <button class="cameraLook iconButton" language-title-bottombuttons-setlook-back>
-            <img class="svgIcon" src="./svg/lookBack.svg" alt="back">
+            <img class="svgIcon" src="../svg/lookBack.svg" alt="back">
         </button>
         <button class="iconButton minimizeCameraLook">
         </button>
@@ -99,53 +99,53 @@ File Description: HAHAHAH
         <div class="splitter"></div>
 
         <button id="setDefaultCamera" class="iconButton" language-title-bottombuttons-defaultcamera-all>
-            <img class="svgIcon" src="./svg/restoreCamera.svg" alt="back">
+            <img class="svgIcon" src="../svg/restoreCamera.svg" alt="back">
         </button>
 
         <button class="iconButton" id="changePerspective" language-title-bottombuttons-setperspective-perspective>
-            <img class="svgIcon" src="./svg/perpective.svg" alt="camera">
+            <img class="svgIcon" src="../svg/perpective.svg" alt="camera">
         </button>
 
         <div class="btnList ignore">
             <label class="buttonLike checkBoxButton">
-                <img class="svgIcon minnor" style="margin-right: 5px;" src="./svg/position.svg" alt="camera">
+                <img class="svgIcon minnor" style="margin-right: 5px;" src="../svg/position.svg" alt="camera">
                 <span language-bottombuttons-defaultcamera-position> </span>
                 <input class="holdOpen" type="checkbox">
             </label>
             <label class="buttonLike checkBoxButton">
-                <img class="svgIcon minnor" style="margin-right: 5px;" src="./svg/rotation.svg" alt="camera">
+                <img class="svgIcon minnor" style="margin-right: 5px;" src="../svg/rotation.svg" alt="camera">
                 <span language-bottombuttons-defaultcamera-orientation> </span>
                 <input class="holdOpen" type="checkbox">
             </label>
             <label class="buttonLike checkBoxButton">
-                <img class="svgIcon minnor" style="margin-right: 5px;" src="./svg/zoom.svg" alt="camera">
+                <img class="svgIcon minnor" style="margin-right: 5px;" src="../svg/zoom.svg" alt="camera">
                 <span language-bottombuttons-defaultcamera-zoom> </span>
                 <input class="holdOpen" type="checkbox">
             </label>
             <label class="buttonLike checkBoxButton">
-                <img class="svgIcon minnor" style="margin-right: 5px;" src="./svg/perspectiveDefault.svg" alt="camera">
+                <img class="svgIcon minnor" style="margin-right: 5px;" src="../svg/perspectiveDefault.svg" alt="camera">
                 <span language-bottombuttons-defaultcamera-perspective> </span>
                 <input class="holdOpen" type="checkbox">
             </label>
         </div>
 
         <button id="showEdges" class="iconButton edgeHiOn" language-title-bottombuttons-edges-show>
-            <img class="svgIcon on" src="./svg/edgeHiOn.svg" alt="edges">
-            <img class="svgIcon off" src="./svg/edgeHiOff.svg" alt="edges">
+            <img class="svgIcon on" src="../svg/edgeHiOn.svg" alt="edges">
+            <img class="svgIcon off" src="../svg/edgeHiOff.svg" alt="edges">
         </button>
     
         <div class="splitter"></div>
         
         <div id="controllers" class="toggleable floatingTogleable">
             <label class="buttonLike checkBoxButton">
-                <img class="svgIcon minnor" style="margin-right: 5px;" src="./svg/controller.svg" alt="camera">
+                <img class="svgIcon minnor" style="margin-right: 5px;" src="../svg/controller.svg" alt="camera">
                 <span language-bottombuttons-controllers-button> </span>
                 <input class="holdOpen" type="checkbox">
             </label>
             
             <div class="body">
                 <h1 class="title">
-                    <span language-bottombuttons-controllers-title></span> <img class="svgIcon" src="./svg/controller.svg" alt="arquivo">
+                    <span language-bottombuttons-controllers-title></span> <img class="svgIcon" src="../svg/controller.svg" alt="arquivo">
                     <button class="options">
                         <i class="hamburger"></i>
                     </button>
@@ -157,13 +157,13 @@ File Description: HAHAHAH
         
         <div id="resourcesDisplay" class="toggleable floatingTogleable">
             <label class="buttonLike checkBoxButton">
-                <img class="svgIcon minnor" style="margin-right: 5px;" src="./svg/options/resources.svg" alt="camera">
+                <img class="svgIcon minnor" style="margin-right: 5px;" src="../svg/options/resources.svg" alt="camera">
                 <span language-bottombuttons-resources-button> </span>
                 <input class="holdOpen" type="checkbox">
             </label>
 
             <div class="body">
-                <h1 class="title"><span language-bottombuttons-resources-title></span> <img class="svgIcon" src="./svg/options/resources.svg" alt="arquivo"></h1>
+                <h1 class="title"><span language-bottombuttons-resources-title></span> <img class="svgIcon" src="../svg/options/resources.svg" alt="arquivo"></h1>
                 <div class="list">
                     <p class="subtitle" language-bottombuttons-resources-libs></p>
                     <div class="preSavedLibs resourceList"></div>
@@ -179,7 +179,7 @@ File Description: HAHAHAH
 
         <div id="logger" class="toggleable floatingTogleable">
             <label class="buttonLike checkBoxButton hasUnread">
-                <img class="svgIcon minnor" style="margin-right: 5px;" src="./svg/options/file.svg" alt="camera">
+                <img class="svgIcon minnor" style="margin-right: 5px;" src="../svg/options/file.svg" alt="camera">
                 <span language-bottombuttons-logs-button></span>
                 <input class="holdOpen" type="checkbox">
                 <div class="unread hide"></div>
@@ -187,7 +187,7 @@ File Description: HAHAHAH
             <div class="body">
                 <h1 class="title">
                     <span language-bottombuttons-logs-title></span>
-                    <img class="svgIcon" src="./svg/options/file.svg" alt="arquivo">
+                    <img class="svgIcon" src="../svg/options/file.svg" alt="arquivo">
                     <label class="buttonLike checkBoxButton doScrollHolder" language-title-bottombuttons-logs-togglescroll>
                         <span class="on">☑</span>
                         <span class="off">☐</span>
@@ -200,7 +200,7 @@ File Description: HAHAHAH
     </div>
 
     <form modal id="translateModal" class="question">
-        <div class="title"><span language-modal-translate-title></span> <img class="svgIcon" src="./svg/options/newFile.svg" alt="new file"></div>
+        <div class="title"><span language-modal-translate-title></span> <img class="svgIcon" src="../svg/options/newFile.svg" alt="new file"></div>
         <div class="inserLangs">
 
         </div>
@@ -211,7 +211,7 @@ File Description: HAHAHAH
     </form>
 
     <form modal id="newFileModal" class="question">
-        <div class="title"><span language-modal-newfile-title></span> <img class="svgIcon" src="./svg/options/newFile.svg" alt="new file"></div>
+        <div class="title"><span language-modal-newfile-title></span> <img class="svgIcon" src="../svg/options/newFile.svg" alt="new file"></div>
         <p language-modal-newfile-name></p>
         <input type="text" name="name" language-placeholder-modal-newfile-nameplaceholder>
         <hr>
@@ -227,7 +227,7 @@ File Description: HAHAHAH
     </form>
 
     <form modal id="renameModal" class="question">
-        <div class="title"><span language-modal-rename-title></span> <img class="svgIcon" src="./svg/options/editFile.svg" alt="rename"></div>
+        <div class="title"><span language-modal-rename-title></span> <img class="svgIcon" src="../svg/options/editFile.svg" alt="rename"></div>
         <p><span language-modal-rename-renaming></span> <span class="name"></span></p>
         <input type="text" name="name" language-placeholder-modal-rename-placeholder>
         <input type="hidden" name="path">
@@ -239,7 +239,7 @@ File Description: HAHAHAH
     </form>
 
     <form modal id="importResources" class="question">
-        <div class="title"><span language-modal-importresources-title></span> <img class="svgIcon" src="./svg/options/import.svg" alt="import resources"></div>
+        <div class="title"><span language-modal-importresources-title></span> <img class="svgIcon" src="../svg/options/import.svg" alt="import resources"></div>
         <input type="text" name="path" placeholder="ex: C:\Users\user\Desktop\spacecad.resources.json">
         <input type="hidden" name="filedata">
         <input type="button" id="selectFile" value="selecionar arquivo">
@@ -289,7 +289,7 @@ File Description: HAHAHAH
     </form>
 
     <form modal id="shareResources" class="question">
-        <div class="title"><span language-modal-shareresources-title></span> <img class="svgIcon" src="./svg/options/export.svg" alt="export resources"></div>
+        <div class="title"><span language-modal-shareresources-title></span> <img class="svgIcon" src="../svg/options/export.svg" alt="export resources"></div>
             <label class="buttonLike checkBoxButton checkBoxIndicator">
                 <span language-modal-shareresources-libs></span>
                 <input type="checkbox" name="libs">
@@ -335,7 +335,7 @@ File Description: HAHAHAH
 
     <form modal id="confirmPopupModal" class="question">
         <div class="title">
-            <span class="titleText"></span> <img class="svgIcon" src="./svg/atention.svg" alt="export resources">
+            <span class="titleText"></span> <img class="svgIcon" src="../svg/atention.svg" alt="export resources">
         </div>
         <p class="message"></p>
         <hr>
@@ -377,11 +377,9 @@ File Description: HAHAHAH
 
         <div class="title" language-modal-changelog-lastupdates></div>
 
-
-        
-        <span style="background: var(--primary);">web route test, generateSchema parser</span>
         (18/09/2026 - 07:50) generateSchema -> generateScheme/parse.js para transformar o schema output em instancias novamente
         <br><br>
+
         
         <span style="background: var(--primary);">scheme, alert</span>
         (18/09/2026 - 05:53) SpaceCAD -> alert agora é um popup, use ogAlert para alertas antigos
@@ -720,7 +718,7 @@ File Description: HAHAHAH
         });
         electron.isFullscreen().then(b => document.body.classList.toggle('fullscreen', b));
         window.electron.onFullscreen(fullscreen => {
-            document.querySelector("#options #optionsFullscreen img").src = `./svg/options/${fullscreen? "fullscreenOut" : "fullscreen"}.svg`;
+            document.querySelector("#options #optionsFullscreen img").src = `../svg/options/${fullscreen? "fullscreenOut" : "fullscreen"}.svg`;
             document.body.classList.toggle('fullscreen', fullscreen);
         });
     } else {
@@ -768,7 +766,7 @@ File Description: HAHAHAH
                         }),
                         createElement("img", e => {
                             e.classList.add("svgIcon");
-                            e.src = "./svg/atention.svg";
+                            e.src = "../svg/atention.svg";
                         })
                     );
                 }),
@@ -830,9 +828,9 @@ File Description: HAHAHAH
     }
 
     let version = "";
-    fetch("/version").then(res => res.json()).then(v => {
+    fetch("../../../version.json").then(res => res.json()).then(v => {
         version = `v${v.year}.${v.month}.${v.version}${v.type? " - "+v.type : ""}`;
-        document.querySelector(".titlebar .title span").innerText = version;
+        document.querySelector(".titlebar .title span").innerText = version + " / web";
     });
     
     let electronStore = isElectron? 
@@ -880,18 +878,18 @@ File Description: HAHAHAH
 <script type="importmap">
 {
   "imports": {
-    "lib/": "/lib/",
+    "lib/": "../../../lib/",
 
-    "three": "/node_modules/three/build/three.module.js",
-    "three/addons/": "/lib/threeAddons/",
+    "three": "../../../node_modules/three/build/three.module.js",
+    "three/addons/": "../../../lib/threeAddons/",
 
-    "astring": "/node_modules/astring/dist/astring.mjs"
+    "astring": "../../../node_modules/astring/dist/astring.mjs"
   }
 }
 </script>
 
-<script src="./scripts/lib/utils.js"></script>
-<script src="./scripts/lib/translations.js"></script>
+<script src="../scripts/lib/utils.js"></script>
+<script src="../scripts/lib/translations.js"></script>
 <script> // TRANSLATIONS
 writeLanguage("en-US", { // default
     name: "English (United States)",
@@ -1672,11 +1670,11 @@ writeLanguage("fr-FR", {
 
 startTranslation(isElectron? electronStore : undefined);
 </script>
-<script src="./scripts/lib/inputManager.js"></script>
-<script src="./scripts/lib/loopManager.js"></script>
-<script src="./scripts/lib/mouseLock.js"></script>
-<script src="./scripts/lib/colors.js"></script>
-<script src="./scripts/lib/logger.js"></script>
+<script src="../scripts/lib/inputManager.js"></script>
+<script src="../scripts/lib/loopManager.js"></script>
+<script src="../scripts/lib/mouseLock.js"></script>
+<script src="../scripts/lib/colors.js"></script>
+<script src="../scripts/lib/logger.js"></script>
 <script> // globalize colors & logger
     const logger = new Logger(doc.query("#logger .body .list"));
     const {color} = Color;
@@ -1731,7 +1729,7 @@ startTranslation(isElectron? electronStore : undefined);
     }
 </script>
 
-<script src="/node_modules/acorn/dist/acorn.js"></script>
+<script src="../../../node_modules/acorn/dist/acorn.js"></script>
 <script type="module"> // globalize imports 
     /* import * as monaco from "monaco"; */
 
@@ -1773,9 +1771,9 @@ startTranslation(isElectron? electronStore : undefined);
     }
 
     loadScript(
-        "./scripts/lib/overloadOperator.js",
-        "./scripts/lib/SpaceCAD.js", 
-        "./scripts/engine.js", () => {
+        "../scripts/lib/overloadOperator.js",
+        "../scripts/lib/SpaceCAD.js", 
+        "../scripts/engine.js", () => {
             const setTogleableZ = (query) => {
                 const selected = query instanceof Node ? query : doc.query(`${query} .body`);
 
@@ -1963,7 +1961,7 @@ startTranslation(isElectron? electronStore : undefined);
             
             setupDropdown(loggerDom, "contextmenu", [
                 createElement("button", e => {
-                    createSvgIcon(e, "./svg/bin.svg", language.bottombuttons.logs.clear);
+                    createSvgIcon(e, "../svg/bin.svg", language.bottombuttons.logs.clear);
                     e.addEventListener("click", () => {
                         unread.classList.toggle("hide", true);
                         logger.clear();
@@ -2084,7 +2082,7 @@ startTranslation(isElectron? electronStore : undefined);
 
             setupDropdown(fileDom, "contextmenu", [
                 createElement("button", e => {
-                    createSvgIcon(e, "./svg/options/file.svg", language.filemenu.fileoperations.openInEditor);
+                    createSvgIcon(e, "../svg/options/file.svg", language.filemenu.fileoperations.openInEditor);
                     e.closeMenu = true;
                     e.addEventListener("click", (evt) => {
                         evt.stopPropagation();
@@ -2098,7 +2096,7 @@ startTranslation(isElectron? electronStore : undefined);
                     });
                 }),
                 createElement("button", e => {
-                    createSvgIcon(e, "./svg/options/openFile.svg", language.filemenu.fileoperations.openInExplorer);
+                    createSvgIcon(e, "../svg/options/openFile.svg", language.filemenu.fileoperations.openInExplorer);
                     e.on("click", (evt) => {
                         evt.stopPropagation();
                         
@@ -2113,7 +2111,7 @@ startTranslation(isElectron? electronStore : undefined);
                     e.closeMenu = true;
                 }),
                 createElement("button", e => {
-                    createSvgIcon(e, "./svg/options/editFile.svg", language.filemenu.fileoperations.rename);
+                    createSvgIcon(e, "../svg/options/editFile.svg", language.filemenu.fileoperations.rename);
                     e.closeMenu = true;
                     e.addEventListener("click", (evt) => {
                         evt.stopPropagation();
@@ -2236,7 +2234,7 @@ startTranslation(isElectron? electronStore : undefined);
     setupDropdown(fileInput, [
         isElectron?
         createElement("button", e => { 
-            createSvgIcon(e, "./svg/options/newFile.svg", language.filemenu.options.new);
+            createSvgIcon(e, "../svg/options/newFile.svg", language.filemenu.options.new);
             e.addEventListener("click", () => {
                 newFileModal.modal.toggle();
             });
@@ -2245,7 +2243,7 @@ startTranslation(isElectron? electronStore : undefined);
 
         isElectron?
         createElement("button", e => {
-            createSvgIcon(e, "./svg/options/openFile.svg", language.filemenu.options.open);
+            createSvgIcon(e, "../svg/options/openFile.svg", language.filemenu.options.open);
             e.addEventListener("click", async () => {
                 let path = await electron.openFile();
 
@@ -2253,7 +2251,7 @@ startTranslation(isElectron? electronStore : undefined);
             });
         }):
         createElement("button", e => {
-            createSvgIcon(e, "./svg/options/openFile.svg", language.filemenu.options.open);
+            createSvgIcon(e, "../svg/options/openFile.svg", language.filemenu.options.open);
             e.addEventListener("click", async () => {
                createElement("input", e => {
                    e.type = "file";
@@ -2270,7 +2268,7 @@ startTranslation(isElectron? electronStore : undefined);
        
         createElement("hr"),
         createElement("button", e => { 
-            createSvgIcon(e, "./svg/options/file.svg", language.filemenu.options.togleeditor);
+            createSvgIcon(e, "../svg/options/file.svg", language.filemenu.options.togleeditor);
             e.addEventListener("click", () => {
                 doc.byId("windowEditor").toggleSeparateWindow();
             });
@@ -2281,14 +2279,14 @@ startTranslation(isElectron? electronStore : undefined);
         ...(isElectron? [
         createElement("hr"),
         createElement("button", e => {
-            createSvgIcon(e, "./svg/options/import.svg", language.filemenu.options.import);
+            createSvgIcon(e, "../svg/options/import.svg", language.filemenu.options.import);
             e.addEventListener("click", () => {
                 importResources.modal.toggle();
             });
             e.closeMenu = true;
         }),
         createElement("button", e => {
-            createSvgIcon(e, "./svg/options/export.svg", language.filemenu.options.export);
+            createSvgIcon(e, "../svg/options/export.svg", language.filemenu.options.export);
             e.addEventListener("click", () => {
                 shareResources.modal.toggle();
             });
@@ -2299,19 +2297,19 @@ startTranslation(isElectron? electronStore : undefined);
 
         isElectron?
         createElement("button", e => {
-            createSvgIcon(e, "./svg/options/desselect.svg",language.filemenu.options.unload);
+            createSvgIcon(e, "../svg/options/desselect.svg",language.filemenu.options.unload);
             e.on("click", () => {
                 electronStore.selectedFile = null;
                 location.reload();
             });
         }): null,
         createElement("button", e => {
-            createSvgIcon(e, "./svg/options/reload.svg", language.filemenu.options.reload);
+            createSvgIcon(e, "../svg/options/reload.svg", language.filemenu.options.reload);
             e.on("click", () => location.reload());
         }),
 
         createElement("button", e => {
-            createSvgIcon(e, "./svg/options/fullscreen.svg", language.filemenu.options.fullscreen);
+            createSvgIcon(e, "../svg/options/fullscreen.svg", language.filemenu.options.fullscreen);
             e.id = "optionsFullscreen";
             e.on("click", () => {
                 if (document.fullscreenElement) {
@@ -2324,7 +2322,7 @@ startTranslation(isElectron? electronStore : undefined);
         }),
         
         createElement("button", e => {
-            createSvgIcon(e, "./svg/options/translate.svg", language.filemenu.options.setlanguage);
+            createSvgIcon(e, "../svg/options/translate.svg", language.filemenu.options.setlanguage);
             e.on("click", () => {
                 const changelog = document.query("#changelog");
                 translateModal.modal.toggle();
@@ -2334,7 +2332,7 @@ startTranslation(isElectron? electronStore : undefined);
         createElement("hr"),
         
         createElement("button", e => {
-            createSvgIcon(e, "./svg/options/file.svg", language.filemenu.options.notes);
+            createSvgIcon(e, "../svg/options/file.svg", language.filemenu.options.notes);
             e.on("click", () => {
                 const changelog = document.query("#changelog");
                 changelog.modal.toggle();
@@ -2342,7 +2340,7 @@ startTranslation(isElectron? electronStore : undefined);
             e.closeMenu = true;
         }),
         createElement("button", e => {
-            createSvgIcon(e, "./svg/options/github.svg", language.filemenu.options.github);
+            createSvgIcon(e, "../svg/options/github.svg", language.filemenu.options.github);
             e.on("click", () => {
                 electron.openUrl("https://github.com/NaN-NaN-sempai/SpaceCAD");
             });
@@ -2995,13 +2993,13 @@ startTranslation(isElectron? electronStore : undefined);
     const windowEditor = doc.query("#windowEditor");
     windowEditor.query(".window .titleBar .buttons .options").dropdown([
         createElement("button", e => {            
-            createSvgIcon(e, "./svg/editor/play.svg", language.editor.title.run, "minnor");
+            createSvgIcon(e, "../svg/editor/play.svg", language.editor.title.run, "minnor");
             e.on("click", runEditorCode);
         }),
         
         createElement("hr"),
         createElement("button", e => {
-            createSvgIcon(e, "./svg/editor/save.svg", language.editor.title.save);
+            createSvgIcon(e, "../svg/editor/save.svg", language.editor.title.save);
             e.on("click", () => {
                 if(isElectron) {
                     if(!electronStore.selectedFile) alert(language.editor.title.popup.nofile);
@@ -3012,7 +3010,7 @@ startTranslation(isElectron? electronStore : undefined);
             })
         }),
         createElement("button", e => {
-            createSvgIcon(e, "./svg/editor/saveNew.svg", language.editor.title.saveasnew);
+            createSvgIcon(e, "../svg/editor/saveNew.svg", language.editor.title.saveasnew);
             e.on("click", () => {
 
                 if(isElectron) {
@@ -3036,9 +3034,9 @@ startTranslation(isElectron? electronStore : undefined);
             e.append(
                 createElement("button", e => {
                     if(electronStore.editorAutosave)
-                        createSvgIcon(e, "./svg/editor/checked.svg", language.editor.title.autosaving);
+                        createSvgIcon(e, "../svg/editor/checked.svg", language.editor.title.autosaving);
                     else
-                        createSvgIcon(e, "./svg/editor/notChecked.svg", language.editor.title.autosaving);
+                        createSvgIcon(e, "../svg/editor/notChecked.svg", language.editor.title.autosaving);
 
                     e.on("click", () => {
                         e.parentElement.children.at(-1).click();
@@ -3057,9 +3055,9 @@ startTranslation(isElectron? electronStore : undefined);
                         const button = e.parentElement.children[0];
                         button.innerHTML = "";
                         if(e.checked)
-                            createSvgIcon(button, "./svg/editor/checked.svg", language.editor.title.autosaving);
+                            createSvgIcon(button, "../svg/editor/checked.svg", language.editor.title.autosaving);
                         else
-                            createSvgIcon(button, "./svg/editor/notChecked.svg", language.editor.title.autosaving);
+                            createSvgIcon(button, "../svg/editor/notChecked.svg", language.editor.title.autosaving);
 
                     })
                 })
@@ -3072,9 +3070,9 @@ startTranslation(isElectron? electronStore : undefined);
             e.append(
                 createElement("button", e => {
                     if(electronStore.editorAutoRun)
-                        createSvgIcon(e, "./svg/editor/checked.svg", language.editor.title.autorun);
+                        createSvgIcon(e, "../svg/editor/checked.svg", language.editor.title.autorun);
                     else
-                        createSvgIcon(e, "./svg/editor/notChecked.svg", language.editor.title.autorun);
+                        createSvgIcon(e, "../svg/editor/notChecked.svg", language.editor.title.autorun);
 
                     e.on("click", () => {
                         e.parentElement.children.at(-1).click();
@@ -3091,10 +3089,10 @@ startTranslation(isElectron? electronStore : undefined);
                         const button = e.parentElement.children[0];
                         button.innerHTML = "";
                         if(e.checked) {
-                            createSvgIcon(button, "./svg/editor/checked.svg", language.editor.title.autorun);
+                            createSvgIcon(button, "../svg/editor/checked.svg", language.editor.title.autorun);
                         }
                         else
-                            createSvgIcon(button, "./svg/editor/notChecked.svg", language.editor.title.autorun);
+                            createSvgIcon(button, "../svg/editor/notChecked.svg", language.editor.title.autorun);
 
                     })
                 })
@@ -3109,9 +3107,9 @@ startTranslation(isElectron? electronStore : undefined);
             e.append(
                 createElement("button", e => {
                     if(electronStore.editorHideFilePath)
-                        createSvgIcon(e, "./svg/editor/checked.svg", language.editor.title.hidefilepath);
+                        createSvgIcon(e, "../svg/editor/checked.svg", language.editor.title.hidefilepath);
                     else
-                        createSvgIcon(e, "./svg/editor/notChecked.svg", language.editor.title.hidefilepath);
+                        createSvgIcon(e, "../svg/editor/notChecked.svg", language.editor.title.hidefilepath);
 
                     e.on("click", () => {
                         e.parentElement.children.at(-1).click();
@@ -3131,11 +3129,11 @@ startTranslation(isElectron? electronStore : undefined);
                         const button = e.parentElement.children[0];
                         button.innerHTML = "";
                         if(e.checked) {
-                            createSvgIcon(button, "./svg/editor/checked.svg", language.editor.title.hidefilepath);
+                            createSvgIcon(button, "../svg/editor/checked.svg", language.editor.title.hidefilepath);
                             windowEditor.classList.add("hideFilePath");
                         }
                         else {
-                            createSvgIcon(button, "./svg/editor/notChecked.svg", language.editor.title.hidefilepath);
+                            createSvgIcon(button, "../svg/editor/notChecked.svg", language.editor.title.hidefilepath);
                             windowEditor.classList.remove("hideFilePath");
                         }
 
@@ -3710,7 +3708,7 @@ startTranslation(isElectron? electronStore : undefined);
 
 <script src="/socket.io/socket.io.js"></script>
 <script> // SOCKET.IO
-    const socket = io != undefined && isElectron ? io(): {on:()=>{}, emit:()=>{}};
+    const socket =  isElectron && io != undefined ? io(): {on:()=>{}, emit:()=>{}};
     
     let firstConnection = true;
     let doServerRestart = true;
@@ -3784,11 +3782,11 @@ startTranslation(isElectron? electronStore : undefined);
 </script>
 
 <!-- monaco -->
-<script src="/node_modules/monaco-editor/min/vs/loader.js"></script>
+<script src="../../../node_modules/monaco-editor/min/vs/loader.js"></script>
 <script>
     require.config({
         paths: {
-            vs: "/node_modules/monaco-editor/min/vs"
+            vs: "../../../node_modules/monaco-editor/min/vs"
         }
     });
 

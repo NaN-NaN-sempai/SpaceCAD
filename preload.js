@@ -11,7 +11,7 @@ contextBridge.exposeInMainWorld('electron', {
     isFullscreen: () => ipcRenderer.invoke("is-fullscreen"),
     onFullscreen: (callback) =>
         ipcRenderer.on('fullscreen', (_, value) => callback(value)),
-    openUrl: url => ipcRenderer.invoke('open-url', url)
+    openUrl: url => ipcRenderer.invoke('open-url', url) 
 });
 contextBridge.exposeInMainWorld('electronStoreOG', {
     get: key => ipcRenderer.sendSync('store-get', key),

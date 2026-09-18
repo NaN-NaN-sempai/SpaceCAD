@@ -1998,7 +1998,13 @@ const setPerspectiveDom = () => {
         camera.perspective == "perspective" ?
         language.bottombuttons.setperspective.orthographic :
         language.bottombuttons.setperspective.perspective;
-    changePerspectiveButton.query("img").src = `./svg/${camera.perspective == "perspective" ? "perpective" : "orthographic"}.svg`;
+
+    const src = changePerspectiveButton.query("img").src.split("/");
+
+    src.pop();
+    src.push(camera.perspective == "perspective" ? "perpective.svg" : "orthographic.svg");
+
+    changePerspectiveButton.query("img").src = src.join("/");
 }
 const changePerspective = () => {
     const isPerspective = camera.perspective == "perspective";
@@ -2084,7 +2090,8 @@ minimizeCameraLookButton.on("contextmenu", (evt, el) => {
 // engine especific
 const cursor = document.querySelector('#tempCursor').style;
 const setCursor = url => {
-    cursor.backgroundImage = `url(/cursor/${url})`;
+    url = isElectron? `/cursor/${url}`: `../cursor/${url}`;
+    cursor.backgroundImage = `url(${url})`;
 }
 
 const mouseLock = new MouseLock(canvas);

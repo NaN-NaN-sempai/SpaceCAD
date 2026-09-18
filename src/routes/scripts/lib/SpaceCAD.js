@@ -5,6 +5,7 @@ const camera = scene.camera;
 const SpaceCAD = class SpaceCAD {
     static npmPackages = new Map();
     static store = function (preload = false) {
+        if(!isElectron) return;
         let cls = isClass(this)? this : this.constructor;
 
         if(Object.entries(SpaceCAD).includes(cls))
@@ -39,6 +40,7 @@ const SpaceCAD = class SpaceCAD {
         return this;
     }
     static storeLib = function (name, lib, preload = false) {
+        if(!isElectron) return;
         if(lib == undefined)
             lib = {lib: null, usage: null};
 
@@ -64,11 +66,13 @@ const SpaceCAD = class SpaceCAD {
 
     }
     static storeAddons = function (...addonList) {
+        if(!isElectron) return;
         syncFetch("/store/addon", {
             body: JSON.stringify(addonList)
         });
     }
     static module = new Proxy(function(name) {
+            if(!isElectron) return {};
             const req = syncFetch(`/store/class/${name}`);
 
             if (req.error) return;
@@ -103,11 +107,13 @@ const SpaceCAD = class SpaceCAD {
         }
     );
     static get modules() {
+        if(!isElectron) return [];
         const req = syncFetch("/store/classes/_");
 
         return req.json;
     }
     static lib = new Proxy(function(name, asGlobal = false) {
+            if(!isElectron) return [];
             const req = syncFetch(`/store/lib/${name}`);
 
             if (req.error) return;
@@ -214,12 +220,14 @@ const SpaceCAD = class SpaceCAD {
         }
     );
     static get libs() {
+        if(!isElectron) return {};
         const req = syncFetch("/store/libs/_");
 
         return req.json;
     }
     
     static addon = new Proxy(function(name) {
+            if(!isElectron) return [];
             const req = syncFetch(`/store/addon/${name}`);
 
             if (req.error) return;
@@ -234,6 +242,7 @@ const SpaceCAD = class SpaceCAD {
     );
     static createdResources = [];
     static get addons() {
+        if(!isElectron) return [];
         const req = syncFetch("/store/addons/_");
 
         return req.json;

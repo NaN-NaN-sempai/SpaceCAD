@@ -1,0 +1,1689 @@
+{ "types": [ { "name": "string"
+        },
+        { "name": "function"
+        },
+        { "name": "object"
+        }
+    ],
+    "schema": { "name": ".",
+        "files": [ { "name": "lib",
+                "files": [ { "name": "generateSchema",
+                        "files": [ { "name": "generateSchema.js",
+                                "description": "library used to generate API schema\r\nIt reads all the files in the selected directory and generates a schema of the API for each directory.",
+                                "data": [ { "name": "JSDoc",
+                                        "type": "class",
+                                        "classBody": [ { "name": "arrayTags",
+                                                "type": "property",
+                                                "static": true
+                                            },
+                                            { "name": "typeTags",
+                                                "type": "property",
+                                                "static": true
+                                            },
+                                            { "name": "Type",
+                                                "type": "class",
+                                                "classBody": [ { "name": "instances",
+                                                        "type": "property",
+                                                        "static": true
+                                                    },
+                                                    { "name": "register",
+                                                        "type": "function",
+                                                        "declarationType": "method"
+                                                    }
+                                                ],
+                                                "static": true
+                                            },
+                                            { "name": "TypeParam",
+                                                "type": "class",
+                                                "static": true
+                                            },
+                                            { "name": "TypeProperty",
+                                                "type": "class",
+                                                "static": true
+                                            },
+                                            { "name": "DataBase",
+                                                "type": "class",
+                                                "static": true
+                                            },
+                                            { "name": "AsVariable",
+                                                "type": "class",
+                                                "static": true
+                                            },
+                                            { "name": "Variable",
+                                                "type": "class",
+                                                "static": true
+                                            },
+                                            { "name": "Property",
+                                                "type": "class",
+                                                "static": true
+                                            },
+                                            { "name": "Function",
+                                                "type": "class",
+                                                "static": true
+                                            },
+                                            { "name": "Class",
+                                                "type": "class",
+                                                "static": true
+                                            }
+                                        ]
+                                    },
+                                    { "name": "Path",
+                                        "type": "class"
+                                    },
+                                    { "name": "FileEntry",
+                                        "type": "class"
+                                    },
+                                    { "name": "Directory",
+                                        "type": "class"
+                                    },
+                                    { "name": "generateApiSchema",
+                                        "type": "function",
+                                        "declarationType": "const"
+                                    }
+                                ]
+                            },
+                            { "name": "parser.js",
+                                "data": [ { "name": "JSData",
+                                        "type": "class"
+                                    },
+                                    { "name": "JSDoc",
+                                        "type": "class",
+                                        "classBody": [ { "name": "arrayTags",
+                                                "type": "property",
+                                                "static": true
+                                            },
+                                            { "name": "typeTags",
+                                                "type": "property",
+                                                "static": true
+                                            }
+                                        ]
+                                    },
+                                    { "name": "UseType",
+                                        "type": "class"
+                                    },
+                                    { "name": "Type",
+                                        "type": "class",
+                                        "classBody": [ { "name": "instances",
+                                                "type": "property",
+                                                "static": true
+                                            }
+                                        ]
+                                    },
+                                    { "name": "Script",
+                                        "type": "class"
+                                    },
+                                    { "name": "FileEntry",
+                                        "type": "class"
+                                    },
+                                    { "name": "Directory",
+                                        "type": "class"
+                                    },
+                                    { "name": "parse",
+                                        "type": "function",
+                                        "declarationType": "const"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    { "name": "JSHON.js",
+                        "data": [ { "name": "javaScriptHighObjectNotation",
+                                "type": "variable",
+                                "declarationType": "const"
+                            }
+                        ]
+                    },
+                    { "name": "storage.js",
+                        "data": [ { "name": "serialize",
+                                "type": "function",
+                                "declarationType": "const"
+                            },
+                            { "name": "filePath",
+                                "type": "variable",
+                                "declarationType": "const"
+                            },
+                            { "name": "write",
+                                "type": "function",
+                                "declarationType": "const"
+                            },
+                            { "type": "variable",
+                                "declarationType": "const"
+                            },
+                            { "name": "proxies",
+                                "type": "variable",
+                                "declarationType": "const"
+                            },
+                            { "name": "proxify",
+                                "type": "function",
+                                "declarationType": "const"
+                            }
+                        ]
+                    }
+                ]
+            },
+            { "name": "src",
+                "files": [ { "name": "routes",
+                        "files": [ { "name": "scripts",
+                                "files": [ { "name": "lib",
+                                        "files": [ { "name": "colors.js",
+                                                "data": [ { "name": "Color",
+                                                        "type": "class",
+                                                        "classBody": [ { "name": "names",
+                                                                "type": "property",
+                                                                "static": true
+                                                            },
+                                                            { "name": "color",
+                                                                "type": "function",
+                                                                "static": true
+                                                            },
+                                                            { "name": "GlobalizeNames",
+                                                                "type": "function",
+                                                                "static": true
+                                                            },
+                                                            { "name": "err",
+                                                                "type": "function",
+                                                                "static": true
+                                                            },
+                                                            { "name": "getStrVal",
+                                                                "type": "function",
+                                                                "static": true
+                                                            },
+                                                            { "name": "asPorc",
+                                                                "type": "function",
+                                                                "static": true
+                                                            },
+                                                            { "name": "mix",
+                                                                "type": "function",
+                                                                "declarationType": "method",
+                                                                "static": true
+                                                            },
+                                                            { "name": "darken",
+                                                                "type": "function",
+                                                                "static": true
+                                                            },
+                                                            { "name": "lighten",
+                                                                "type": "function",
+                                                                "static": true
+                                                            },
+                                                            { "name": "opacity",
+                                                                "type": "function",
+                                                                "static": true
+                                                            },
+                                                            { "name": "defaultOutputType",
+                                                                "type": "property",
+                                                                "static": true
+                                                            },
+                                                            { "name": "setProperties",
+                                                                "type": "function",
+                                                                "static": true
+                                                            },
+                                                            { "name": "ColorRoot",
+                                                                "type": "class",
+                                                                "classBody": [ { "name": "getInstance",
+                                                                        "type": "function",
+                                                                        "declarationType": "method"
+                                                                    },
+                                                                    { "name": "mix",
+                                                                        "type": "function",
+                                                                        "declarationType": "method"
+                                                                    },
+                                                                    { "name": "darken",
+                                                                        "type": "function",
+                                                                        "declarationType": "method"
+                                                                    },
+                                                                    { "name": "lighten",
+                                                                        "type": "function",
+                                                                        "declarationType": "method"
+                                                                    },
+                                                                    { "name": "opacity",
+                                                                        "type": "function",
+                                                                        "declarationType": "method"
+                                                                    },
+                                                                    { "name": "setupProps",
+                                                                        "type": "function",
+                                                                        "static": true
+                                                                    },
+                                                                    { "name": "outputTHREE",
+                                                                        "type": "function",
+                                                                        "declarationType": "method"
+                                                                    },
+                                                                    { "name": "outputString",
+                                                                        "type": "function",
+                                                                        "declarationType": "method"
+                                                                    },
+                                                                    { "name": "outputStringObject",
+                                                                        "type": "function",
+                                                                        "declarationType": "method"
+                                                                    },
+                                                                    { "name": "Output",
+                                                                        "type": "function",
+                                                                        "declarationType": "method"
+                                                                    },
+                                                                    { "name": "to",
+                                                                        "type": "function",
+                                                                        "declarationType": "method"
+                                                                    },
+                                                                    { "name": "toHEX",
+                                                                        "type": "function",
+                                                                        "declarationType": "method"
+                                                                    },
+                                                                    { "name": "toRGB",
+                                                                        "type": "function",
+                                                                        "declarationType": "method"
+                                                                    },
+                                                                    { "name": "toHSL",
+                                                                        "type": "function",
+                                                                        "declarationType": "method"
+                                                                    },
+                                                                    { "name": "toHWB",
+                                                                        "type": "function",
+                                                                        "declarationType": "method"
+                                                                    },
+                                                                    { "name": "toLAB",
+                                                                        "type": "function",
+                                                                        "declarationType": "method"
+                                                                    },
+                                                                    { "name": "toLCH",
+                                                                        "type": "function",
+                                                                        "declarationType": "method"
+                                                                    },
+                                                                    { "name": "toOKLAB",
+                                                                        "type": "function",
+                                                                        "declarationType": "method"
+                                                                    },
+                                                                    { "name": "toOKLCH",
+                                                                        "type": "function",
+                                                                        "declarationType": "method"
+                                                                    }
+                                                                ],
+                                                                "static": true
+                                                            },
+                                                            { "name": "HEX",
+                                                                "type": "class",
+                                                                "classBody": [ { "name": "toInt",
+                                                                        "type": "function",
+                                                                        "declarationType": "method"
+                                                                    },
+                                                                    { "name": "toString",
+                                                                        "type": "function",
+                                                                        "declarationType": "method"
+                                                                    },
+                                                                    { "name": "noSharp",
+                                                                        "type": "function",
+                                                                        "declarationType": "method"
+                                                                    }
+                                                                ],
+                                                                "static": true
+                                                            },
+                                                            { "name": "namedColor",
+                                                                "type": "class",
+                                                                "static": true
+                                                            },
+                                                            { "name": "nameSpaceColor",
+                                                                "type": "class",
+                                                                "static": true
+                                                            },
+                                                            { "name": "RGB",
+                                                                "type": "class",
+                                                                "classBody": [ { "name": "fromStr",
+                                                                        "type": "function",
+                                                                        "static": true
+                                                                    }
+                                                                ],
+                                                                "static": true
+                                                            },
+                                                            { "name": "HSL",
+                                                                "type": "class",
+                                                                "classBody": [ { "name": "fromStr",
+                                                                        "type": "function",
+                                                                        "static": true
+                                                                    }
+                                                                ],
+                                                                "static": true
+                                                            },
+                                                            { "name": "HWB",
+                                                                "type": "class",
+                                                                "classBody": [ { "name": "fromStr",
+                                                                        "type": "function",
+                                                                        "static": true
+                                                                    }
+                                                                ],
+                                                                "static": true
+                                                            },
+                                                            { "name": "LAB",
+                                                                "type": "class",
+                                                                "classBody": [ { "name": "fromStr",
+                                                                        "type": "function",
+                                                                        "static": true
+                                                                    }
+                                                                ],
+                                                                "static": true
+                                                            },
+                                                            { "name": "LCH",
+                                                                "type": "class",
+                                                                "classBody": [ { "name": "fromStr",
+                                                                        "type": "function",
+                                                                        "static": true
+                                                                    }
+                                                                ],
+                                                                "static": true
+                                                            },
+                                                            { "name": "OKLAB",
+                                                                "type": "class",
+                                                                "classBody": [ { "name": "fromStr",
+                                                                        "type": "function",
+                                                                        "static": true
+                                                                    }
+                                                                ],
+                                                                "static": true
+                                                            },
+                                                            { "name": "OKLCH",
+                                                                "type": "class",
+                                                                "classBody": [ { "name": "fromStr",
+                                                                        "type": "function",
+                                                                        "static": true
+                                                                    }
+                                                                ],
+                                                                "static": true
+                                                            },
+                                                            { "name": "namedSpace",
+                                                                "type": "function",
+                                                                "static": true
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            { "name": "inputManager.js",
+                                                "data": [ { "name": "ButtonStateRapidThreshold",
+                                                        "type": "variable",
+                                                        "declarationType": "const"
+                                                    },
+                                                    { "name": "InputManager",
+                                                        "type": "class",
+                                                        "classBody": [ { "name": "addManager",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "update",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "disable",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "enable",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "toggle",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            }
+                                                        ]
+                                                    },
+                                                    { "name": "MouseManager",
+                                                        "type": "class",
+                                                        "classBody": [ { "name": "onBrowser",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "update",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            }
+                                                        ]
+                                                    },
+                                                    { "name": "ButtonClass",
+                                                        "type": "class"
+                                                    },
+                                                    { "name": "ButtonManager",
+                                                        "type": "class",
+                                                        "classBody": [ { "name": "onBrowser",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "getInput",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "getInputInt",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "setInputState",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "emit",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "update",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            { "name": "logger.js",
+                                                "data": [ { "name": "Logger",
+                                                        "type": "class",
+                                                        "classBody": [ { "name": "stringify",
+                                                                "type": "function",
+                                                                "static": true
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            { "name": "loopManager.js",
+                                                "data": [ { "name": "counter",
+                                                        "type": "variable",
+                                                        "declarationType": "let"
+                                                    },
+                                                    { "name": "LOOP",
+                                                        "type": "class",
+                                                        "classBody": [ { "name": "loops",
+                                                                "type": "property",
+                                                                "static": true
+                                                            },
+                                                            { "name": "globalFrame",
+                                                                "type": "property",
+                                                                "static": true
+                                                            },
+                                                            { "name": "updateAll",
+                                                                "type": "function",
+                                                                "static": true
+                                                            },
+                                                            { "name": "pre",
+                                                                "type": "class",
+                                                                "static": true
+                                                            },
+                                                            { "name": "loop",
+                                                                "type": "property",
+                                                                "static": true
+                                                            },
+                                                            { "name": "post",
+                                                                "type": "class",
+                                                                "static": true
+                                                            },
+                                                            { "name": "disable",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "enable",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "getIndex",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "moveToIndex",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "update",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "destroy",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            { "name": "mouseLock.js",
+                                                "data": [ { "name": "MouseLock",
+                                                        "type": "class",
+                                                        "classBody": [ { "name": "ExecuteDOM",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "DOMLock",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "DOMUnlock",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "lock",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "update",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            { "name": "overloadOperator.js",
+                                                "data": [ { "name": "Overloader",
+                                                        "type": "class",
+                                                        "classBody": [ { "name": "instances",
+                                                                "type": "property",
+                                                                "static": true
+                                                            },
+                                                            { "name": "keys",
+                                                                "type": "property",
+                                                                "static": true
+                                                            },
+                                                            { "name": "handlers",
+                                                                "type": "property",
+                                                                "static": true
+                                                            },
+                                                            { "name": "transformHandlers",
+                                                                "type": "property",
+                                                                "static": true
+                                                            },
+                                                            { "name": "eval",
+                                                                "type": "function",
+                                                                "static": true
+                                                            },
+                                                            { "name": "evalArgs",
+                                                                "type": "function",
+                                                                "static": true
+                                                            },
+                                                            { "name": "transform",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "setPostCode",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "setCallback",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "addAddon",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "addTransformHandler",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "onError",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "execute",
+                                                                "type": "function"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            { "name": "SpaceCAD.js",
+                                                "data": [ { "name": "generateSpaceCAD",
+                                                        "type": "variable",
+                                                        "declarationType": "const"
+                                                    }
+                                                ]
+                                            },
+                                            { "name": "translations.js",
+                                                "data": [ { "name": "languages",
+                                                        "type": "variable",
+                                                        "declarationType": "const"
+                                                    },
+                                                    { "name": "defaultLang",
+                                                        "type": "variable",
+                                                        "declarationType": "let"
+                                                    },
+                                                    { "name": "writeLanguage",
+                                                        "type": "function",
+                                                        "declarationType": "const"
+                                                    },
+                                                    { "name": "language",
+                                                        "type": "variable",
+                                                        "declarationType": "let"
+                                                    },
+                                                    { "name": "startTranslation",
+                                                        "type": "function",
+                                                        "declarationType": "const"
+                                                    },
+                                                    { "name": "selectLanguage",
+                                                        "type": "function",
+                                                        "declarationType": "const"
+                                                    },
+                                                    { "name": "langFromPath",
+                                                        "type": "function",
+                                                        "declarationType": "const"
+                                                    },
+                                                    { "name": "doDocumentTranslation",
+                                                        "type": "function",
+                                                        "declarationType": "const"
+                                                    },
+                                                    { "name": "setLangPath",
+                                                        "type": "function",
+                                                        "declarationType": "const"
+                                                    },
+                                                    { "name": "setTranslate",
+                                                        "type": "function",
+                                                        "declarationType": "const"
+                                                    },
+                                                    { "name": "propToString",
+                                                        "type": "function",
+                                                        "declarationType": "const"
+                                                    }
+                                                ]
+                                            },
+                                            { "name": "utils.js",
+                                                "data": [ { "name": "on",
+                                                        "type": "function",
+                                                        "declarationType": "const"
+                                                    },
+                                                    { "name": "off",
+                                                        "type": "function",
+                                                        "declarationType": "const"
+                                                    },
+                                                    { "name": "callbacsOnInnerHTML",
+                                                        "type": "variable",
+                                                        "declarationType": "const"
+                                                    },
+                                                    { "name": "doc",
+                                                        "type": "variable",
+                                                        "declarationType": "const"
+                                                    },
+                                                    { "name": "recursiveProxies",
+                                                        "type": "variable",
+                                                        "declarationType": "const"
+                                                    },
+                                                    { "name": "isProxy",
+                                                        "type": "function",
+                                                        "declarationType": "const"
+                                                    },
+                                                    { "name": "resolveProxy",
+                                                        "type": "function",
+                                                        "declarationType": "const"
+                                                    },
+                                                    { "name": "recursiveProxy",
+                                                        "type": "function",
+                                                        "declarationType": "const"
+                                                    },
+                                                    { "name": "ProxyAccumulator",
+                                                        "type": "class",
+                                                        "classBody": [ { "name": "ObjectTraverser",
+                                                                "type": "class",
+                                                                "classBody": [ { "name": "traverse",
+                                                                        "type": "function",
+                                                                        "declarationType": "method",
+                                                                        "static": true
+                                                                    }
+                                                                ],
+                                                                "static": true
+                                                            }
+                                                        ]
+                                                    },
+                                                    { "name": "normalizePath",
+                                                        "type": "function",
+                                                        "declarationType": "const"
+                                                    },
+                                                    { "name": "isClass",
+                                                        "type": "function"
+                                                    },
+                                                    { "name": "syncFetch",
+                                                        "type": "function"
+                                                    },
+                                                    { "name": "observeVector3",
+                                                        "type": "function"
+                                                    },
+                                                    { "name": "isValidFileName",
+                                                        "type": "function"
+                                                    },
+                                                    { "name": "textFromHTML",
+                                                        "type": "function"
+                                                    },
+                                                    { "name": "getClassMethods",
+                                                        "type": "function",
+                                                        "declarationType": "const"
+                                                    },
+                                                    { "name": "createSvgIcon",
+                                                        "type": "function",
+                                                        "declarationType": "const"
+                                                    },
+                                                    { "name": "removeDropdownWindowListeners",
+                                                        "type": "function",
+                                                        "declarationType": "const"
+                                                    },
+                                                    { "name": "setupDropdown",
+                                                        "type": "function",
+                                                        "declarationType": "const"
+                                                    },
+                                                    { "name": "formData",
+                                                        "type": "function",
+                                                        "declarationType": "const"
+                                                    },
+                                                    { "name": "cssVar",
+                                                        "type": "variable",
+                                                        "declarationType": "const"
+                                                    },
+                                                    { "name": "moveChild",
+                                                        "type": "function"
+                                                    },
+                                                    { "name": "Modal",
+                                                        "type": "class",
+                                                        "classBody": [ { "name": "instances",
+                                                                "type": "property",
+                                                                "static": true
+                                                            },
+                                                            { "name": "on",
+                                                                "type": "function",
+                                                                "static": true
+                                                            },
+                                                            { "name": "remove",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "onOpen",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "onClose",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "open",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "close",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "toggle",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            }
+                                                        ]
+                                                    },
+                                                    { "name": "ObjectForm",
+                                                        "type": "class",
+                                                        "classBody": [ { "name": "instances",
+                                                                "type": "property",
+                                                                "static": true
+                                                            },
+                                                            { "name": "on",
+                                                                "type": "function",
+                                                                "static": true
+                                                            },
+                                                            { "name": "remove",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "elements",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "elementsObject",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "get",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            }
+                                                        ]
+                                                    },
+                                                    { "name": "Interval",
+                                                        "type": "class",
+                                                        "classBody": [ { "name": "instances",
+                                                                "type": "property",
+                                                                "static": true
+                                                            },
+                                                            { "name": "interval",
+                                                                "type": "function",
+                                                                "static": true
+                                                            },
+                                                            { "name": "timeout",
+                                                                "type": "function",
+                                                                "static": true
+                                                            },
+                                                            { "name": "clear",
+                                                                "type": "function",
+                                                                "static": true
+                                                            },
+                                                            { "name": "begin",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            },
+                                                            { "name": "clear",
+                                                                "type": "function",
+                                                                "declarationType": "method"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    { "name": "engine.js",
+                                        "data": [ { "name": "THREE",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "getDirection",
+                                                "type": "function"
+                                            },
+                                            { "name": "isAboveMouse",
+                                                "type": "function"
+                                            },
+                                            { "name": "isAboveMouseGroup",
+                                                "type": "function"
+                                            },
+                                            { "name": "Arrow3D",
+                                                "type": "class"
+                                            },
+                                            { "name": "scene",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "UIScene",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "PivotCamera",
+                                                "type": "class",
+                                                "classBody": [ { "name": "instances",
+                                                        "type": "property",
+                                                        "static": true
+                                                    },
+                                                    { "name": "updateAll",
+                                                        "type": "function",
+                                                        "declarationType": "method",
+                                                        "static": true
+                                                    },
+                                                    { "name": "setZoom",
+                                                        "type": "function",
+                                                        "declarationType": "method"
+                                                    },
+                                                    { "name": "copyFrom",
+                                                        "type": "function",
+                                                        "declarationType": "method"
+                                                    },
+                                                    { "name": "update",
+                                                        "type": "function",
+                                                        "declarationType": "method"
+                                                    }
+                                                ]
+                                            },
+                                            { "name": "camera",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "UICamera",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "cameraDefaultPos",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "cameraDefaultRot",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "cameraDefaultZoom",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "cameraRot",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "cameraPos",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "cameraSetDefaultPos",
+                                                "type": "function",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "cameraSetDefaultRot",
+                                                "type": "function",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "cameraSetDefaultZoom",
+                                                "type": "function",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "cameraSetDefaultPerspective",
+                                                "type": "function",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "cameraSetDefault",
+                                                "type": "function",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "SpaceCAD",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "renderer",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "canvas",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "pmremGenerator",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "environmentMap",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "auxCanvas",
+                                                "type": "function",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "light",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "doEdgesIfToggled",
+                                                "type": "function",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "generateResourcesDOM",
+                                                "type": "function",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "controllers",
+                                                "type": "variable",
+                                                "declarationType": "let"
+                                            },
+                                            { "name": "setupControllers",
+                                                "type": "function",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "createController",
+                                                "type": "function",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "controller",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "changePerspectiveButton",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "setPerspectiveDom",
+                                                "type": "function",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "changePerspective",
+                                                "type": "function",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "minimizeCameraLook",
+                                                "type": "function",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "setMinimizeCameraLookButtomTitle",
+                                                "type": "function",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "minimizeCameraLookButton",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "cursor",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "setCursor",
+                                                "type": "function",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "mouseLock",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "lockMouse",
+                                                "type": "function",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "unlockMouse",
+                                                "type": "function",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "raycaster",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "vectorMouse",
+                                                "type": "function",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "mousePositionInWorld",
+                                                "type": "function",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "cameraMoveToMouse",
+                                                "type": "function",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "uiOverlayMaterial",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "UI",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "UIDistance",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "Gizmo",
+                                                "type": "class",
+                                                "classBody": [ { "name": "instances",
+                                                        "type": "property",
+                                                        "static": true
+                                                    },
+                                                    { "name": "updateAll",
+                                                        "type": "function",
+                                                        "declarationType": "method",
+                                                        "static": true
+                                                    },
+                                                    { "name": "Root",
+                                                        "type": "function",
+                                                        "static": true
+                                                    }
+                                                ]
+                                            },
+                                            { "name": "DirectionGizmo",
+                                                "type": "class",
+                                                "classBody": [ { "name": "instances",
+                                                        "type": "property",
+                                                        "static": true
+                                                    },
+                                                    { "name": "getFromArr",
+                                                        "type": "function",
+                                                        "declarationType": "method"
+                                                    },
+                                                    { "name": "getDirectFidget",
+                                                        "type": "function",
+                                                        "declarationType": "method"
+                                                    },
+                                                    { "name": "releaseMantainedFidget",
+                                                        "type": "function",
+                                                        "declarationType": "method"
+                                                    },
+                                                    { "name": "getIntersectingFidgets",
+                                                        "type": "function",
+                                                        "declarationType": "method"
+                                                    },
+                                                    { "name": "update",
+                                                        "type": "function",
+                                                        "declarationType": "method"
+                                                    }
+                                                ]
+                                            },
+                                            { "name": "worldGizmo",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "ScreenToScene",
+                                                "type": "class",
+                                                "classBody": [ { "name": "instances",
+                                                        "type": "property",
+                                                        "static": true
+                                                    },
+                                                    { "name": "update",
+                                                        "type": "function",
+                                                        "static": true
+                                                    },
+                                                    { "name": "setSize",
+                                                        "type": "function",
+                                                        "declarationType": "method"
+                                                    },
+                                                    { "name": "height",
+                                                        "type": "function",
+                                                        "declarationType": "method"
+                                                    },
+                                                    { "name": "width",
+                                                        "type": "function",
+                                                        "declarationType": "method"
+                                                    },
+                                                    { "name": "vwLeft",
+                                                        "type": "function",
+                                                        "declarationType": "method"
+                                                    },
+                                                    { "name": "vwRight",
+                                                        "type": "function",
+                                                        "declarationType": "method"
+                                                    },
+                                                    { "name": "vwTop",
+                                                        "type": "function",
+                                                        "declarationType": "method"
+                                                    },
+                                                    { "name": "vwBottom",
+                                                        "type": "function",
+                                                        "declarationType": "method"
+                                                    },
+                                                    { "name": "left",
+                                                        "type": "function",
+                                                        "declarationType": "method"
+                                                    },
+                                                    { "name": "right",
+                                                        "type": "function",
+                                                        "declarationType": "method"
+                                                    },
+                                                    { "name": "top",
+                                                        "type": "function",
+                                                        "declarationType": "method"
+                                                    },
+                                                    { "name": "bottom",
+                                                        "type": "function",
+                                                        "declarationType": "method"
+                                                    }
+                                                ]
+                                            },
+                                            { "name": "screenToScene",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "getScreenDirection",
+                                                "type": "function"
+                                            },
+                                            { "name": "getAxisScreenDirection",
+                                                "type": "function"
+                                            },
+                                            { "name": "selection3DGizmo",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "inputManager",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "movement",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "mouseMovement",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "mousePosition",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "lookAtMouse",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "mouseLeft",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "mouseRight",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "mouseWheel",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "pinch",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "perspective",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "onMouseRotation",
+                                                "type": "variable",
+                                                "declarationType": "let"
+                                            },
+                                            { "name": "doMouseRotate",
+                                                "type": "variable",
+                                                "declarationType": "let"
+                                            },
+                                            { "name": "doMouseMove",
+                                                "type": "variable",
+                                                "declarationType": "let"
+                                            },
+                                            { "name": "zoom",
+                                                "type": "variable",
+                                                "declarationType": "let"
+                                            },
+                                            { "name": "moveSpeed",
+                                                "type": "variable",
+                                                "declarationType": "let"
+                                            },
+                                            { "name": "ogSceneAdd",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "sceneObjects",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "sceneObjectsEmpty",
+                                                "type": "function",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "debugMousePos",
+                                                "type": "variable",
+                                                "declarationType": "let"
+                                            },
+                                            { "name": "lockSelectionmovement",
+                                                "type": "variable",
+                                                "declarationType": "let"
+                                            },
+                                            { "name": "overloader",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "ENGINE_LOOP",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "PRE_LOOP",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "POST_LOOP",
+                                                "type": "variable",
+                                                "declarationType": "const"
+                                            },
+                                            { "name": "engineResize",
+                                                "type": "function",
+                                                "declarationType": "const"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            { "name": "index.html",
+                                "description": "HAHAHAH",
+                                "scripts": [ [ { "name": "isElectron",
+                                            "type": "variable",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "minimize",
+                                            "type": "variable",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "maximize",
+                                            "type": "variable",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "close",
+                                            "type": "variable",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "appPopup",
+                                            "type": "function",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "popup",
+                                            "type": "function",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "ogAlert",
+                                            "type": "variable",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "version",
+                                            "type": "variable",
+                                            "declarationType": "let"
+                                        },
+                                        { "name": "electronStore",
+                                            "type": "variable",
+                                            "declarationType": "let"
+                                        },
+                                        { "name": "awaitValue",
+                                            "type": "function",
+                                            "declarationType": "const"
+                                        }
+                                    ],
+                                    [ { "name": "logger",
+                                            "type": "variable",
+                                            "declarationType": "const"
+                                        },
+                                        { "type": "variable",
+                                            "declarationType": "const"
+                                        }
+                                    ],
+                                    [ { "name": "loadScript",
+                                            "type": "function",
+                                            "declarationType": "const"
+                                        }
+                                    ],
+                                    [ { "name": "fileIndicator",
+                                            "type": "variable",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "fileList",
+                                            "type": "variable",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "fromEnvArgs",
+                                            "type": "variable",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "selectDOM",
+                                            "type": "function",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "fileDom",
+                                            "type": "function",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "fileArray",
+                                            "type": "variable",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "fileIsInArray",
+                                            "type": "function",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "saveLS",
+                                            "type": "function",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "addFile",
+                                            "type": "function",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "removeFile",
+                                            "type": "function",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "editFile",
+                                            "type": "function",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "moveInList",
+                                            "type": "function",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "watchFile",
+                                            "type": "function",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "removeWatcher",
+                                            "type": "function",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "addPath",
+                                            "type": "function",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "fileInput",
+                                            "type": "variable",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "importResources",
+                                            "type": "variable",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "shareResources",
+                                            "type": "variable",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "translateModal",
+                                            "type": "variable",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "newFileModal",
+                                            "type": "variable",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "renameModal",
+                                            "type": "variable",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "setTogleableMaxHeight",
+                                            "type": "function",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "browserSaveFile",
+                                            "type": "function",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "runEditorCode",
+                                            "type": "function",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "saveFile",
+                                            "type": "function",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "windowEditor",
+                                            "type": "variable",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "localEditor",
+                                            "type": "variable",
+                                            "declarationType": "let"
+                                        },
+                                        { "name": "editor",
+                                            "type": "variable",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "monacoInterval",
+                                            "type": "variable",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "debug",
+                                            "type": "variable",
+                                            "declarationType": "const"
+                                        }
+                                    ],
+                                    [ { "name": "socket",
+                                            "type": "variable",
+                                            "declarationType": "const"
+                                        },
+                                        { "name": "firstConnection",
+                                            "type": "variable",
+                                            "declarationType": "let"
+                                        },
+                                        { "name": "doServerRestart",
+                                            "type": "variable",
+                                            "declarationType": "let"
+                                        }
+                                    ]
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            { "name": "electron.js",
+                "data": [ { "type": "variable",
+                        "declarationType": "const"
+                    },
+                    { "name": "__dirname",
+                        "type": "variable",
+                        "declarationType": "const"
+                    },
+                    { "name": "watchport",
+                        "type": "function",
+                        "declarationType": "const"
+                    },
+                    { "name": "win",
+                        "type": "variable",
+                        "declarationType": "let"
+                    },
+                    { "name": "loadUrl",
+                        "type": "function",
+                        "declarationType": "const"
+                    },
+                    { "name": "storage",
+                        "type": "variable",
+                        "declarationType": "let"
+                    },
+                    { "name": "app",
+                        "type": "variable",
+                        "declarationType": "const"
+                    },
+                    { "name": "httpServer",
+                        "type": "variable",
+                        "declarationType": "const"
+                    },
+                    { "name": "io",
+                        "type": "variable",
+                        "declarationType": "const"
+                    },
+                    { "name": "routesPath",
+                        "type": "variable",
+                        "declarationType": "const"
+                    },
+                    { "name": "file404",
+                        "type": "function",
+                        "declarationType": "const"
+                    },
+                    { "name": "watchTimeout",
+                        "type": "variable",
+                        "declarationType": "let"
+                    },
+                    { "name": "fileWatcher",
+                        "type": "variable",
+                        "declarationType": "let"
+                    },
+                    { "name": "watchFile",
+                        "type": "variable",
+                        "declarationType": "let"
+                    },
+                    { "name": "watchFilePath",
+                        "type": "function",
+                        "declarationType": "const"
+                    },
+                    { "name": "cancelWatch",
+                        "type": "function",
+                        "declarationType": "const"
+                    },
+                    { "name": "candidates",
+                        "type": "variable",
+                        "declarationType": "const"
+                    },
+                    { "name": "vscode",
+                        "type": "variable",
+                        "declarationType": "const"
+                    },
+                    { "name": "setupStorage",
+                        "type": "function",
+                        "declarationType": "const"
+                    },
+                    { "name": "isDirSync",
+                        "type": "function",
+                        "declarationType": "const"
+                    }
+                ]
+            },
+            { "name": "generateSchema.js",
+                "description": "File used to define the types for the SpaceCAD Project API schema and generate the output \"apiSchema.json\" file.\r\n\r\n@type HTMLElement\r\n@description HTML element\r\n@end\r\n\r\n@type HTMLInputElement\r\n@description HTML input element\r\n@extends HTMLElement\r\n@end",
+                "data": [ { "name": "schema",
+                        "type": "variable",
+                        "declarationType": "const"
+                    },
+                    { "name": "objIsEmpty",
+                        "type": "function",
+                        "declarationType": "const"
+                    },
+                    { "name": "traverser",
+                        "type": "function",
+                        "declarationType": "const"
+                    }
+                ]
+            },
+            { "name": "preload.js",
+                "data": [ { "type": "variable",
+                        "declarationType": "const"
+                    }
+                ]
+            },
+            { "name": "server.js",
+                "data": [ { "name": "__filename",
+                        "type": "variable",
+                        "declarationType": "const"
+                    },
+                    { "name": "__dirname",
+                        "type": "variable",
+                        "declarationType": "const"
+                    },
+                    { "name": "app",
+                        "type": "variable",
+                        "declarationType": "const"
+                    },
+                    { "name": "httpServer",
+                        "type": "variable",
+                        "declarationType": "const"
+                    },
+                    { "name": "io",
+                        "type": "variable",
+                        "declarationType": "const"
+                    },
+                    { "name": "file404",
+                        "type": "function",
+                        "declarationType": "const"
+                    },
+                    { "name": "watchTimeout",
+                        "type": "variable",
+                        "declarationType": "let"
+                    },
+                    { "name": "fileWatcher",
+                        "type": "variable",
+                        "declarationType": "let"
+                    },
+                    { "name": "watchFile",
+                        "type": "variable",
+                        "declarationType": "let"
+                    },
+                    { "name": "watchFilePath",
+                        "type": "function",
+                        "declarationType": "const"
+                    },
+                    { "name": "cancelWatch",
+                        "type": "function",
+                        "declarationType": "const"
+                    },
+                    { "name": "candidates",
+                        "type": "variable",
+                        "declarationType": "const"
+                    },
+                    { "name": "vscode",
+                        "type": "variable",
+                        "declarationType": "const"
+                    },
+                    { "name": "setupStorage",
+                        "type": "function",
+                        "declarationType": "const"
+                    },
+                    { "name": "isDirSync",
+                        "type": "function",
+                        "declarationType": "const"
+                    },
+                    { "name": "setupVersion",
+                        "type": "function",
+                        "declarationType": "const"
+                    }
+                ]
+            }
+        ]
+    }
+}
