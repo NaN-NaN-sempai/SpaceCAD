@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <!-- 
-    File Description: Web version of routes/index.html    
+    File Description: Frontend of SpaceCAD
     -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,7 +29,7 @@
             </div>
 
         </div>
-        <div class="fileIndicator">
+        <div class="fileIndicator hidden">
             <button id="options">
                 <i class="hamburger"></i>
             </button>
@@ -344,6 +344,8 @@
         </div>
     </form>
 
+    <iframe modal open class="question loadingWindow" id="loadingWindow" src="./loading/index.html?asAsset=true" frameborder="0"></iframe>
+
     <!-- CHANGELOG -->
     <div modal id="changelog" class="question">
         <div class="title" language-modal-changelog-todo></div>
@@ -375,6 +377,13 @@
 
 
         <div class="title" language-modal-changelog-lastupdates></div>
+
+        
+        <span style="background: var(--primary);">documentation for monaco phase 1</span>
+        (26/09/2026 - 17:35) editor -> hinter de codigo e autocompletions basicos
+        <br><br>
+        (26/09/2026 - 13:03) UI -> modal de aviso de carregamento de recursos antes de carregar todos os dados do SpaceCAD
+        <br><br>
 
 
         
@@ -692,7 +701,7 @@
         (19/08/2026 - 16:30) electron -> barra de titulo
     </div>
 </body> 
-<script> // TITLE BAR & OTHERS
+<script schemaname="electronBase"> // TITLE BAR & OTHERS
     const isElectron = window.electronStoreAPI != undefined;
 
     const minimize = document.querySelector("#minimize");
@@ -891,7 +900,7 @@
 
 <script src="./scripts/lib/utils.js"></script>
 <script src="./scripts/lib/translations.js"></script>
-<script> // TRANSLATIONS
+<script schemaname="translations"> // TRANSLATIONS
 writeLanguage("en-US", { // default
     name: "English (United States)",
     translationnotfound: "~translation not found~",
@@ -1676,7 +1685,7 @@ startTranslation(isElectron? electronStore : undefined);
 <script src="./scripts/lib/mouseLock.js"></script>
 <script src="./scripts/lib/colors.js"></script>
 <script src="./scripts/lib/logger.js"></script>
-<script> // globalize colors & logger
+<script schemaname="globalizeColorNLogger"> // globalize colors & logger
     const logger = new Logger(doc.query("#logger .body .list"));
     const {color} = Color;
     awaitValue(() => {
@@ -1690,9 +1699,8 @@ startTranslation(isElectron? electronStore : undefined);
     });
 </script>
 
-<script>
-    // old not browser page
-    if(window.electronStoreAPI == undefined  && false) {
+<script schemaname="breackIfBrowser">
+    if(window.electronStoreAPI == undefined) {
         const title = document.querySelector(".titlebar").cloneNode(1);
         title.querySelector(".fileIndicator").remove();
         title.querySelector(".window-buttons").remove();
@@ -1731,7 +1739,7 @@ startTranslation(isElectron? electronStore : undefined);
 </script>
 
 <script src="/node_modules/acorn/dist/acorn.js"></script>
-<script type="module"> // globalize imports 
+<script type="module" schemaname="globalizeImports"> // globalize imports 
     /* import * as monaco from "monaco"; */
 
     import JSHON from "lib/JSHON.js";
@@ -1975,9 +1983,17 @@ startTranslation(isElectron? electronStore : undefined);
     );
 </script>
 
-<script> // FILE MANAGMENT & APP UI
+
+<script src="/lib/generateSchema/chargerStructure.js"></script>
+<script src="/lib/generateSchema/parser.js"></script>
+<script schemaname="fileNUI"> // FILE MANAGMENT & APP UI
     const fileIndicator = document.querySelector(".fileIndicator");
     const fileList = fileIndicator.querySelector(".fileList");
+    const loadingWindow = document.querySelector(".loadingWindow");
+    loadingWindow.modal.onCloseAnimationEnd(() => {
+        doc.query(".titlebar .fileIndicator").classList.remove("hidden");
+        loadingWindow.modal.remove();
+    });
 
     window.addEventListener("dragover", e => {
         e.preventDefault();
@@ -2003,13 +2019,16 @@ startTranslation(isElectron? electronStore : undefined);
 
         electronStore.selectedFile = file;
 
-        if(window.SpaceCAD)
+        if(window.SpaceCAD) {
             SpaceCAD.deleteAll();
+            loadingWindow.modal.close();      
+        }
         else {
             const deleteAll = setInterval(() => {
                 if (window.SpaceCAD) {
                     clearInterval(deleteAll);
                     SpaceCAD.deleteAll();
+                    loadingWindow.modal.close();                    
                 }
             });
         }
@@ -3157,6 +3176,167 @@ startTranslation(isElectron? electronStore : undefined);
                 logger: "logger"
             };
 
+            const schema = schemify(syncFetch("/apiSchema").json);
+
+            const schemaList = schema.schema.byName("src/routes/index.html").scripts
+            .filter(e=>(e.data || !e.origin.unnacessible) && (e.data?.length || e.origin?.data?.length))
+            .flatMap(e => e.data || e.origin.data);
+
+            /* 
+            schemify(syncFetch("/apiSchema").json).schema.byName("src/routes/scripts/lib")
+            .files.filter(e=>["SpaceCAD.js", "overloadOperator.js"].includes(e.name));
+
+            schemify(syncFetch("/apiSchema").json).schema.byName("src/routes/scripts/engine.js");
+            */
+
+            const signatures = {
+                functions: [],
+                suggestions: []
+            }
+            const kind = (e) => {
+                if(e.type == "function") return monaco.languages.CompletionItemKind.Function;
+                if(e.type == "class") return monaco.languages.CompletionItemKind.Class;
+                if(e.type == "variable" && ["var", "let"].includes(e.declarationType)) return monaco.languages.CompletionItemKind.Variable;
+                if(e.type == "constant" && e.declarationType == "const") return monaco.languages.CompletionItemKind.Constant;
+
+                return monaco.languages.CompletionItemKind.Text;
+            }
+
+            
+            schemaList.forEach(e => {
+
+                if(!e.name) {
+                    if(Object.keys(e.jsdoc) == 0) return;
+                    
+                    e.name = e.jsdoc.name;
+                    console.log(e);
+                }
+
+                if(e.type == "function" && e.jsdoc) {
+                    const params = e.jsdoc?.params ?? [];
+
+                    const resolveType = (type = []) => {
+                        return type.map(t => `${t.target.name}${t.array ? "[]" : ""}${t.target.description? ` - ${t.target.description}` : ""}`).join("|");
+                    }
+                    const resolveReference = (ref = []) => {
+                        return `${resolveType(ref.type)}${ref.summary? "\n" + ref.summary : ""}`;
+                    }
+
+                    signatures.functions.push({
+                        label:  `${e.name}(${params.map(p => p.name).join(", ")})`,
+                        documentation: [
+                            "————",
+                            e.jsdoc?.summary,
+                            e.jsdoc?.description? e.jsdoc?.description + "\n————": null,
+                            `returns → ${resolveReference(e.jsdoc.returns) || "void"}`,
+                        ].filter(Boolean).join("\n"),
+
+                        parameters:  params.map(p => ({
+                            label: p.name,
+                            documentation: `${resolveType(p.type)}\n- ${p.description ?? ""}`
+                        })),
+                    });
+                }
+
+                function resolveTemplate(template, context)  {
+                    if (typeof template != "string")
+                        return template;
+
+                    return new Function(`return \`${template}\`;`).call(context);
+                }
+                const sig = e?.jsdoc?.signature;
+                const sug = new Proxy(e, {
+                    get(target, key) {
+                        const inSig = sig?.[key];
+
+                        if (inSig !== undefined)
+                            return resolveTemplate(inSig, target);
+
+                        return target[key];
+                    }
+                });
+                signatures.suggestions.push({
+                    label: sug.name,
+
+                    kind: kind(e),
+
+                    ...(e.type == "function"? {
+                        insertText: sig?.insertText? resolveTemplate(sig.insertText, e) : `${e.name}($0)`,
+                        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                    } : {
+                        insertText: sug.insertText ?? sug.name,
+                    }),
+                });                
+            });
+
+            monaco.languages.registerCompletionItemProvider("javascript", {
+                provideCompletionItems(model, position) {
+                    const word = model.getWordUntilPosition(position);
+
+                    const range = {
+                        startLineNumber: position.lineNumber,
+                        startColumn: word.startColumn,
+                        endLineNumber: position.lineNumber,
+                        endColumn: position.column
+                    };
+
+                    return {
+                        suggestions: signatures.suggestions.map(s => ({
+                            label: s.label,
+                            kind: s.kind,
+                            insertText: s.insertText,
+                            range,
+
+                            ...(s.insertTextRules !== undefined
+                                ? { insertTextRules: s.insertTextRules }
+                                : {})
+                        }))
+                    };
+                }
+            });
+
+            monaco.languages.registerSignatureHelpProvider("javascript", {
+                signatureHelpTriggerCharacters: ["(", ","],
+                signatureHelpRetriggerCharacters: [",", ")"],
+
+                provideSignatureHelp(model, position) {
+                    const line = model.getLineContent(position.lineNumber);
+                    const before = line.slice(0, position.column - 1);
+
+                    const match = before.match(/([\w$]+)\s*\([^()]*$/);
+
+                    if (!match)
+                        return null;
+
+                    const name = match[1];
+
+                    const signature = signatures.functions.find(
+                        s => s.label.startsWith(`${name}(`)
+                    );
+
+                    if (!signature)
+                        return null;
+
+                    const parameters = signature.parameters;
+
+                    const args = before.slice(match.index).match(/,/g) ?? [];
+
+                    const activeParameter = Math.min(
+                        args.length,
+                        parameters.length - 1
+                    );
+
+                    return {
+                        value: {
+                            signatures: [signature],
+                            activeSignature: 0,
+                            activeParameter
+                        },
+
+                        dispose() {}
+                    };
+                }
+            });
             
 
             function updateCustomHighlight(editor, oldDecorations = []) {
@@ -3588,7 +3768,16 @@ startTranslation(isElectron? electronStore : undefined);
                 }
             );
 
+            const originalLayout = localEditor.layout.bind(localEditor);
+
+            localEditor.layout = () => {
+                originalLayout();
+
+            };
+
             localEditor.layout();
+
+
 
             localEditor.onDidFocusEditorText(() => {
                 inputManager.disable();
@@ -3679,6 +3868,29 @@ startTranslation(isElectron? electronStore : undefined);
 
                 if(!evt.isFlush) {
                     editor.changeFileText();
+                    
+                    const hinter = doc.query(".editor-widget.parameter-hints-widget .phwrapper");
+                    
+                    if(hinter) {
+                        setTimeout(() => {
+                            hinter.css.maxHeight =
+                            hinter.parentElement.css.maxHeight = "100%";
+                        }, 200)
+                    }
+                }
+            });
+
+            editor.onDidChangeCursorPosition(() => {
+                const position = editor.getPosition();
+                const line = editor.getModel().getLineContent(position.lineNumber);
+                const before = line.slice(0, position.column - 1);
+
+                if (/[\w$]+\s*\([^()]*$/.test(before)) {
+                    editor.trigger(
+                        "keyboard",
+                        "editor.action.triggerParameterHints",
+                        null
+                    );
                 }
             });
         }
@@ -3708,7 +3920,7 @@ startTranslation(isElectron? electronStore : undefined);
 
 
 <script src="/socket.io/socket.io.js"></script>
-<script> // SOCKET.IO
+<script schemaname="socket"> // SOCKET.IO
     const socket = io != undefined && isElectron ? io(): {on:()=>{}, emit:()=>{}};
     
     let firstConnection = true;
@@ -3784,7 +3996,7 @@ startTranslation(isElectron? electronStore : undefined);
 
 <!-- monaco -->
 <script src="/node_modules/monaco-editor/min/vs/loader.js"></script>
-<script>
+<script schemaname="monaco">
     require.config({
         paths: {
             vs: "/node_modules/monaco-editor/min/vs"

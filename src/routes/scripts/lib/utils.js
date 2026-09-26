@@ -2,7 +2,10 @@
 
 
 /**
- * test
+ * @name testehahaha
+ * @signature
+ * @insertText ${this.name}; // catambolas
+ * @signature end
  */
 [
     "Object",
@@ -342,7 +345,7 @@ const off = function (...args) {
 }
 window.on = on;
 window.off = off;
-const callbacsOnInnerHTML = [];
+const callbacksOnInnerHTML = [];
 [HTMLDocument, HTMLElement].forEach(proto => {
     if(proto == HTMLElement) {
 
@@ -376,7 +379,7 @@ const callbacsOnInnerHTML = [];
                     return html.get.call(this);
                 },
                 set(value) {
-                    callbacsOnInnerHTML.forEach(c => c(this, value));
+                    callbacksOnInnerHTML.forEach(c => c(this, value));
                     this.innerListeners.forEach(c => c(this, value));
                     return html.set.call(this, value);
                 }
@@ -386,7 +389,7 @@ const callbacsOnInnerHTML = [];
                     return text.get.call(this);
                 },
                 set(value) {
-                    callbacsOnInnerHTML.forEach(c => c(this, value));
+                    callbacksOnInnerHTML.forEach(c => c(this, value));
                     this.innerListeners.forEach(c => c(this, value));
                     return text.set.call(this, value);
                 }
@@ -961,10 +964,14 @@ const getClassMethods = obj => {
     return [...methods];
 };
 
-/**
+/** sumary test
+ * hi
  * @function createElement
+ * @signature
+ * @insertText ${this.name}($0); // catambolas
+ * @signature end
  * @description Creates an HTML element
- * @returns {HTMLElement}
+ * @returns {HTMLElement} descrição temporario
  * @param {string} tag - (optional) The tag name of the element, defaults to "div"
  * @param {string[]} classList - (optional) The class list of the element
  * @param {object} styles - (optional) The styles of the element
@@ -1024,7 +1031,7 @@ const removeDropdownWindowListeners = (el) => {
         e.removeWindowListeners?.()
     })
 }
-callbacsOnInnerHTML.push(removeDropdownWindowListeners);
+callbacksOnInnerHTML.push(removeDropdownWindowListeners);
 const setupDropdown = (...args) => {
     if(!args[0]) throw new Error("No element provided");
 
@@ -1254,7 +1261,9 @@ function moveChild(element, index) {
     }
 }
 
-
+/**
+ * @class Modal
+ * */
 class Modal {
     static instances = [];
     static {
@@ -1326,6 +1335,18 @@ class Modal {
 
         return this;
     }
+    onOpenAnimationEnd(...callbacks) {
+        this.onOpenAnimationEndCallback = this.onOpenAnimationEndCallback || [];
+        this.onOpenAnimationEndCallback.push(...callbacks);
+
+        return this;
+    }
+    onCloseAnimationEnd(...callbacks) {
+        this.onCloseAnimationEndCallback = this.onCloseAnimationEndCallback || [];
+        this.onCloseAnimationEndCallback.push(...callbacks);
+
+        return this;
+    }
     open(...args) {
         if(Array.isArray(this.onOpenCallback)) {
             this.onOpenCallback.forEach(callback => {
@@ -1348,6 +1369,13 @@ class Modal {
             instance.modal.style.zIndex = 1000 + index;
         });
 
+        if(Array.isArray(this.onOpenAnimationEndCallback)) {
+            this.onOpenAnimationEndCallback.forEach(callback => {
+                if(typeof callback == "function")
+                callback(this, ...args);
+            });
+        }
+
         return this;
     }
     close(...args) {
@@ -1361,7 +1389,15 @@ class Modal {
 
         this.modal.classList.remove("open");
         const animSpeed = parseFloat(this.modal.css.var.animSpeed);
-        setTimeout(() => this.hiddenContainer.appendChild(this.modal), animSpeed * 1000);
+        setTimeout(() => {
+            if(Array.isArray(this.onCloseAnimationEndCallback)) {
+                this.onCloseAnimationEndCallback.forEach(callback => {
+                    if(typeof callback == "function")
+                    callback(this, ...args);
+                });
+            }
+            this.hiddenContainer.appendChild(this.modal);
+        }, animSpeed * 1000);
         this.isOpen = false;
 
         this.openList.splice(this.openList.indexOf(this), 1);

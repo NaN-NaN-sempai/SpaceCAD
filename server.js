@@ -111,6 +111,11 @@ app.get("/version", (req, res) => {
    
     res.json(v);
 });
+app.get("/apiSchema", (req, res) => {
+    const v = JSON.parse(fs.readFileSync(path.join(__dirname, "API.json"), "utf8"));
+   
+    res.json(v);
+});
 
 app.post("/updateFile", (req, res) => {
     const path = req.body.path;

@@ -10,13 +10,13 @@
             --primary: rgb(35, 40, 44);
             --secondary: rgb(75, 86, 95);
             --tertiary: rgb(24, 26, 28);
+            
+            --highlight: #f28202;
         }
 
     </style>
 
     <style>
-        
-
         button, .buttonLike, input[type="button"], input[type="submit"] {
             cursor: pointer;
             border: none;
@@ -246,6 +246,39 @@
         .owner {
             cursor: pointer;
         }
+
+        .loadingMessage {
+            display: none;
+            text-align: center;
+        }
+
+        .asAsset {
+            cursor: wait;
+
+            .titlebar {
+                display: none;
+            }
+
+            .loadingMessage {
+                display: inline-block;
+                color: var(--highlight);
+                cursor: default;
+                font-size: 1.1rem;
+                animation: flashing 1s ease-in-out infinite;
+            }
+        }
+
+        @keyframes flashing {
+            0% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .2;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body>
@@ -273,12 +306,51 @@
         <img class="logotype" src="../../../assets/logo/logotype.svg">   
         
         <span class="owner">luishenrique.space</span>
+
+
+        <br>
+        <span class="loadingMessage" language.loadingassets></span>
     </div>
     
 </body>
+<script src="../scripts/lib/utils.js"></script>
+<script src="../scripts/lib/translations.js"></script>
 <script>
-    if(window.electronStoreAPI == undefined) location.href = "../";
+    writeLanguage("en-US", { // default
+        loadingassets: "Loading assets...",
+        takingtoolong: "It's taking longer than usual<br>wait a bit longer<br>or restart the app",
+    });
+    writeLanguage("pt-BR", {
+        loadingassets: "Carregando recursos...",
+        takingtoolong: "Está demorando mais do que normal<br>espera um pouco mais<br>ou reinicie o app"
+    });
+    writeLanguage("fr-FR", {
+        loadingassets: "Chargement des ressources...",
+        takingtoolong: "Cela prend plus longtemps que normal<br>attendez un peu plus<br>ou relancez l'application"
+    });
+    
+    const isElectron = window.electronStoreAPI != undefined;
+    startTranslation(isElectron? electronStore : undefined);
+</script>
+
+<script>
+    const params = new URLSearchParams(location.search);
+    const asAsset = params.get("asAsset") == "true";
+    const loadingAssets = doc.query(".loadingMessage");
+
+    if(asAsset) {
+        document.querySelector("body").classList.add("fullscreen");
+        document.body.classList.add("asAsset");
+
+        setTimeout(() => {
+            loadingAssets.setlang.takingtoolong$;
+        }, 10000)
+    } else {
+        if(window.electronStoreAPI == undefined) location.href = "../";
+        document.querySelector("#close").addEventListener("click", titlbar.close);
+    }
+
     document.querySelector(".owner").addEventListener("click", () => electron.openUrl('https://github.com/NaN-NaN-sempai'));
-    document.querySelector("#close").addEventListener("click", titlbar.close);
+
 </script>
 </html>

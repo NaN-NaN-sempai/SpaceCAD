@@ -1,3 +1,4 @@
+// @ignoreSchema begin
 const {app, BrowserWindow, dialog, ipcMain, Menu, shell} = require('electron');
 const path = require('path');
 
@@ -9,10 +10,23 @@ const store = new Store();
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
 
 const fs = require("fs");
+// @ignoreSchema end
 const { spawn, exec } = require('child_process');
 
 
+/**
+ * Variable that stores the Electron window port
+ * 
+ * @type {number}
+ */
 let nowPort;
+
+/**
+ * Watch changes on the file "port.js"
+ * then update the Electron window URL
+ * @function watchport carambolas
+ * @returns {chargerStructure~lib\generateSchema\chargerStructure.js} test @from outro/aqruivo
+ */
 const watchport = () => {
     if(fs.existsSync("port.js"))
         fs.watch("port.js", () => {
@@ -28,8 +42,13 @@ const watchport = () => {
         setTimeout(watchport, 1000);
 }
 
-
+/**
+ * Variable that stores the Electron window
+ *
+ * @type {Electron.BrowserWindow}
+ */
 let win; 
+
 
 const loadUrl = (port) => {
     const url = `http://localhost:${port}`;

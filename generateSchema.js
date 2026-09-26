@@ -1,5 +1,6 @@
 /* 
-File Description: File used to define the types for the SpaceCAD Project API schema and generate the output "apiSchema.json" file.
+@fileSummary
+File used to define the types for the SpaceCAD Project API schema and generate the output "API.json" ans "API_Pending.json" file.
 
 @type HTMLElement
 @description HTML element
@@ -14,7 +15,7 @@ File Description: File used to define the types for the SpaceCAD Project API sch
 */
 
 
-
+import {chargerStructure} from "./lib/generateSchema/chargerStructure.mjs";
 import generateApiSchema from "./lib/generateSchema/generateSchema.js";
 import fs from "fs";
 
@@ -23,93 +24,113 @@ const schema = generateApiSchema("./", [
     "node_modules",
     "build",
     "threeAddons"
-], ["."], [".js", ".html"]);
+], ["."], [".js", ".cjs", ".html"]);
 
 
-const objIsEmpty = (obj) => Object.keys(obj).length === 0;
-const traverser = (obj, parent) => {
-    let ret = {};
-
-    if(obj.isType) {
-        if(!obj.description && !obj.summary) {
-            ret.name = obj.name;
-        }
-        else 
-            return null;
-    }
 
 
-    if(obj.types)
-        ret.types = obj.types.map(type => traverser(type, obj)).filter(Boolean);
+const schemify = (obj, charger) => {
+    charger = charger || chargerStructure();
 
-    if(obj.schema)
-        ret.schema = traverser(obj.schema, obj);
+    if(Array.isArray(obj.files) && !obj.types) {
+        obj.files = obj.files.map(e => schemify(e, charger))
+        .filter(Boolean);
 
-
-    if(obj.files) {
-        ret.name = obj.name;
-        if(obj.files.length) {
-            ret.files = obj.files.map(file => traverser(file, obj)).filter(Boolean);
-
-            if(!ret.files.length)
-                return null;
-        }
-        else
-            return null;
-    }
-
-    if(["js", "html"].includes(obj.type)) {
-        ret.name = obj.name;
-        ret.description = obj.description;
-
-        if(obj.data) {
-            if(obj.data.length)
-                ret.data = obj.data.map(data => traverser(data, obj)).filter(Boolean);
-            else
-                return null;
-        }
-        if(obj.scripts) {
-            if(obj.scripts.length)
-                ret.scripts = obj.scripts.map(data => data.map(script => traverser(script, obj)).filter(Boolean));
-            else
-                return null;
-        }
-    }
-
-    if(obj.jsdoc) {
-        ret.name = obj.name;
-        ret.type = obj.type;
-
-        if(obj.type == "function" && obj.name == "constructor") 
+        if(obj.files.length === 0)
             return null;
 
-        if((obj.classBody || []).length) {
-            const classBody = obj.classBody.map(data => traverser(data, obj)).filter(Boolean);
-            if(classBody.length)
-                ret.classBody = classBody;
-        }
+        obj.name=undefined;
 
-        if(objIsEmpty(obj.jsdoc)) {
-            Object.entries(obj).forEach(([key, value]) => {
-                if(key != "jsdoc" && key != "classBody") ret[key] = value;
-            }) 
-            
-        } 
+        return obj;
+    }
+
+    if(obj.type == "js") {
+        obj.data = obj.data.map(e => schemify(e, charger))
+        .filter(Boolean);
+
+        if(!obj.data || obj.data.length === 0)
+            return null;
+
+        obj.name=undefined;
+
+        return obj;
+    }
+
+    if(obj.type == "html") {
+        obj.scripts = obj.scripts.map(e => {
+            const script = schemify(e, charger);
+
+            if(Object.keys(script).length > 0)
+                return script
+        })
+        .filter(Boolean);
+
+        if(obj.scripts.length === 0)
+            return null;
+
+        obj.name=undefined;
+
+        return obj;
+    }
+
+    if(obj.isGetter) {
+        obj = charger.search(obj);
+
+        if(obj.jsdoc && Object.keys(obj.jsdoc).length > 0)
+            return null;
+
+        return schemify(obj, charger);
+    }
+
+    if(Object.keys(charger).find(k => Object.keys(obj).includes(k))) {
+        charger.onNonIgnore(([k]) => {
+            if(Array.isArray(charger[k]))
+            obj[k].forEach(e => charger[k].push(e));
+        })   
         
-        if(!objIsEmpty(obj.jsdoc) && !(ret.classBody || []).length) {
-            return null;
+        const types = obj.types.filter(t => !t.description && !t.summary);
+        const ret = {
+            types,
+            schema: schemify(obj.schema, charger),
         }
+
+        for(const callback of charger.stashes) {
+            callback();
+        }
+        
+        return ret;
     }
 
+    if(Array.isArray(obj)) {
+        obj = obj.map(e => schemify(e, charger))
+        .filter(Boolean);
+        
+        if(obj.length === 0)
+            return null;
 
-    return ret;
+        return obj;
+    }
+
+    Object.entries(obj)
+    .forEach(([k, v]) => {
+        if(typeof v === "object") {
+            const val = schemify(v, charger);
+            if(k == "jsdoc" && Object.keys(val).length != 0)
+                delete obj[k];
+            else if(val)
+                obj[k] = val;
+            else
+                delete obj[k];
+        }
+    });
+    
+    return obj;
 }
 
-
-
-
+if(1)
 fs.writeFileSync("API.json", JSON.stringify(schema, null, 4));
 console.log("API.json generated");
 
-fs.writeFileSync("API_Pending.json", JSON.stringify(traverser(schema), null, 4).replace(/\{\s*/g, "{ ").replace(/\[\s*/g, "[ "));
+if(1)
+fs.writeFileSync("API_Pending.json", JSON.stringify(schemify(schema), null, 4));
 console.log("API_Pending.json generated");
